@@ -1,6 +1,8 @@
 import { levels, rooms, tileTypes, type LevelDefinition } from '../data/gameData';
 import { Match3Engine, type Position } from '../engine/Match3Engine';
 import { ProgressStore } from '../engine/ProgressStore';
+import { CollectObjective } from '../objectives/CollectObjective';
+import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 
 export class GameApp {
   private readonly root: HTMLElement;
@@ -10,7 +12,8 @@ export class GameApp {
   private currentRoomId = 'hall';
   private currentLevel: LevelDefinition | null = null;
   private selected: Position | null = null;
-  private collected = 0;
+  private collectObjective: CollectObjective | null = null;
+  private objectiveTracker: ObjectiveTracker | null = null;
   private movesLeft = 0;
   private busy = false;
 
@@ -147,21 +150,28 @@ export class GameApp {
     this.currentLevel = levels[levelId - 1];
     this.engine = new Match3Engine();
     this.selected = null;
-    this.collected = 0;
+    this.collectObjective = new CollectObjective({
+      id: `level-${this.currentLevel.id}-collect`,
+      tileType: this.currentLevel.targetTile,
+      target: this.currentLevel.targetCount,
+    });
+    this.objectiveTracker = new ObjectiveTracker([this.collectObjective]);
     this.movesLeft = this.currentLevel.moves;
+    this.busy = false;
     this.renderGame();
   }
 
   private renderGame(): void {
-    if (!this.currentLevel) return;
-    const target = tileTypes[this.currentLevel.targetTile];
+    if (!this.currentLevel || !this.collectObjective) return;
+    const objective = this.collectObjective.getSnapshot();
+    const target = tileTypes[objective.tileType];
 
     this.screen.innerHTML = `
       ${this.topbar(this.currentLevel.title, () => this.showRoom(this.currentRoomId))}
       <section class="objective-card">
         <div>
-          <strong>${Math.min(this.collected, this.currentLevel.targetCount)} / ${this.currentLevel.targetCount} · ${target.name}</strong>
-          <div class="progress"><i style="width:${Math.min(100, (this.collected / this.currentLevel.targetCount) * 100)}%"></i></div>
+          <strong>${objective.current} / ${objective.target} · ${target.name}</strong>
+          <div class="progress"><i style="width:${Math.min(100, (objective.current / objective.target) * 100)}%"></i></div>
         </div>
         <div class="objective-icon">${target.icon}</div>
       </section>
@@ -233,7 +243,10 @@ export class GameApp {
 
     while (matches.length > 0) {
       const removed = this.engine.clearMatches(matches);
-      this.collected += removed.filter((tile) => tile === this.currentLevel!.targetTile).length;
+      this.objectiveTracker?.handle({
+        type: 'tiles-removed',
+        tileTypes: removed,
+      });
       this.renderGame();
       await this.delay(140);
       this.engine.collapse();
@@ -250,7 +263,7 @@ export class GameApp {
 
     this.busy = false;
 
-    if (this.collected >= this.currentLevel.targetCount) {
+    if (this.objectiveTracker?.isComplete) {
       this.winLevel();
     } else if (this.movesLeft <= 0) {
       this.loseLevel();
