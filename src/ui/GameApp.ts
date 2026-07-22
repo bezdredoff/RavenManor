@@ -240,7 +240,13 @@ export class GameApp {
       matches = this.engine.findMatches();
     }
 
-    if (!this.engine.findPossibleMove()) this.engine.generateBoard();
+    if (!this.engine.findPossibleMove()) {
+      const reshuffled = this.engine.reshuffle();
+
+      // This fallback should only be reached for an invalid or pathological
+      // tile distribution. It keeps the level playable instead of blocking UI.
+      if (!reshuffled) this.engine.generateBoard();
+    }
 
     this.busy = false;
 
