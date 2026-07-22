@@ -1,6 +1,8 @@
 export type Position = { row: number; col: number };
 
 export class Match3Engine {
+  private static readonly MAX_RESHUFFLE_ATTEMPTS = 2_000;
+
   readonly size: number;
   readonly tileTypeCount: number;
   board: number[][];
@@ -124,6 +126,81 @@ export class Match3Engine {
     }
 
     return null;
+  }
+
+  /**
+   * Rearranges the current tiles without changing how many tiles of each type
+   * are present. A successful result has no immediate matches and contains at
+   * least one legal move.
+   *
+   * Returns false only when no valid arrangement was found within the bounded
+   * search. In that case the original board is restored unchanged.
+   */
+  reshuffle(): boolean {
+    const originalBoard = this.board.map((row) => [...row]);
+    const tiles = originalBoard.flat();
+
+    if (
+      tiles.length !== this.size * this.size ||
+      tiles.some((tile) => tile < 0 || tile >= this.tileTypeCount)
+    ) {
+      return false;
+    }
+
+    for (let attempt = 0; attempt < Match3Engine.MAX_RESHUFFLE_ATTEMPTS; attempt++) {
+      this.board = this.toBoard(this.shuffleCopy(tiles));
+
+      if (this.findMatches().length === 0 && this.findPossibleMove()) {
+        return true;
+      }
+    }
+
+    // A deterministic fallback is useful for structured dead boards where a
+    // single transposition can make the layout playable.
+    this.board = originalBoard.map((row) => [...row]);
+    const positions = Array.from({ length: this.size * this.size }, (_, index) => ({
+      row: Math.floor(index / this.size),
+      col: index % this.size,
+    }));
+
+    for (let firstIndex = 0; firstIndex < positions.length - 1; firstIndex++) {
+      for (let secondIndex = firstIndex + 1; secondIndex < positions.length; secondIndex++) {
+        const first = positions[firstIndex];
+        const second = positions[secondIndex];
+
+        if (this.board[first.row][first.col] === this.board[second.row][second.col]) {
+          continue;
+        }
+
+        this.swap(first, second);
+
+        if (this.findMatches().length === 0 && this.findPossibleMove()) {
+          return true;
+        }
+
+        this.swap(first, second);
+      }
+    }
+
+    this.board = originalBoard;
+    return false;
+  }
+
+  private shuffleCopy(tiles: number[]): number[] {
+    const shuffled = [...tiles];
+
+    for (let index = shuffled.length - 1; index > 0; index--) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+    }
+
+    return shuffled;
+  }
+
+  private toBoard(tiles: number[]): number[][] {
+    return Array.from({ length: this.size }, (_, row) =>
+      tiles.slice(row * this.size, (row + 1) * this.size),
+    );
   }
 
   private randomTile(): number {
