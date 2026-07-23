@@ -5,8 +5,18 @@ import {
   type CollectObjectiveDefinition,
   type LevelDefinition,
 } from '../data/gameData';
+import {
+  restorationTasks,
+  type RestorationTaskDefinition,
+} from '../data/restorationTasks';
 import { Match3Engine, type Position } from '../engine/Match3Engine';
 import { ProgressStore } from '../engine/ProgressStore';
+import {
+  completeRestorationTask,
+  getAvailableStars,
+  getRestorationTaskStatus,
+  getRoomRestorationTasks,
+} from '../meta/RoomRestoration';
 import { CollectObjective } from '../objectives/CollectObjective';
 import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 
@@ -51,9 +61,17 @@ export class GameApp {
       <header class="topbar">
         ${back ? '<button class="ghost compact" data-action="back">←</button>' : '<div></div>'}
         <div class="brand">${title}</div>
-        <div class="resource">★ ${this.progress.totalStars}</div>
+        <div class="resource" title="Доступные звёзды">★ ${this.availableStars}</div>
       </header>
     `;
+  }
+
+  private get availableStars(): number {
+    return getAvailableStars(
+      this.progress.totalStars,
+      restorationTasks,
+      this.progress.state.completedRestorationTasks,
+    );
   }
 
   showHome(): void {
@@ -119,7 +137,11 @@ export class GameApp {
     if (!room) return;
 
     const cards = room.levelIds.map((levelId) => {
-      const level = levels[levelId - 1];
+      const level = levels.find((candidate) => candidate.id === levelId);
+      if (!level) {
+        throw new Error(`Room ${room.id} references unknown level ${levelId}.`);
+      }
+
       const objective = this.getCollectObjectiveDefinition(level);
       const locked = this.progress.totalStars < level.requiredStars;
       const stars = this.progress.state.stars[level.id] ?? 0;
@@ -141,20 +163,92 @@ export class GameApp {
       `;
     }).join('');
 
+    const restorationCards = getRoomRestorationTasks(restorationTasks, room.id)
+      .map((task) => this.renderRestorationTask(task))
+      .join('');
+
     this.screen.innerHTML = `
       ${this.topbar(room.title, () => this.showManor())}
       <p class="subtitle">${room.description}</p>
-      <div class="level-grid">${cards}</div>
+      <section class="room-section">
+        <div class="section-heading">
+          <div>
+            <div class="chapter">Восстановление</div>
+            <h2>Задачи комнаты</h2>
+          </div>
+          <div class="resource resource-inline">★ ${this.availableStars}</div>
+        </div>
+        <div class="restoration-list">${restorationCards}</div>
+      </section>
+      <section class="room-section">
+        <div class="chapter">Match-3</div>
+        <h2>Уровни комнаты</h2>
+        <div class="level-grid">${cards}</div>
+      </section>
     `;
 
     this.bind('back', () => this.showManor());
     this.screen.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((button) => {
       button.addEventListener('click', () => this.startLevel(Number(button.dataset.level)));
     });
+    this.screen.querySelectorAll<HTMLButtonElement>('[data-restoration-task]').forEach((button) => {
+      button.addEventListener('click', () => this.restoreTask(button.dataset.restorationTask!));
+    });
+  }
+
+  private renderRestorationTask(task: RestorationTaskDefinition): string {
+    const roomTasks = getRoomRestorationTasks(restorationTasks, task.roomId);
+    const status = getRestorationTaskStatus(
+      task,
+      roomTasks,
+      this.progress.state.completedRestorationTasks,
+      this.availableStars,
+    );
+    const completed = status === 'completed';
+    const disabled = status !== 'available';
+
+    const buttonLabel = status === 'completed'
+      ? 'Выполнено'
+      : status === 'locked'
+        ? 'Сначала предыдущая'
+        : `${task.starCost} ★`;
+
+    return `
+      <article class="restoration-card ${completed ? 'completed' : ''} ${status === 'locked' ? 'locked' : ''}">
+        <div class="restoration-status">${completed ? '✓' : task.order}</div>
+        <div>
+          <h3>${task.title}</h3>
+          <div class="room-meta">${task.description}</div>
+        </div>
+        <button
+          class="${completed ? 'ghost' : 'secondary'} compact"
+          ${disabled ? 'disabled' : ''}
+          data-restoration-task="${task.id}"
+        >${buttonLabel}</button>
+      </article>
+    `;
+  }
+
+  private restoreTask(taskId: string): void {
+    const updatedTasks = completeRestorationTask(
+      taskId,
+      restorationTasks,
+      this.progress.state.completedRestorationTasks,
+      this.progress.totalStars,
+    );
+
+    if (updatedTasks[taskId]) {
+      this.progress.completeRestorationTask(taskId);
+    }
+
+    this.showRoom(this.currentRoomId);
   }
 
   private startLevel(levelId: number): void {
-    this.currentLevel = levels[levelId - 1];
+    this.currentLevel = levels.find((level) => level.id === levelId) ?? null;
+    if (!this.currentLevel) {
+      throw new Error(`Unknown level: ${levelId}`);
+    }
     const objectiveDefinition = this.getCollectObjectiveDefinition(this.currentLevel);
     this.engine = new Match3Engine();
     this.selected = null;
