@@ -45,8 +45,9 @@ improve to 3 stars   -> +2 earned
 replay with 2 stars  -> +0 earned
 ```
 
-Room and level unlock thresholds use `earned`, not `available`. Spending stars
-therefore never relocks content already reached by the player.
+Level groups unlock from distinct completed levels, not from star totals. Rooms
+unlock from persisted restoration milestones. Spending changes `available` but
+cannot undo a completed level or restoration task.
 
 ## Spending rules
 

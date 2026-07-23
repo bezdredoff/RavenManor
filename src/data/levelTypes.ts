@@ -1,4 +1,11 @@
-export const LEVEL_SCHEMA_VERSION = 1 as const;
+export const LEVEL_SCHEMA_VERSION = 2 as const;
+
+export type LevelDifficulty = 'easy' | 'normal' | 'hard' | 'finale';
+
+export type StarThresholds = Readonly<{
+  twoStarsMovesLeft: number;
+  threeStarsMovesLeft: number;
+}>;
 
 export type CollectObjectiveDefinition = Readonly<{
   id: string;
@@ -17,7 +24,8 @@ export type LevelDefinition = Readonly<{
   schemaVersion: typeof LEVEL_SCHEMA_VERSION;
   id: number;
   title: string;
+  difficulty: LevelDifficulty;
   moves: number;
-  requiredStars: number;
+  starThresholds: StarThresholds;
   objectives: readonly LevelObjectiveDefinition[];
 }>;

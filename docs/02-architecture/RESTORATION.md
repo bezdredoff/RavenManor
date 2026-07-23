@@ -27,7 +27,7 @@ src/ui/GameApp.ts                  Task interaction and room-stage rendering
   explicit wallet has enough available stars;
 - completing a task spends its configured cost exactly once;
 - completed task IDs and the star wallet persist together;
-- room and level unlocks use earned stars, so spending cannot relock content.
+- level groups unlock from distinct victories; rooms unlock from completed restoration milestones.
 
 ## Visual-state rules
 

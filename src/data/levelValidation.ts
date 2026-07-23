@@ -2,6 +2,8 @@ import {
   LEVEL_SCHEMA_VERSION,
   type CollectObjectiveDefinition,
   type LevelDefinition,
+  type LevelDifficulty,
+  type StarThresholds,
 } from './levelTypes';
 
 export type LevelValidationIssue = Readonly<{
@@ -31,23 +33,30 @@ const LEVEL_KEYS = new Set([
   'schemaVersion',
   'id',
   'title',
+  'difficulty',
   'moves',
-  'requiredStars',
+  'starThresholds',
   'objectives',
 ]);
-
+const STAR_THRESHOLD_KEYS = new Set([
+  'twoStarsMovesLeft',
+  'threeStarsMovesLeft',
+]);
 const COLLECT_OBJECTIVE_KEYS = new Set([
   'id',
   'type',
   'tileType',
   'target',
 ]);
+const DIFFICULTIES = new Set<LevelDifficulty>([
+  'easy',
+  'normal',
+  'hard',
+  'finale',
+]);
 
 /**
  * Validates untrusted JSON before it crosses into gameplay code.
- *
- * The returned definitions are fresh objects, so application code does not
- * keep references to the imported JSON module's mutable values.
  */
 export function validateLevelCatalog(
   value: unknown,
@@ -56,13 +65,11 @@ export function validateLevelCatalog(
   assertTileTypeCount(options.tileTypeCount);
 
   const issues: LevelValidationIssue[] = [];
-
   if (!Array.isArray(value)) {
     throw new LevelValidationError([
       { path: 'levels', message: 'must be a non-empty array' },
     ]);
   }
-
   if (value.length === 0) {
     issues.push({ path: 'levels', message: 'must contain at least one level' });
   }
@@ -72,14 +79,12 @@ export function validateLevelCatalog(
 
   value.forEach((rawLevel, levelIndex) => {
     const path = `levels[${levelIndex}]`;
-
     if (!isRecord(rawLevel)) {
       issues.push({ path, message: 'must be an object' });
       return;
     }
 
     reportUnexpectedKeys(rawLevel, LEVEL_KEYS, path, issues);
-
     const schemaVersion = readExactInteger(
       rawLevel.schemaVersion,
       LEVEL_SCHEMA_VERSION,
@@ -88,11 +93,16 @@ export function validateLevelCatalog(
     );
     const id = readInteger(rawLevel.id, 1, `${path}.id`, issues);
     const title = readNonEmptyString(rawLevel.title, `${path}.title`, issues);
+    const difficulty = readDifficulty(
+      rawLevel.difficulty,
+      `${path}.difficulty`,
+      issues,
+    );
     const moves = readInteger(rawLevel.moves, 1, `${path}.moves`, issues);
-    const requiredStars = readInteger(
-      rawLevel.requiredStars,
-      0,
-      `${path}.requiredStars`,
+    const starThresholds = validateStarThresholds(
+      rawLevel.starThresholds,
+      path,
+      moves,
       issues,
     );
     const objectives = validateObjectives(
@@ -114,26 +124,71 @@ export function validateLevelCatalog(
       schemaVersion !== null
       && id !== null
       && title !== null
+      && difficulty !== null
       && moves !== null
-      && requiredStars !== null
+      && starThresholds !== null
       && objectives !== null
     ) {
       validatedLevels.push({
         schemaVersion,
         id,
         title,
+        difficulty,
         moves,
-        requiredStars,
+        starThresholds,
         objectives,
       });
     }
   });
 
-  if (issues.length > 0) {
-    throw new LevelValidationError(issues);
-  }
-
+  if (issues.length > 0) throw new LevelValidationError(issues);
   return validatedLevels;
+}
+
+function validateStarThresholds(
+  value: unknown,
+  levelPath: string,
+  moves: number | null,
+  issues: LevelValidationIssue[],
+): StarThresholds | null {
+  const path = `${levelPath}.starThresholds`;
+  if (!isRecord(value)) {
+    issues.push({ path, message: 'must be an object' });
+    return null;
+  }
+  reportUnexpectedKeys(value, STAR_THRESHOLD_KEYS, path, issues);
+
+  const twoStarsMovesLeft = readInteger(
+    value.twoStarsMovesLeft,
+    0,
+    `${path}.twoStarsMovesLeft`,
+    issues,
+  );
+  const threeStarsMovesLeft = readInteger(
+    value.threeStarsMovesLeft,
+    0,
+    `${path}.threeStarsMovesLeft`,
+    issues,
+  );
+
+  if (twoStarsMovesLeft !== null && threeStarsMovesLeft !== null) {
+    if (threeStarsMovesLeft <= twoStarsMovesLeft) {
+      issues.push({
+        path: `${path}.threeStarsMovesLeft`,
+        message: 'must be greater than twoStarsMovesLeft',
+      });
+      return null;
+    }
+    if (moves !== null && threeStarsMovesLeft >= moves) {
+      issues.push({
+        path: `${path}.threeStarsMovesLeft`,
+        message: `must be less than the level move limit ${moves}`,
+      });
+      return null;
+    }
+    return { twoStarsMovesLeft, threeStarsMovesLeft };
+  }
+  return null;
 }
 
 function validateObjectives(
@@ -143,12 +198,10 @@ function validateObjectives(
   issues: LevelValidationIssue[],
 ): CollectObjectiveDefinition[] | null {
   const path = `${levelPath}.objectives`;
-
   if (!Array.isArray(value)) {
     issues.push({ path, message: 'must be a non-empty array' });
     return null;
   }
-
   if (value.length === 0) {
     issues.push({ path, message: 'must contain at least one objective' });
     return null;
@@ -156,28 +209,15 @@ function validateObjectives(
 
   const seenObjectiveIds = new Set<string>();
   const objectives: CollectObjectiveDefinition[] = [];
-
   value.forEach((rawObjective, objectiveIndex) => {
     const objectivePath = `${path}[${objectiveIndex}]`;
-
     if (!isRecord(rawObjective)) {
       issues.push({ path: objectivePath, message: 'must be an object' });
       return;
     }
 
-    reportUnexpectedKeys(
-      rawObjective,
-      COLLECT_OBJECTIVE_KEYS,
-      objectivePath,
-      issues,
-    );
-
-    const id = readNonEmptyString(
-      rawObjective.id,
-      `${objectivePath}.id`,
-      issues,
-    );
-
+    reportUnexpectedKeys(rawObjective, COLLECT_OBJECTIVE_KEYS, objectivePath, issues);
+    const id = readNonEmptyString(rawObjective.id, `${objectivePath}.id`, issues);
     if (id !== null) {
       if (seenObjectiveIds.has(id)) {
         issues.push({
@@ -210,18 +250,24 @@ function validateObjectives(
       `${objectivePath}.target`,
       issues,
     );
-
     if (id !== null && tileType !== null && target !== null) {
-      objectives.push({
-        id,
-        type: 'collect',
-        tileType,
-        target,
-      });
+      objectives.push({ id, type: 'collect', tileType, target });
     }
   });
 
   return objectives;
+}
+
+function readDifficulty(
+  value: unknown,
+  path: string,
+  issues: LevelValidationIssue[],
+): LevelDifficulty | null {
+  if (typeof value !== 'string' || !DIFFICULTIES.has(value as LevelDifficulty)) {
+    issues.push({ path, message: 'must be "easy", "normal", "hard", or "finale"' });
+    return null;
+  }
+  return value as LevelDifficulty;
 }
 
 function readExactInteger<T extends number>(
@@ -234,7 +280,6 @@ function readExactInteger<T extends number>(
     issues.push({ path, message: `must equal ${expected}` });
     return null;
   }
-
   return expected;
 }
 
@@ -249,23 +294,15 @@ function readInteger(
     issues.push({ path, message: 'must be an integer' });
     return null;
   }
-
-  const integer = value as number;
-
-  if (integer < minimum) {
+  if (value < minimum) {
     issues.push({ path, message: `must be greater than or equal to ${minimum}` });
     return null;
   }
-
-  if (maximum !== undefined && integer > maximum) {
-    issues.push({
-      path,
-      message: `must be between ${minimum} and ${maximum}`,
-    });
+  if (maximum !== undefined && value > maximum) {
+    issues.push({ path, message: `must be between ${minimum} and ${maximum}` });
     return null;
   }
-
-  return integer;
+  return value;
 }
 
 function readNonEmptyString(
@@ -277,7 +314,6 @@ function readNonEmptyString(
     issues.push({ path, message: 'must be a non-empty string' });
     return null;
   }
-
   return value;
 }
 
@@ -289,10 +325,7 @@ function reportUnexpectedKeys(
 ): void {
   for (const key of Object.keys(record)) {
     if (!allowedKeys.has(key)) {
-      issues.push({
-        path: `${path}.${key}`,
-        message: 'is not allowed by the current schema',
-      });
+      issues.push({ path: `${path}.${key}`, message: 'is not allowed by the current schema' });
     }
   }
 }

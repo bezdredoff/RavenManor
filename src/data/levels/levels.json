@@ -1,102 +1,142 @@
 [
   {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": 1,
-    "title": "Уровень 1",
+    "title": "Первые розы",
+    "difficulty": "easy",
     "moves": 18,
-    "requiredStars": 0,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 10
+    },
     "objectives": [
-      { "id": "primary", "type": "collect", "tileType": 0, "target": 12 }
+      { "id": "primary", "type": "collect", "tileType": 0, "target": 15 }
     ]
   },
   {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": 2,
-    "title": "Уровень 2",
+    "title": "Тлеющие свечи",
+    "difficulty": "normal",
     "moves": 18,
-    "requiredStars": 1,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 9
+    },
     "objectives": [
-      { "id": "primary", "type": "collect", "tileType": 1, "target": 14 }
+      { "id": "primary", "type": "collect", "tileType": 1, "target": 18 }
     ]
   },
   {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": 3,
-    "title": "Уровень 3",
-    "moves": 19,
-    "requiredStars": 3,
+    "title": "Связка ключей",
+    "difficulty": "hard",
+    "moves": 18,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
     "objectives": [
-      { "id": "primary", "type": "collect", "tileType": 2, "target": 16 }
+      { "id": "primary", "type": "collect", "tileType": 2, "target": 21 }
     ]
   },
   {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": 4,
-    "title": "Уровень 4",
+    "title": "Холодный блеск",
+    "difficulty": "easy",
     "moves": 19,
-    "requiredStars": 5,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 10
+    },
     "objectives": [
-      { "id": "primary", "type": "collect", "tileType": 3, "target": 18 }
+      { "id": "primary", "type": "collect", "tileType": 3, "target": 19 }
     ]
   },
   {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": 5,
-    "title": "Уровень 5",
-    "moves": 20,
-    "requiredStars": 7,
+    "title": "Стая под крышей",
+    "difficulty": "normal",
+    "moves": 19,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 9
+    },
     "objectives": [
-      { "id": "primary", "type": "collect", "tileType": 4, "target": 20 }
+      { "id": "primary", "type": "collect", "tileType": 4, "target": 23 }
     ]
   },
   {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": 6,
-    "title": "Уровень 6",
-    "moves": 20,
-    "requiredStars": 9,
+    "title": "Пыльные свитки",
+    "difficulty": "hard",
+    "moves": 19,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
     "objectives": [
-      { "id": "primary", "type": "collect", "tileType": 5, "target": 22 }
+      { "id": "primary", "type": "collect", "tileType": 5, "target": 27 }
     ]
   },
   {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": 7,
-    "title": "Уровень 7",
-    "moves": 21,
-    "requiredStars": 11,
+    "title": "Розарий во тьме",
+    "difficulty": "easy",
+    "moves": 20,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 10
+    },
     "objectives": [
-      { "id": "primary", "type": "collect", "tileType": 0, "target": 24 }
+      { "id": "primary", "type": "collect", "tileType": 0, "target": 22 }
     ]
   },
   {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": 8,
-    "title": "Уровень 8",
-    "moves": 21,
-    "requiredStars": 13,
+    "title": "Ночная процессия",
+    "difficulty": "normal",
+    "moves": 20,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 8
+    },
     "objectives": [
-      { "id": "primary", "type": "collect", "tileType": 1, "target": 26 }
+      { "id": "primary", "type": "collect", "tileType": 1, "target": 27 }
     ]
   },
   {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": 9,
-    "title": "Уровень 9",
-    "moves": 22,
-    "requiredStars": 15,
+    "title": "Ключ от крипты",
+    "difficulty": "hard",
+    "moves": 20,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 6
+    },
     "objectives": [
-      { "id": "primary", "type": "collect", "tileType": 2, "target": 28 }
+      { "id": "primary", "type": "collect", "tileType": 2, "target": 32 }
     ]
   },
   {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": 10,
-    "title": "Уровень 10",
+    "title": "Сердце поместья",
+    "difficulty": "finale",
     "moves": 22,
-    "requiredStars": 17,
+    "starThresholds": {
+      "twoStarsMovesLeft": 2,
+      "threeStarsMovesLeft": 6
+    },
     "objectives": [
-      { "id": "primary", "type": "collect", "tileType": 3, "target": 30 }
+      { "id": "primary", "type": "collect", "tileType": 3, "target": 34 }
     ]
   }
 ]

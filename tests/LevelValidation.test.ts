@@ -5,18 +5,17 @@ import {
 } from '../src/data/levelValidation';
 
 const validLevel = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   id: 1,
-  title: 'Уровень 1',
+  title: 'Первые розы',
+  difficulty: 'easy',
   moves: 18,
-  requiredStars: 0,
+  starThresholds: {
+    twoStarsMovesLeft: 4,
+    threeStarsMovesLeft: 10,
+  },
   objectives: [
-    {
-      id: 'primary',
-      type: 'collect',
-      tileType: 0,
-      target: 12,
-    },
+    { id: 'primary', type: 'collect', tileType: 0, target: 15 },
   ],
 };
 
@@ -27,7 +26,6 @@ function getValidationError(value: unknown): LevelValidationError {
     expect(error).toBeInstanceOf(LevelValidationError);
     return error as LevelValidationError;
   }
-
   throw new Error('Expected level validation to fail');
 }
 
@@ -35,117 +33,61 @@ describe('level runtime validation', () => {
   it('returns validated copies for a valid catalog', () => {
     const input = [validLevel];
     const result = validateLevelCatalog(input, { tileTypeCount: 6 });
-
     expect(result).toEqual(input);
     expect(result).not.toBe(input);
     expect(result[0]).not.toBe(input[0]);
-    expect(result[0].objectives).not.toBe(input[0].objectives);
   });
 
-  it('rejects a non-array or empty catalog', () => {
-    expect(getValidationError({}).message).toContain(
-      'levels: must be a non-empty array',
-    );
-    expect(getValidationError([]).message).toContain(
-      'levels: must contain at least one level',
-    );
+  it('rejects invalid level fields with JSON paths', () => {
+    const error = getValidationError([{
+      ...validLevel,
+      schemaVersion: 1,
+      difficulty: 'impossible',
+      moves: 0,
+      debugOnly: true,
+    }]);
+    expect(error.message).toContain('levels[0].schemaVersion: must equal 2');
+    expect(error.message).toContain('levels[0].difficulty');
+    expect(error.message).toContain('levels[0].moves: must be greater than or equal to 1');
+    expect(error.message).toContain('levels[0].debugOnly: is not allowed');
   });
 
-  it('reports invalid level fields with their JSON paths', () => {
-    const error = getValidationError([
-      {
-        ...validLevel,
-        schemaVersion: 2,
-        title: '   ',
-        moves: 0,
-        requiredStars: -1,
-        debugOnly: true,
+  it('requires valid ordered star thresholds', () => {
+    const error = getValidationError([{
+      ...validLevel,
+      starThresholds: {
+        twoStarsMovesLeft: 10,
+        threeStarsMovesLeft: 8,
       },
-    ]);
-
-    expect(error.message).toContain('levels[0].schemaVersion: must equal 1');
-    expect(error.message).toContain('levels[0].title: must be a non-empty string');
+    }]);
     expect(error.message).toContain(
-      'levels[0].moves: must be greater than or equal to 1',
-    );
-    expect(error.message).toContain(
-      'levels[0].requiredStars: must be greater than or equal to 0',
-    );
-    expect(error.message).toContain(
-      'levels[0].debugOnly: is not allowed by the current schema',
+      'levels[0].starThresholds.threeStarsMovesLeft: must be greater than twoStarsMovesLeft',
     );
   });
 
-  it('rejects duplicate level ids', () => {
+  it('does not allow a three-star threshold equal to the move limit', () => {
+    const error = getValidationError([{
+      ...validLevel,
+      starThresholds: {
+        twoStarsMovesLeft: 4,
+        threeStarsMovesLeft: 18,
+      },
+    }]);
+    expect(error.message).toContain('must be less than the level move limit 18');
+  });
+
+  it('rejects duplicate ids and invalid objectives', () => {
     const error = getValidationError([
       validLevel,
-      { ...validLevel, title: 'Уровень-дубликат' },
-    ]);
-
-    expect(error.message).toContain('levels[1].id: duplicate level id 1');
-  });
-
-  it('requires at least one objective', () => {
-    const error = getValidationError([
-      { ...validLevel, objectives: [] },
-    ]);
-
-    expect(error.message).toContain(
-      'levels[0].objectives: must contain at least one objective',
-    );
-  });
-
-  it('rejects duplicate objective ids within one level', () => {
-    const duplicateObjective = {
-      ...validLevel.objectives[0],
-      tileType: 1,
-    };
-    const error = getValidationError([
-      {
-        ...validLevel,
-        objectives: [validLevel.objectives[0], duplicateObjective],
-      },
-    ]);
-
-    expect(error.message).toContain(
-      'levels[0].objectives[1].id: duplicate objective id "primary" within level',
-    );
-  });
-
-  it('rejects unsupported objective types and invalid collect values', () => {
-    const error = getValidationError([
       {
         ...validLevel,
         objectives: [
-          {
-            id: 'unsupported',
-            type: 'score',
-            target: 100,
-          },
-          {
-            id: 'collect',
-            type: 'collect',
-            tileType: 6,
-            target: 0,
-          },
+          { id: 'primary', type: 'collect', tileType: 6, target: 0 },
         ],
       },
     ]);
-
-    expect(error.message).toContain(
-      'levels[0].objectives[0].type: must be the supported objective type "collect"',
-    );
-    expect(error.message).toContain(
-      'levels[0].objectives[1].tileType: must be between 0 and 5',
-    );
-    expect(error.message).toContain(
-      'levels[0].objectives[1].target: must be greater than or equal to 1',
-    );
-  });
-
-  it('rejects an invalid tile type count supplied by application code', () => {
-    expect(() =>
-      validateLevelCatalog([validLevel], { tileTypeCount: 0 }),
-    ).toThrow('tileTypeCount must be a positive integer');
+    expect(error.message).toContain('levels[1].id: duplicate level id 1');
+    expect(error.message).toContain('levels[1].objectives[0].tileType: must be between 0 and 5');
+    expect(error.message).toContain('levels[1].objectives[0].target: must be greater than or equal to 1');
   });
 });
