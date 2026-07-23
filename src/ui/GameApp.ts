@@ -30,6 +30,7 @@ import {
 } from '../meta/TutorialState';
 import { CollectObjective } from '../objectives/CollectObjective';
 import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
+import { getScreenClassName, type ScreenMode } from './layoutPolicy';
 
 const DIFFICULTY_LABELS: Record<LevelDifficulty, string> = {
   easy: 'Легко',
@@ -74,12 +75,21 @@ export class GameApp {
     return this.root.querySelector('#modal') as HTMLElement;
   }
 
+  private renderScreen(mode: ScreenMode, content: string): void {
+    this.screen.className = getScreenClassName(mode);
+    this.screen.innerHTML = content;
+  }
+
   private topbar(title: string, back?: () => void): string {
     return `
       <header class="topbar">
-        ${back ? '<button class="ghost compact" data-action="back">←</button>' : '<div></div>'}
-        <div class="brand">${title}</div>
-        <div class="resource" title="Доступные звёзды">★ ${this.availableStars}</div>
+        ${back
+          ? '<button class="icon-button" data-action="back" aria-label="Назад"><span aria-hidden="true">‹</span></button>'
+          : '<div class="topbar-spacer" aria-hidden="true"></div>'}
+        <div class="brand" title="${title}">${title}</div>
+        <div class="resource" title="Доступные звёзды" aria-label="Доступно звёзд: ${this.availableStars}">
+          <span aria-hidden="true">★</span><strong>${this.availableStars}</strong>
+        </div>
       </header>
     `;
   }
@@ -108,7 +118,7 @@ export class GameApp {
   }
 
   showHome(): void {
-    this.screen.innerHTML = `
+    this.renderScreen('home', `
       ${this.topbar('Raven Manor')}
       <section class="hero">
         <div class="raven">🦅</div>
@@ -121,8 +131,8 @@ export class GameApp {
         <button class="ghost" data-action="story">Продолжить историю</button>
         <button class="ghost" data-action="settings">Настройки</button>
       </div>
-      <p class="footer-note">Первые 10 уровней — вертикальный срез масштабируемой системы.</p>
-    `;
+      <p class="footer-note">Глава I · Возвращение в Raven Manor</p>
+    `);
 
     this.bind('play', () => this.showLevelMap());
     this.bind('manor', () => this.showManor());
@@ -165,7 +175,7 @@ export class GameApp {
       `;
     }).join('');
 
-    this.screen.innerHTML = `
+    this.renderScreen('manor', `
       ${this.topbar('Поместье', () => this.showHome())}
       <div class="chapter">Глава I · Возвращение</div>
       <h2>Комнаты Raven Manor</h2>
@@ -174,7 +184,7 @@ export class GameApp {
       <button class="primary wide-action" data-action="levels">Перейти к уровням</button>
       <div class="room-list">${cards}</div>
       <button class="ghost reset" data-action="reset">Сбросить прогресс</button>
-    `;
+    `);
 
     this.bind('back', () => this.showHome());
     this.bind('levels', () => this.showLevelMap());
@@ -221,7 +231,7 @@ export class GameApp {
       `;
     }).join('');
 
-    this.screen.innerHTML = `
+    this.renderScreen('levels', `
       ${this.topbar('Уровни', () => this.showHome())}
       <div class="chapter">Match-3 кампания</div>
       <h2>Выберите уровень</h2>
@@ -229,7 +239,7 @@ export class GameApp {
       ${this.renderStarWallet()}
       <button class="secondary wide-action" data-action="manor">Вернуться в поместье</button>
       <div class="level-group-list">${groupCards}</div>
-    `;
+    `);
 
     this.bind('back', () => this.showHome());
     this.bind('manor', () => this.showManor());
@@ -282,7 +292,7 @@ export class GameApp {
       .join('');
     const roomVisual = this.renderRoomVisual(room.id, room.title);
 
-    this.screen.innerHTML = `
+    this.renderScreen('room', `
       ${this.topbar(room.title, () => this.showManor())}
       <p class="subtitle">${room.description}</p>
       ${this.renderStarWallet()}
@@ -305,7 +315,7 @@ export class GameApp {
         </div>
         <button class="primary" data-action="levels">К уровням</button>
       </section>
-    `;
+    `);
 
     this.bind('back', () => this.showManor());
     this.bind('levels', () => this.showLevelMap());
@@ -437,25 +447,36 @@ export class GameApp {
     if (!this.currentLevel || !this.collectObjective) return;
     const objective = this.collectObjective.getSnapshot();
     const target = tileTypes[objective.tileType];
+    const tutorialVisible = shouldShowTutorial(this.progress.state.tutorial);
 
-    this.screen.innerHTML = `
-      ${this.topbar(this.currentLevel.title, () => this.showLevelMap())}
-      ${this.renderTutorialBanner()}
-      <section class="objective-card">
-        <div>
-          <strong>${objective.current} / ${objective.target} · ${target.name}</strong>
-          <div class="progress"><i style="width:${Math.min(100, (objective.current / objective.target) * 100)}%"></i></div>
+    this.renderScreen('game', `
+      <div class="game-layout ${tutorialVisible ? 'with-tutorial' : ''}">
+        ${this.topbar(this.currentLevel.title, () => this.showLevelMap())}
+        ${this.renderTutorialBanner()}
+        <section class="game-hud" aria-label="Цель уровня и оставшиеся ходы">
+          <div class="objective-card">
+            <div class="objective-copy">
+              <span class="hud-label">Цель</span>
+              <strong>${objective.current} / ${objective.target} · ${target.name}</strong>
+              <div class="progress" aria-label="Прогресс цели"><i style="width:${Math.min(100, (objective.current / objective.target) * 100)}%"></i></div>
+            </div>
+            <div class="objective-icon" aria-hidden="true">${target.icon}</div>
+          </div>
+          <div class="move-counter">
+            <span>Ходы</span>
+            <strong>${this.movesLeft}</strong>
+          </div>
+        </section>
+        <div class="star-targets">3★ ${this.currentLevel.starThresholds.threeStarsMovesLeft}+ · 2★ ${this.currentLevel.starThresholds.twoStarsMovesLeft}+ оставшихся</div>
+        <div class="board-stage">
+          <div class="board-wrap"><div class="board" role="grid" aria-label="Игровое поле 8 на 8">${this.renderBoard()}</div></div>
         </div>
-        <div class="objective-icon">${target.icon}</div>
-      </section>
-      <div class="moves">Ходы: ${this.movesLeft}</div>
-      <div class="star-targets">3★: ${this.currentLevel.starThresholds.threeStarsMovesLeft}+ ходов · 2★: ${this.currentLevel.starThresholds.twoStarsMovesLeft}+</div>
-      <div class="board-wrap"><div class="board">${this.renderBoard()}</div></div>
-      <div class="game-actions">
-        <button class="secondary" data-action="hint">Подсказка</button>
-        <button class="ghost" data-action="restart">Заново</button>
+        <div class="game-actions">
+          <button class="secondary" data-action="hint">Подсказка</button>
+          <button class="ghost" data-action="restart">Заново</button>
+        </div>
       </div>
-    `;
+    `);
 
     this.bind('back', () => this.showLevelMap());
     this.bind('hint', () => this.showHint());
@@ -482,6 +503,8 @@ export class GameApp {
         <button
           class="tile ${this.selected?.row === rowIndex && this.selected?.col === colIndex ? 'selected' : ''}"
           data-tile="${rowIndex},${colIndex}"
+          role="gridcell"
+          aria-label="${tileTypes[tile]?.name ?? 'Фишка'}, ряд ${rowIndex + 1}, колонка ${colIndex + 1}"
         >${tileTypes[tile]?.icon ?? ''}</button>
       `),
     ).join('');
@@ -671,7 +694,7 @@ export class GameApp {
           ? 'Завершено'
           : 'Отключено';
 
-    this.screen.innerHTML = `
+    this.renderScreen('settings', `
       ${this.topbar('Настройки', () => this.showHome())}
       <div class="chapter">Игровые настройки</div>
       <h2>Подсказки и обучение</h2>
@@ -687,7 +710,7 @@ export class GameApp {
         </div>
       </section>
       <p class="footer-note">Новые механики позднее будут объясняться такими же короткими контекстными карточками.</p>
-    `;
+    `);
 
     this.bind('back', () => this.showHome());
     this.bind('tutorial-restart', () => {

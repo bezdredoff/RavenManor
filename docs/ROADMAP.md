@@ -8,47 +8,69 @@
 - FEATURE-013/014/015 — restoration tasks, visual stages, and star economy;
 - FEATURE-028/029/030 — tests, CI, and GitHub Pages;
 - FEATURE-036 — scalable level groups and initial balance;
-- FEATURE-037 — optional first-session guidance.
+- FEATURE-037 — optional first-session guidance;
+- FEATURE-038 — visual audit and locked Romantic Gothic Restoration direction.
 
-## Next phase — Visual Quality
-
-### FEATURE-038 — Visual audit and art-direction lock
-
-- review every current screen;
-- define the gothic-romance visual pillars;
-- choose typography, palette, shape language, and reference quality bar;
-- create an asset inventory and replacement priority.
+## Current phase — Visual Quality
 
 ### FEATURE-039 — UI design system
 
-- reusable buttons, cards, modals, counters, tabs, and spacing tokens;
-- consistent hierarchy and mobile-safe layouts;
-- replace prototype emoji where UI icons are required.
+_Status: implemented, pending project verification._
+
+- implement documented colour, typography, spacing, radius, elevation, and
+  motion tokens;
+- add a consistent icon system with fallbacks;
+- create reusable button, card, top-bar, modal, wallet, badge, and setting-row
+  components/styles;
+- redesign Home, Settings, Level Selection, and generic modal shells;
+- remove player-facing prototype/developer language;
+- preserve all progression and save behaviour.
 
 ### FEATURE-040 — Match-3 board visual overhaul
 
-- final tile silhouettes and iconography;
-- clearer selection, legal-move, match, fall, and objective feedback;
-- board frame, background, and readable HUD;
-- prepare special-tile visual conventions.
+- integrate six authored tile slots and fallback assets;
+- redesign board frame, cells, objective HUD, moves, and star threshold display;
+- add clear selected, invalid-swap, match, fall, cascade, and hint states;
+- prepare visual conventions for future special tiles;
+- verify silhouette and contrast accessibility.
 
-### FEATURE-041 — Manor and room presentation
+### FEATURE-041 — Manor, rooms, and narrative presentation
 
-- replace CSS/emoji room placeholders with staged room artwork;
-- room navigation and restoration reveals;
-- character/scene presentation for the narrative layer.
+- integrate manor key art and room thumbnails;
+- replace room CSS/emoji placeholders with staged artwork via existing
+  `assetKey` values;
+- create restoration reveal presentation;
+- redesign story screens using backdrop and character portrait slots;
+- retain fallbacks for missing production assets.
 
 ### FEATURE-042 — Motion and VFX polish
 
-- swap, clear, cascade, reshuffle, win, and restoration animations;
-- particles, screen feedback, and reduced-motion option;
-- animation timing guidelines for future AI contributors.
+- swap, invalid swap, clear, fall, cascade, reshuffle, hint, win, loss,
+  restoration, and room-unlock motion;
+- particles based on gold glints, candle sparks, dust, petals, mist, and raven
+  feathers;
+- screen transitions and timing guidelines;
+- reduced-motion behaviour and tests.
 
 ### FEATURE-043 — Audio and final UX polish
 
-- music and sound-feedback hooks;
-- settings for music, SFX, and reduced motion;
-- accessibility, responsive layout, and public-test readiness.
+- music and SFX hooks;
+- music/SFX settings and persistence;
+- final responsive regression and device-specific safe-area pass;
+- accessibility and contrast pass;
+- loading/error/fallback states;
+- public-test readiness checklist.
+
+## Recommended visual production order
+
+1. Produce/approve the six tile concepts and UI icon family while FEATURE-039 is
+   implemented.
+2. Integrate the UI system and asset resolver.
+3. Integrate tile set and gameplay feedback in FEATURE-040.
+4. Produce Hall stages first as the room-art quality benchmark.
+5. Expand approved environment approach to Library, Garden, Crypt, and Tower.
+6. Add character portraits and narrative presentation.
+7. Complete motion, VFX, audio, and accessibility polish.
 
 ## Later gameplay expansion
 
