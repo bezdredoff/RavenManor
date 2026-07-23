@@ -1,3 +1,5 @@
+export const LEVEL_SCHEMA_VERSION = 1 as const;
+
 export type CollectObjectiveDefinition = Readonly<{
   id: string;
   type: 'collect';
@@ -12,7 +14,7 @@ export type CollectObjectiveDefinition = Readonly<{
 export type LevelObjectiveDefinition = CollectObjectiveDefinition;
 
 export type LevelDefinition = Readonly<{
-  schemaVersion: 1;
+  schemaVersion: typeof LEVEL_SCHEMA_VERSION;
   id: number;
   title: string;
   moves: number;

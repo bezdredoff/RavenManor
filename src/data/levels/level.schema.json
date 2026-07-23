@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://raven-manor.example/schemas/level.schema.json",
   "title": "Raven Manor level catalog",
   "description": "Data contract for the level definitions loaded by the vertical slice.",
@@ -42,18 +42,23 @@
         "items": {
           "oneOf": [
             {
-              "$ref": "#/$defs/collectObjective"
+              "$ref": "#/definitions/collectObjective"
             }
           ]
         }
       }
     }
   },
-  "$defs": {
+  "definitions": {
     "collectObjective": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "type", "tileType", "target"],
+      "required": [
+        "id",
+        "type",
+        "tileType",
+        "target"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -64,7 +69,9 @@
         },
         "tileType": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Index into the current six-entry tileTypes catalog."
         },
         "target": {
           "type": "integer",

@@ -1,5 +1,5 @@
 import levelDefinitionsJson from './levels/levels.json';
-import type { LevelDefinition } from './levelTypes';
+import { validateLevelCatalog } from './levelValidation';
 
 export type RoomDefinition = {
   id: string;
@@ -33,8 +33,6 @@ export const rooms: RoomDefinition[] = [
   { id: 'tower', icon: '🌙', title: 'Воронья башня', requiredStars: 18, description: 'Финал вертикального слайса и раскрытие силуэта.', levelIds: [9, 10] },
 ];
 
-/**
- * JSON is asserted to the TypeScript contract here. Runtime validation belongs
- * to FEATURE-012 and will replace this trust boundary with explicit checks.
- */
-export const levels = levelDefinitionsJson as LevelDefinition[];
+export const levels = validateLevelCatalog(levelDefinitionsJson, {
+  tileTypeCount: tileTypes.length,
+});
