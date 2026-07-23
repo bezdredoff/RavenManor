@@ -6,25 +6,37 @@ import {
   spendStars,
   type StarBalance,
 } from '../meta/StarEconomy';
+import {
+  advanceTutorial,
+  createTutorialState,
+  restartTutorial,
+  restoreTutorialState,
+  skipTutorial,
+  startTutorial,
+  type TutorialState,
+} from '../meta/TutorialState';
 
 export type ProgressState = {
   stars: Record<number, number>;
   completed: Record<number, boolean>;
   completedRestorationTasks: Record<string, boolean>;
   starBalance: StarBalance;
+  tutorial: TutorialState;
   storyStep: number;
 };
 
 export type ProgressStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
-const STORAGE_KEY = 'ravenManorStateV3';
-const LEGACY_STORAGE_KEY = 'ravenManorStateV2';
+const STORAGE_KEY = 'ravenManorStateV4';
+const LEGACY_V3_STORAGE_KEY = 'ravenManorStateV3';
+const LEGACY_V2_STORAGE_KEY = 'ravenManorStateV2';
 
 const createEmptyState = (): ProgressState => ({
   stars: {},
   completed: {},
   completedRestorationTasks: {},
   starBalance: createStarBalance(),
+  tutorial: createTutorialState(),
   storyStep: 0,
 });
 
@@ -83,6 +95,26 @@ export class ProgressStore {
     return true;
   }
 
+  startTutorial(): void {
+    this.state.tutorial = startTutorial();
+    this.persist();
+  }
+
+  skipTutorial(): void {
+    this.state.tutorial = skipTutorial();
+    this.persist();
+  }
+
+  advanceTutorial(): void {
+    this.state.tutorial = advanceTutorial(this.state.tutorial);
+    this.persist();
+  }
+
+  restartTutorial(): void {
+    this.state.tutorial = restartTutorial();
+    this.persist();
+  }
+
   advanceStory(maxSteps: number): number {
     const current = Math.min(this.state.storyStep, maxSteps - 1);
     this.state.storyStep = (current + 1) % maxSteps;
@@ -92,14 +124,18 @@ export class ProgressStore {
 
   reset(): void {
     this.state = createEmptyState();
-    this.storage.removeItem(LEGACY_STORAGE_KEY);
+    this.storage.removeItem(LEGACY_V3_STORAGE_KEY);
+    this.storage.removeItem(LEGACY_V2_STORAGE_KEY);
     this.persist();
   }
 
   private load(): { state: ProgressState; migrated: boolean } {
     const currentRaw = this.storage.getItem(STORAGE_KEY);
-    const legacyRaw = currentRaw ? null : this.storage.getItem(LEGACY_STORAGE_KEY);
-    const raw = currentRaw ?? legacyRaw;
+    const legacyV3Raw = currentRaw ? null : this.storage.getItem(LEGACY_V3_STORAGE_KEY);
+    const legacyV2Raw = currentRaw || legacyV3Raw
+      ? null
+      : this.storage.getItem(LEGACY_V2_STORAGE_KEY);
+    const raw = currentRaw ?? legacyV3Raw ?? legacyV2Raw;
 
     if (!raw) return { state: createEmptyState(), migrated: false };
 
@@ -108,6 +144,8 @@ export class ProgressStore {
       const stars = parsed.stars ?? {};
       const completed = parsed.completed ?? {};
       const completedRestorationTasks = parsed.completedRestorationTasks ?? {};
+      const hasExistingProgress = Object.values(completed).some(Boolean)
+        || Object.values(completedRestorationTasks).some(Boolean);
 
       return {
         state: {
@@ -120,9 +158,12 @@ export class ProgressStore {
             this.restorationTasks,
             completedRestorationTasks,
           ),
+          tutorial: restoreTutorialState(parsed.tutorial, hasExistingProgress),
           storyStep: parsed.storyStep ?? 0,
         },
-        migrated: Boolean(legacyRaw) || !parsed.starBalance,
+        migrated: Boolean(legacyV3Raw || legacyV2Raw)
+          || !parsed.starBalance
+          || !parsed.tutorial,
       };
     } catch {
       return { state: createEmptyState(), migrated: false };
