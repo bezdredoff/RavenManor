@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Готическая свеча">
+  <defs>
+    <linearGradient id="wax" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#9d8f79"/><stop offset=".28" stop-color="#fff1c8"/><stop offset=".68" stop-color="#d8c39c"/><stop offset="1" stop-color="#796b58"/></linearGradient>
+    <radialGradient id="flame" cx="45%" cy="70%" r="70%"><stop stop-color="#fff4b0"/><stop offset=".42" stop-color="#f6b54d"/><stop offset="1" stop-color="#a63438"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f2d68e"/><stop offset=".5" stop-color="#b77a32"/><stop offset="1" stop-color="#5b321a"/></linearGradient>
+    <filter id="glow"><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#ffc765" flood-opacity=".7"/><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#120b10" flood-opacity=".8"/></filter>
+  </defs>
+  <g filter="url(#glow)">
+    <path fill="url(#flame)" stroke="#f5d883" stroke-width="2.5" d="M64 12c10 13 14 24 7 33-4 6-11 7-16 2-9-9 1-20 9-35Z"/>
+    <path fill="url(#wax)" stroke="#d7b96d" stroke-width="3" d="M45 43h38v55c0 9-7 14-19 14s-19-5-19-14V43Z"/>
+    <path fill="#f5e0b7" d="M45 44c6-6 12 4 19 0 7-4 13-6 19 0v14c-6 4-11-3-17 1-8 5-12-5-21 0V44Z"/>
+    <path d="M64 43v-8" stroke="#36251c" stroke-width="4" stroke-linecap="round"/>
+    <path fill="url(#gold)" stroke="#f1d58b" stroke-width="2" d="M33 105h62l-7 12H40l-7-12Z"/>
+  </g>
+</svg>

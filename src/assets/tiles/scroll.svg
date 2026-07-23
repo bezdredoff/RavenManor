@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Запечатанный свиток">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0c6"/><stop offset=".46" stop-color="#d9bb7a"/><stop offset="1" stop-color="#8e653a"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f4d99a"/><stop offset="1" stop-color="#875328"/></linearGradient>
+    <radialGradient id="seal"><stop stop-color="#d65b6c"/><stop offset=".68" stop-color="#8e263e"/><stop offset="1" stop-color="#4e1729"/></radialGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#130b0d" flood-opacity=".85"/></filter>
+  </defs>
+  <g filter="url(#shadow)" stroke="url(#gold)" stroke-width="3" stroke-linejoin="round">
+    <path fill="url(#paper)" d="M30 27c0-8 8-13 17-13h52c-7 3-9 9-9 17v64c0 9-7 16-17 16H28c8-4 10-10 10-18V37c0-6-3-9-8-10Z"/>
+    <path fill="#b98c51" d="M30 27c12-2 18 3 18 11H25c-7 0-10-4-8-8 2-4 7-5 13-3Zm58 68c11-2 18 3 18 10 0 6-5 10-13 10H73c9-3 14-10 15-20Z"/>
+    <path d="M52 48h25M52 60h30M52 72h20" stroke="#795336" stroke-width="4" stroke-linecap="round"/>
+    <circle fill="url(#seal)" cx="73" cy="84" r="17"/>
+    <path d="m66 84 5 5 10-12" fill="none" stroke="#efc98b" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

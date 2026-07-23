@@ -117,3 +117,21 @@ section and must not visually compete with everyday settings.
 - primary Retry action;
 - secondary Choose another level action;
 - avoid punitive or alarming visual treatment in the first ten levels.
+
+
+## Match-3 board composition (FEATURE-040)
+
+The board is the dominant visual object and must remain square and fully visible.
+Its frame may use ornamental corners and a subtle central sigil, but decoration
+must never overlap a tile hit area. The objective uses the same authored tile
+asset as the board rather than a separate emoji or icon.
+
+At 320 × 568 the priority order is:
+
+1. compact top bar;
+2. objective and moves;
+3. square 8×8 board;
+4. hint and restart actions.
+
+Transient feedback appears inside the board frame so it does not increase screen
+height. A tutorial banner reduces board size rather than creating page scroll.

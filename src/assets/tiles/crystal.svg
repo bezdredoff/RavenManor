@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Лунный кристалл">
+  <defs>
+    <linearGradient id="facetA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d7e9ff"/><stop offset=".42" stop-color="#8ea9ef"/><stop offset="1" stop-color="#55348f"/></linearGradient>
+    <linearGradient id="facetB" x1="1" y1="0" x2="0" y2="1"><stop stop-color="#c9b6ff"/><stop offset=".52" stop-color="#6d57bf"/><stop offset="1" stop-color="#28234f"/></linearGradient>
+    <filter id="glow"><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#8faeff" flood-opacity=".6"/><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#0b0b1e" flood-opacity=".85"/></filter>
+  </defs>
+  <g filter="url(#glow)" stroke="#d6d6ff" stroke-width="2.5" stroke-linejoin="round">
+    <path fill="url(#facetA)" d="M64 10 103 43 86 103 64 119 42 103 25 43Z"/>
+    <path fill="#b8d3ff" d="m64 10 13 35-13 74-13-74Z" opacity=".78"/>
+    <path fill="url(#facetB)" d="m25 43 26 2 13 74-22-16Z"/>
+    <path fill="#4b3a96" d="m103 43-26 2-13 74 22-16Z"/>
+    <path fill="#e7f0ff" d="m64 10 13 35H51Z" opacity=".8"/>
+  </g>
+</svg>
