@@ -1,14 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Готическая роза">
   <defs>
-    <radialGradient id="petal" cx="38%" cy="32%" r="72%"><stop stop-color="#e27b91"/><stop offset=".48" stop-color="#a93155"/><stop offset="1" stop-color="#55162f"/></radialGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f3d99a"/><stop offset=".5" stop-color="#c89646"/><stop offset="1" stop-color="#70401e"/></linearGradient>
-    <filter id="shadow"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#160814" flood-opacity=".8"/></filter>
+    <radialGradient id="roseOuter" cx="38%" cy="30%" r="78%">
+      <stop stop-color="#ef8aa0"/>
+      <stop offset=".48" stop-color="#b6385c"/>
+      <stop offset="1" stop-color="#57152e"/>
+    </radialGradient>
+    <radialGradient id="roseInner" cx="42%" cy="34%" r="72%">
+      <stop stop-color="#ffd0d8"/>
+      <stop offset=".34" stop-color="#d95a78"/>
+      <stop offset="1" stop-color="#7e1e40"/>
+    </radialGradient>
+    <linearGradient id="roseGold" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#f5dda0"/>
+      <stop offset=".55" stop-color="#c79243"/>
+      <stop offset="1" stop-color="#70401e"/>
+    </linearGradient>
   </defs>
-  <g filter="url(#shadow)" stroke="url(#gold)" stroke-width="3" stroke-linejoin="round">
-    <path fill="url(#petal)" d="M64 106C45 96 26 82 25 61c-1-14 10-24 23-22 2-15 27-15 31 0 14-2 25 8 24 22-1 21-20 35-39 45Z"/>
-    <path fill="#7a203f" d="M48 39c-7 15 2 28 16 32 14-4 23-17 16-32-10 2-14 8-16 15-2-7-6-13-16-15Z"/>
-    <path fill="url(#petal)" d="M37 58c11-2 19 3 27 13-4 12-15 18-29 14-5-10-4-19 2-27Zm54 0c-11-2-19 3-27 13 4 12 15 18 29 14 5-10 4-19-2-27Z"/>
-    <path fill="#d75a78" d="M64 49c9 6 11 15 0 24-11-9-9-18 0-24Z"/>
+
+  <!-- A top-down layered rose: five broad outer petals, five inner petals, then a spiral bud. -->
+  <g stroke="url(#roseGold)" stroke-width="2.5" stroke-linejoin="round">
+    <path fill="url(#roseOuter)" d="M64 19c13 0 21 12 18 25 12-6 26 2 27 15 2 13-9 22-22 21 7 11 1 26-12 30-12 4-23-4-25-17-7 11-23 13-32 3-9-10-5-25 7-31-13-4-18-19-10-30 8-11 23-11 31-1 3-9 9-15 18-15Z"/>
+
+    <path fill="url(#roseInner)" d="M64 35c9-8 23-3 24 9 11-3 21 7 17 18 9 7 6 21-5 25-1 12-14 19-24 12-8 9-23 7-28-4-11 3-22-7-18-19-9-7-6-21 5-25 1-12 14-19 24-12 1-2 3-3 5-4Z"/>
+
+    <path fill="#7b1d3b" d="M64 46c10 0 18 8 18 18 0 11-8 20-20 20-11 0-19-8-19-18 0-7 4-13 10-16-1 8 3 14 10 15 5 1 9-2 10-6 1-5-3-9-8-9-4 0-7 2-9 5 1-6 4-9 8-9Z"/>
+    <path fill="none" stroke="#f4c387" stroke-width="3" stroke-linecap="round" d="M55 55c-3 8 2 16 10 16 7 0 11-6 9-12-2-5-8-7-12-4-4 3-4 9 0 12"/>
   </g>
-  <path d="M64 105v13" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+
 </svg>

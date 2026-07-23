@@ -70,3 +70,15 @@ slots, not temporary emoji. Engine tile indices and save data remain unchanged.
 
 Rationale: this gives immediate silhouette, touch, contrast, and motion feedback
 for mobile testing while preserving an inexpensive asset-replacement path.
+
+## 2026-07-23 — Basic tile readability hotfix
+
+Decision: redraw the rose, key, and scroll after device review. The rose now
+uses a layered top-down blossom, the key is optically centred around its total
+silhouette, and the scroll seal uses an ornamental rose rather than a checkmark.
+Embedded SVG drop-shadow filters are removed from these assets; the board's CSS
+owns shadow presentation.
+
+Rationale: authored assets still require in-game review at mobile cell size.
+Recognisable silhouette, optical centring, and semantic clarity take precedence
+over preserving the first vector draft.

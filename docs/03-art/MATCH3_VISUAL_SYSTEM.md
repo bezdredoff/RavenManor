@@ -65,3 +65,12 @@ high-contrast modifier:
 
 Do not create entirely unrelated silhouettes that can be confused with new
 basic tile types.
+
+## SVG production rules
+
+- use a shared `0 0 128 128` view box;
+- centre the visible mass optically, not only by path coordinates;
+- keep important details inside an approximately 12 px safe margin;
+- avoid embedded SVG filters for core readability; board CSS owns drop shadows;
+- do not include symbols that resemble unrelated interface controls;
+- verify every asset at both full size and the smallest mobile cell size.
