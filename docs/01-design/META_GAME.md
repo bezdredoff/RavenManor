@@ -1,31 +1,53 @@
 # Meta Game
 
-Игрок получает звёзды за уровни, открывает комнаты и тратит доступные звёзды на
-последовательное восстановление Raven Manor.
+Match-3 progression and manor restoration are related through stars but are not
+hard-wired to the same content structure.
 
-## Current Prototype Implementation
+## Two Progression Tracks
 
-- каждая из пяти комнат имеет три последовательные задачи;
-- кошелёк отдельно хранит заработанные, потраченные и доступные звёзды;
-- повторное прохождение уровня начисляет только улучшение лучшего результата;
-- каждая restoration task списывает свою стоимость только один раз;
-- пороги комнат и уровней используют заработанные звёзды;
-- после каждой задачи комната переходит в новое визуальное состояние;
-- экран комнаты показывает preview, описание состояния и три milestone;
-- экран поместья и экран комнаты показывают полный баланс звёзд;
-- старые сохранения V2 автоматически мигрируют в V3;
-- финальные room-art assets позже заменят CSS/emoji placeholders по стабильным
-  `assetKey`.
+### Gameplay progression
+
+```text
+win levels
+-> unlock the next level group
+-> choose any available level inside that group
+```
+
+The first group exposes three levels immediately. Later groups require two
+victories in the previous group. Replaying a completed level never counts as an
+additional victory, but it can improve the star reward.
+
+### Manor progression
+
+```text
+earn stars
+-> spend available stars on restoration tasks
+-> advance a room visual state
+-> open the next room after the configured restoration milestone
+```
+
+Rooms are not containers for a fixed number of match-3 levels. This allows the
+campaign to grow to hundreds or thousands of levels without creating an equal
+number of rooms or restoration tasks.
+
+## Prototype Rules
+
+- 10 match-3 levels are a vertical slice, not a product-size cap;
+- levels 1-3 are available at the start;
+- any two victories unlock the next group;
+- each level has independent 2-star and 3-star thresholds;
+- one-star wins are enough for gameplay progression;
+- stars remain the currency for manor restoration;
+- the next room opens from restoration progress, not from raw earned stars;
+- onboarding is optional and belongs to FEATURE-037.
 
 ## Player Loop
 
 ```text
-Пройти match-3 уровень
--> получить или улучшить результат 1-3 звезды
--> увидеть earned / spent / available баланс
--> выбрать задачу восстановления
--> потратить доступные звёзды
--> увидеть заметное изменение комнаты
--> открыть следующий уровень или комнату
--> получить сюжетный фрагмент
+choose one of several available levels
+-> complete it and earn 1-3 stars
+-> unlock another group after enough distinct victories
+-> spend stars on a chosen restoration task
+-> see the room improve and eventually open the next room
+-> return to any open level group
 ```

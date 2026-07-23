@@ -2,88 +2,58 @@
 
 ## Purpose
 
-Level content is stored as JSON so level designers and independent AI agents
-can create or balance levels without editing `GameApp` or gameplay classes.
+Level content is stored as validated JSON so designers and independent AI agents
+can add or balance content without editing gameplay UI classes.
 
-## Files
-
-```text
-src/data/levels/levels.json       Current level catalog
-src/data/levels/level.schema.json JSON Schema contract
-src/data/levelTypes.ts            TypeScript mirror used by application code
-src/data/levelValidation.ts       Runtime validation and actionable errors
-src/data/gameData.ts              Validated import boundary and public exports
-```
-
-## Level shape
+## Level Schema Version 2
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": 1,
-  "title": "Уровень 1",
+  "title": "Первые розы",
+  "difficulty": "easy",
   "moves": 18,
-  "requiredStars": 0,
+  "starThresholds": {
+    "twoStarsMovesLeft": 4,
+    "threeStarsMovesLeft": 10
+  },
   "objectives": [
     {
       "id": "primary",
       "type": "collect",
       "tileType": 0,
-      "target": 12
+      "target": 15
     }
   ]
 }
 ```
 
-## Runtime trust boundary
+`requiredStars` was removed from level data. Unlocking is now owned by the
+separate level-group progression catalog.
 
-Imported JSON is treated as `unknown`. `gameData.ts` calls
-`validateLevelCatalog` before exporting levels to gameplay code.
-
-Validation currently checks:
-
-- a non-empty level array;
-- schema version 1;
-- positive, unique level IDs;
-- non-empty titles;
-- positive move limits;
-- non-negative star requirements;
-- at least one objective;
-- unique objective IDs within each level;
-- supported objective type `collect`;
-- tile indices within the current tile catalog;
-- positive collect targets;
-- unexpected fields.
-
-Invalid content throws `LevelValidationError` before gameplay starts. Every issue
-contains a JSON-style path, for example:
+## Files
 
 ```text
-levels[0].objectives[0].tileType: must be between 0 and 5
+src/data/levels/levels.json
+src/data/levels/level.schema.json
+src/data/levelTypes.ts
+src/data/levelValidation.ts
+src/data/progression/level-groups.json
+src/data/progression/level-group.schema.json
+src/data/levelGroupTypes.ts
+src/data/levelGroupValidation.ts
 ```
 
-## Objective definitions
+## Scaling Beyond the Prototype
 
-The `objectives` array is a discriminated union. The current prototype supports:
+The ten-level file is intentionally small. A production catalog can later be
+sharded without changing the gameplay contract:
 
-- `collect` — remove a configured number of one tile type.
-
-New objective kinds must extend:
-
-1. the JSON Schema;
-2. the TypeScript union;
-3. runtime validation;
-4. objective construction in the gameplay layer;
-5. automated tests.
-
-## Content authoring rule
-
-Changing level balance should normally require edits only to `levels.json`.
-Application code changes only when the contract or supported mechanics change.
-
-After every level-data edit, run:
-
-```bash
-npm test
-npm run build
+```text
+levels/chapter-001/levels-0001-0100.json
+levels/chapter-002/levels-0101-0200.json
+progression/chapter-001-groups.json
 ```
+
+The application consumes validated arrays, not a hard-coded maximum count.

@@ -1,20 +1,35 @@
 import levelDefinitionsJson from './levels/levels.json';
+import levelGroupsJson from './progression/level-groups.json';
 import { validateLevelCatalog } from './levelValidation';
+import { validateLevelGroups } from './levelGroupValidation';
 
-export type RoomDefinition = {
+export type RoomUnlockRule =
+  | Readonly<{ type: 'always' }>
+  | Readonly<{
+      type: 'room-restoration';
+      roomId: string;
+      completedTasks: number;
+    }>;
+
+export type RoomDefinition = Readonly<{
   id: string;
   icon: string;
   title: string;
-  requiredStars: number;
   description: string;
-  levelIds: number[];
-};
+  unlock: RoomUnlockRule;
+}>;
 
 export type {
   CollectObjectiveDefinition,
   LevelDefinition,
+  LevelDifficulty,
   LevelObjectiveDefinition,
+  StarThresholds,
 } from './levelTypes';
+export type {
+  LevelGroupDefinition,
+  LevelGroupUnlockRule,
+} from './levelGroupTypes';
 
 export const tileTypes = [
   { icon: '🌹', name: 'роза' },
@@ -25,14 +40,62 @@ export const tileTypes = [
   { icon: '📜', name: 'свиток' },
 ] as const;
 
-export const rooms: RoomDefinition[] = [
-  { id: 'hall', icon: '🏚️', title: 'Вестибюль', requiredStars: 0, description: 'Парадный вход, скрывающий первую семейную тайну.', levelIds: [1, 2] },
-  { id: 'library', icon: '📚', title: 'Запретная библиотека', requiredStars: 3, description: 'Книги здесь помнят больше, чем живые обитатели.', levelIds: [3, 4] },
-  { id: 'garden', icon: '🥀', title: 'Зимний сад', requiredStars: 7, description: 'Мёртвые розы расцветают при лунном свете.', levelIds: [5, 6] },
-  { id: 'crypt', icon: '⚰️', title: 'Семейная крипта', requiredStars: 12, description: 'Под особняком спит древний договор.', levelIds: [7, 8] },
-  { id: 'tower', icon: '🌙', title: 'Воронья башня', requiredStars: 18, description: 'Финал вертикального слайса и раскрытие силуэта.', levelIds: [9, 10] },
-];
-
 export const levels = validateLevelCatalog(levelDefinitionsJson, {
   tileTypeCount: tileTypes.length,
 });
+
+export const levelGroups = validateLevelGroups(levelGroupsJson, levels);
+
+export const rooms: readonly RoomDefinition[] = [
+  {
+    id: 'hall',
+    icon: '🏚️',
+    title: 'Вестибюль',
+    description: 'Парадный вход, скрывающий первую семейную тайну.',
+    unlock: { type: 'always' },
+  },
+  {
+    id: 'library',
+    icon: '📚',
+    title: 'Запретная библиотека',
+    description: 'Книги здесь помнят больше, чем живые обитатели.',
+    unlock: {
+      type: 'room-restoration',
+      roomId: 'hall',
+      completedTasks: 2,
+    },
+  },
+  {
+    id: 'garden',
+    icon: '🥀',
+    title: 'Зимний сад',
+    description: 'Мёртвые розы расцветают при лунном свете.',
+    unlock: {
+      type: 'room-restoration',
+      roomId: 'library',
+      completedTasks: 2,
+    },
+  },
+  {
+    id: 'crypt',
+    icon: '⚰️',
+    title: 'Семейная крипта',
+    description: 'Под особняком спит древний договор.',
+    unlock: {
+      type: 'room-restoration',
+      roomId: 'garden',
+      completedTasks: 2,
+    },
+  },
+  {
+    id: 'tower',
+    icon: '🌙',
+    title: 'Воронья башня',
+    description: 'Финальная мета-сцена вертикального среза.',
+    unlock: {
+      type: 'room-restoration',
+      roomId: 'crypt',
+      completedTasks: 1,
+    },
+  },
+];

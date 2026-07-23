@@ -378,3 +378,100 @@ button:disabled { cursor: default; transform: none; }
   color: var(--muted);
   font-size: 14px;
 }
+
+/* FEATURE-036: scalable level map and decoupled progression */
+.wide-action {
+  width: 100%;
+  margin: 0 0 16px;
+}
+.room-stage {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.room-level-cta {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(20,15,24,.88);
+}
+.room-level-cta h2 { margin: 4px 0 6px; }
+.room-level-cta .subtitle { margin: 0; }
+
+.level-group-list {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+.level-group {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(30,22,35,.96), rgba(16,12,20,.96));
+}
+.level-group.locked { opacity: .68; }
+.level-group-heading {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+.level-group-heading h2 { margin: 4px 0 6px; }
+.level-group-heading .subtitle { margin: 0; }
+.group-progress {
+  max-width: 190px;
+  padding: 8px 10px;
+  border: 1px solid rgba(215,180,106,.22);
+  border-radius: 999px;
+  color: var(--gold);
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: center;
+}
+.level-grid-map {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.level-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.difficulty {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.difficulty-easy { color: #b9d6bd; border-color: rgba(128,180,136,.35); }
+.difficulty-normal { color: #c8c3dc; }
+.difficulty-hard { color: #e2b0ad; border-color: rgba(196,105,97,.38); }
+.difficulty-finale { color: var(--gold); border-color: rgba(215,180,106,.42); }
+.balance-meta,
+.star-targets {
+  color: #8f8494;
+  font-size: 11px;
+}
+.balance-meta { margin-top: 6px; }
+.star-targets {
+  margin: -4px 0 12px;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .level-group-heading,
+  .room-level-cta {
+    grid-template-columns: 1fr;
+  }
+  .group-progress { max-width: none; }
+}
