@@ -336,3 +336,45 @@ button:disabled { cursor: default; transform: none; }
   }
   .room-visual-symbol { margin: 0 auto; }
 }
+
+.star-wallet {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: 14px 0 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--line);
+}
+.star-wallet > div {
+  min-width: 0;
+  padding: 12px 8px;
+  text-align: center;
+  background: #151019;
+}
+.star-wallet span {
+  display: block;
+  margin-bottom: 5px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.star-wallet strong {
+  color: #d6c7dc;
+  font-size: 16px;
+}
+.star-wallet .available {
+  background: rgba(215,180,106,.1);
+}
+.star-wallet .available strong { color: var(--gold); }
+.reward-message { color: var(--gold); font-weight: bold; }
+.modal-balance {
+  margin: -2px 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+}

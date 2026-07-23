@@ -1,39 +1,86 @@
+import type { RestorationTaskDefinition } from '../data/restorationTasks';
+import {
+  awardStars,
+  createStarBalance,
+  restoreStarBalance,
+  spendStars,
+  type StarBalance,
+} from '../meta/StarEconomy';
+
 export type ProgressState = {
   stars: Record<number, number>;
   completed: Record<number, boolean>;
   completedRestorationTasks: Record<string, boolean>;
+  starBalance: StarBalance;
   storyStep: number;
 };
 
-const STORAGE_KEY = 'ravenManorStateV2';
+export type ProgressStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+
+const STORAGE_KEY = 'ravenManorStateV3';
+const LEGACY_STORAGE_KEY = 'ravenManorStateV2';
 
 const createEmptyState = (): ProgressState => ({
   stars: {},
   completed: {},
   completedRestorationTasks: {},
+  starBalance: createStarBalance(),
   storyStep: 0,
 });
 
 export class ProgressStore {
   state: ProgressState;
 
-  constructor() {
-    this.state = this.load();
+  constructor(
+    private readonly restorationTasks: readonly RestorationTaskDefinition[] = [],
+    private readonly storage: ProgressStorage = localStorage,
+  ) {
+    const { state, migrated } = this.load();
+    this.state = state;
+
+    if (migrated) this.persist();
   }
 
+  get earnedStars(): number {
+    return this.state.starBalance.earned;
+  }
+
+  get spentStars(): number {
+    return this.state.starBalance.spent;
+  }
+
+  get availableStars(): number {
+    return this.state.starBalance.available;
+  }
+
+  /** @deprecated Use earnedStars when checking progression thresholds. */
   get totalStars(): number {
-    return Object.values(this.state.stars).reduce((sum, value) => sum + value, 0);
+    return this.earnedStars;
   }
 
-  saveLevel(levelId: number, stars: number): void {
-    this.state.stars[levelId] = Math.max(this.state.stars[levelId] ?? 0, stars);
+  saveLevel(levelId: number, stars: number): number {
+    const previousBest = this.state.stars[levelId] ?? 0;
+    const nextBest = Math.max(previousBest, stars);
+    const newlyEarned = nextBest - previousBest;
+
+    this.state.stars[levelId] = nextBest;
     this.state.completed[levelId] = true;
+    this.state.starBalance = awardStars(this.state.starBalance, newlyEarned);
     this.persist();
+
+    return newlyEarned;
   }
 
-  completeRestorationTask(taskId: string): void {
+  completeRestorationTask(taskId: string): boolean {
+    if (this.state.completedRestorationTasks[taskId]) return false;
+
+    const task = this.restorationTasks.find((candidate) => candidate.id === taskId);
+    if (!task) throw new Error(`Unknown restoration task: ${taskId}`);
+
+    this.state.starBalance = spendStars(this.state.starBalance, task.starCost);
     this.state.completedRestorationTasks[taskId] = true;
     this.persist();
+    return true;
   }
 
   advanceStory(maxSteps: number): number {
@@ -45,27 +92,44 @@ export class ProgressStore {
 
   reset(): void {
     this.state = createEmptyState();
+    this.storage.removeItem(LEGACY_STORAGE_KEY);
     this.persist();
   }
 
-  private load(): ProgressState {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return createEmptyState();
+  private load(): { state: ProgressState; migrated: boolean } {
+    const currentRaw = this.storage.getItem(STORAGE_KEY);
+    const legacyRaw = currentRaw ? null : this.storage.getItem(LEGACY_STORAGE_KEY);
+    const raw = currentRaw ?? legacyRaw;
 
+    if (!raw) return { state: createEmptyState(), migrated: false };
+
+    try {
       const parsed = JSON.parse(raw) as Partial<ProgressState>;
+      const stars = parsed.stars ?? {};
+      const completed = parsed.completed ?? {};
+      const completedRestorationTasks = parsed.completedRestorationTasks ?? {};
+
       return {
-        stars: parsed.stars ?? {},
-        completed: parsed.completed ?? {},
-        completedRestorationTasks: parsed.completedRestorationTasks ?? {},
-        storyStep: parsed.storyStep ?? 0,
+        state: {
+          stars,
+          completed,
+          completedRestorationTasks,
+          starBalance: restoreStarBalance(
+            parsed.starBalance,
+            stars,
+            this.restorationTasks,
+            completedRestorationTasks,
+          ),
+          storyStep: parsed.storyStep ?? 0,
+        },
+        migrated: Boolean(legacyRaw) || !parsed.starBalance,
       };
     } catch {
-      return createEmptyState();
+      return { state: createEmptyState(), migrated: false };
     }
   }
 
   private persist(): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+    this.storage.setItem(STORAGE_KEY, JSON.stringify(this.state));
   }
 }

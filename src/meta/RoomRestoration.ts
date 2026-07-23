@@ -17,24 +17,6 @@ export function getRoomRestorationTasks(
     .sort((left, right) => left.order - right.order);
 }
 
-export function getSpentStars(
-  tasks: readonly RestorationTaskDefinition[],
-  completedTasks: CompletedRestorationTasks,
-): number {
-  return tasks.reduce(
-    (total, task) => total + (completedTasks[task.id] ? task.starCost : 0),
-    0,
-  );
-}
-
-export function getAvailableStars(
-  totalStars: number,
-  tasks: readonly RestorationTaskDefinition[],
-  completedTasks: CompletedRestorationTasks,
-): number {
-  return Math.max(0, totalStars - getSpentStars(tasks, completedTasks));
-}
-
 export function getRestorationTaskStatus(
   task: RestorationTaskDefinition,
   roomTasks: readonly RestorationTaskDefinition[],
@@ -56,13 +38,12 @@ export function completeRestorationTask(
   taskId: string,
   tasks: readonly RestorationTaskDefinition[],
   completedTasks: CompletedRestorationTasks,
-  totalStars: number,
+  availableStars: number,
 ): CompletedRestorationTasks {
   const task = tasks.find((candidate) => candidate.id === taskId);
   if (!task) throw new Error(`Unknown restoration task: ${taskId}`);
 
   const roomTasks = getRoomRestorationTasks(tasks, task.roomId);
-  const availableStars = getAvailableStars(totalStars, tasks, completedTasks);
   const status = getRestorationTaskStatus(
     task,
     roomTasks,
