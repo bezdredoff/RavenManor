@@ -1,0 +1,102 @@
+[
+  {
+    "schemaVersion": 1,
+    "id": 1,
+    "title": "Уровень 1",
+    "moves": 18,
+    "requiredStars": 0,
+    "objectives": [
+      { "id": "primary", "type": "collect", "tileType": 0, "target": 12 }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "id": 2,
+    "title": "Уровень 2",
+    "moves": 18,
+    "requiredStars": 1,
+    "objectives": [
+      { "id": "primary", "type": "collect", "tileType": 1, "target": 14 }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "id": 3,
+    "title": "Уровень 3",
+    "moves": 19,
+    "requiredStars": 3,
+    "objectives": [
+      { "id": "primary", "type": "collect", "tileType": 2, "target": 16 }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "id": 4,
+    "title": "Уровень 4",
+    "moves": 19,
+    "requiredStars": 5,
+    "objectives": [
+      { "id": "primary", "type": "collect", "tileType": 3, "target": 18 }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "id": 5,
+    "title": "Уровень 5",
+    "moves": 20,
+    "requiredStars": 7,
+    "objectives": [
+      { "id": "primary", "type": "collect", "tileType": 4, "target": 20 }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "id": 6,
+    "title": "Уровень 6",
+    "moves": 20,
+    "requiredStars": 9,
+    "objectives": [
+      { "id": "primary", "type": "collect", "tileType": 5, "target": 22 }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "id": 7,
+    "title": "Уровень 7",
+    "moves": 21,
+    "requiredStars": 11,
+    "objectives": [
+      { "id": "primary", "type": "collect", "tileType": 0, "target": 24 }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "id": 8,
+    "title": "Уровень 8",
+    "moves": 21,
+    "requiredStars": 13,
+    "objectives": [
+      { "id": "primary", "type": "collect", "tileType": 1, "target": 26 }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "id": 9,
+    "title": "Уровень 9",
+    "moves": 22,
+    "requiredStars": 15,
+    "objectives": [
+      { "id": "primary", "type": "collect", "tileType": 2, "target": 28 }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "id": 10,
+    "title": "Уровень 10",
+    "moves": 22,
+    "requiredStars": 17,
+    "objectives": [
+      { "id": "primary", "type": "collect", "tileType": 3, "target": 30 }
+    ]
+  }
+]

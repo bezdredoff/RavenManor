@@ -1,4 +1,10 @@
-import { levels, rooms, tileTypes, type LevelDefinition } from '../data/gameData';
+import {
+  levels,
+  rooms,
+  tileTypes,
+  type CollectObjectiveDefinition,
+  type LevelDefinition,
+} from '../data/gameData';
 import { Match3Engine, type Position } from '../engine/Match3Engine';
 import { ProgressStore } from '../engine/ProgressStore';
 import { CollectObjective } from '../objectives/CollectObjective';
@@ -114,6 +120,7 @@ export class GameApp {
 
     const cards = room.levelIds.map((levelId) => {
       const level = levels[levelId - 1];
+      const objective = this.getCollectObjectiveDefinition(level);
       const locked = this.progress.totalStars < level.requiredStars;
       const stars = this.progress.state.stars[level.id] ?? 0;
 
@@ -122,7 +129,7 @@ export class GameApp {
           <div>
             <div class="level-number">${String(level.id).padStart(2, '0')}</div>
             <h3>${level.title}</h3>
-            <div class="room-meta">Цель: ${level.targetCount} × ${tileTypes[level.targetTile].icon}</div>
+            <div class="room-meta">Цель: ${objective.target} × ${tileTypes[objective.tileType].icon}</div>
           </div>
           <div>
             <div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
@@ -148,17 +155,31 @@ export class GameApp {
 
   private startLevel(levelId: number): void {
     this.currentLevel = levels[levelId - 1];
+    const objectiveDefinition = this.getCollectObjectiveDefinition(this.currentLevel);
     this.engine = new Match3Engine();
     this.selected = null;
     this.collectObjective = new CollectObjective({
-      id: `level-${this.currentLevel.id}-collect`,
-      tileType: this.currentLevel.targetTile,
-      target: this.currentLevel.targetCount,
+      id: `level-${this.currentLevel.id}-${objectiveDefinition.id}`,
+      tileType: objectiveDefinition.tileType,
+      target: objectiveDefinition.target,
     });
     this.objectiveTracker = new ObjectiveTracker([this.collectObjective]);
     this.movesLeft = this.currentLevel.moves;
     this.busy = false;
     this.renderGame();
+  }
+
+
+  private getCollectObjectiveDefinition(level: LevelDefinition): CollectObjectiveDefinition {
+    const objective = level.objectives.find(
+      (definition): definition is CollectObjectiveDefinition => definition.type === 'collect',
+    );
+
+    if (!objective) {
+      throw new Error(`Level ${level.id} does not define a collect objective.`);
+    }
+
+    return objective;
   }
 
   private renderGame(): void {
