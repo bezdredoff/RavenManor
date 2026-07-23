@@ -11,7 +11,8 @@ can create or balance levels without editing `GameApp` or gameplay classes.
 src/data/levels/levels.json       Current level catalog
 src/data/levels/level.schema.json JSON Schema contract
 src/data/levelTypes.ts            TypeScript mirror used by application code
-src/data/gameData.ts              Import boundary and public data exports
+src/data/levelValidation.ts       Runtime validation and actionable errors
+src/data/gameData.ts              Validated import boundary and public exports
 ```
 
 ## Level shape
@@ -34,25 +35,55 @@ src/data/gameData.ts              Import boundary and public data exports
 }
 ```
 
+## Runtime trust boundary
+
+Imported JSON is treated as `unknown`. `gameData.ts` calls
+`validateLevelCatalog` before exporting levels to gameplay code.
+
+Validation currently checks:
+
+- a non-empty level array;
+- schema version 1;
+- positive, unique level IDs;
+- non-empty titles;
+- positive move limits;
+- non-negative star requirements;
+- at least one objective;
+- unique objective IDs within each level;
+- supported objective type `collect`;
+- tile indices within the current tile catalog;
+- positive collect targets;
+- unexpected fields.
+
+Invalid content throws `LevelValidationError` before gameplay starts. Every issue
+contains a JSON-style path, for example:
+
+```text
+levels[0].objectives[0].tileType: must be between 0 and 5
+```
+
 ## Objective definitions
 
-The `objectives` array is a discriminated union. FEATURE-011 supports only:
+The `objectives` array is a discriminated union. The current prototype supports:
 
 - `collect` — remove a configured number of one tile type.
 
-New objective kinds must extend both the JSON Schema and the TypeScript union.
-They must not add one-off fields to `GameApp`.
+New objective kinds must extend:
 
-## Trust boundary
-
-FEATURE-011 imports JSON and asserts it to `LevelDefinition[]` at the data
-boundary. It does not claim that arbitrary JSON is safe.
-
-FEATURE-012 will add runtime validation and actionable errors before the data is
-exported to gameplay code.
+1. the JSON Schema;
+2. the TypeScript union;
+3. runtime validation;
+4. objective construction in the gameplay layer;
+5. automated tests.
 
 ## Content authoring rule
 
 Changing level balance should normally require edits only to `levels.json`.
-Application code may change only when the data contract or supported mechanics
-change.
+Application code changes only when the contract or supported mechanics change.
+
+After every level-data edit, run:
+
+```bash
+npm test
+npm run build
+```
