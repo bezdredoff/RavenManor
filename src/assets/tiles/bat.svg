@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Готическая летучая мышь">
+  <defs>
+    <linearGradient id="wing" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#9371c4"/><stop offset=".55" stop-color="#51326e"/><stop offset="1" stop-color="#24162f"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f0d28b"/><stop offset="1" stop-color="#9a622c"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#0d0712" flood-opacity=".9"/></filter>
+  </defs>
+  <g filter="url(#shadow)" stroke="url(#gold)" stroke-width="2.5" stroke-linejoin="round">
+    <path fill="url(#wing)" d="M61 49C48 31 29 25 12 30c8 8 10 16 7 25 8-3 15 0 19 7 4-5 9-6 15-4l8 14Z"/>
+    <path fill="url(#wing)" d="M67 49c13-18 32-24 49-19-8 8-10 16-7 25-8-3-15 0-19 7-4-5-9-6-15-4l-8 14Z"/>
+    <path fill="#3b214d" d="M51 45 57 29l7 10 7-10 6 16c6 14 2 36-13 53-15-17-19-39-13-53Z"/>
+    <path fill="#b74f6b" stroke="none" d="M58 54h4v4h-4zm8 0h4v4h-4z"/>
+    <path fill="#e7d8b2" stroke="none" d="m59 66 4 7-6-3zm10 0-4 7 6-3z"/>
+  </g>
+</svg>

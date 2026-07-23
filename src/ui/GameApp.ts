@@ -31,6 +31,7 @@ import {
 import { CollectObjective } from '../objectives/CollectObjective';
 import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 import { getScreenClassName, type ScreenMode } from './layoutPolicy';
+import { getTileClassName, getTileKey } from './tilePresentation';
 
 const DIFFICULTY_LABELS: Record<LevelDifficulty, string> = {
   easy: 'Легко',
@@ -51,6 +52,12 @@ export class GameApp {
   private objectiveTracker: ObjectiveTracker | null = null;
   private movesLeft = 0;
   private busy = false;
+  private readonly matchedTiles = new Set<string>();
+  private readonly invalidTiles = new Set<string>();
+  private readonly hintedTiles = new Set<string>();
+  private boardSettling = false;
+  private boardReshuffling = false;
+  private boardMessage = '';
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -259,7 +266,7 @@ export class GameApp {
             <span class="difficulty difficulty-${level.difficulty}">${DIFFICULTY_LABELS[level.difficulty]}</span>
           </div>
           <h3>${level.title}</h3>
-          <div class="room-meta">Цель: ${objective.target} × ${tileTypes[objective.tileType].icon}</div>
+          <div class="room-meta level-objective">Цель: ${objective.target} × ${this.renderTileIcon(objective.tileType, 'inline-tile-icon')}</div>
           <div class="balance-meta">${level.moves} ходов · 3★ при ${level.starThresholds.threeStarsMovesLeft}+ оставшихся</div>
         </div>
         <div>
@@ -428,6 +435,12 @@ export class GameApp {
     this.objectiveTracker = new ObjectiveTracker([this.collectObjective]);
     this.movesLeft = this.currentLevel.moves;
     this.busy = false;
+    this.matchedTiles.clear();
+    this.invalidTiles.clear();
+    this.hintedTiles.clear();
+    this.boardSettling = false;
+    this.boardReshuffling = false;
+    this.boardMessage = '';
     this.renderGame();
 
     if (shouldOfferTutorial(this.progress.state.tutorial)) {
@@ -443,11 +456,21 @@ export class GameApp {
     return objective;
   }
 
+  private renderTileIcon(tileType: number, className = 'tile-icon'): string {
+    const tile = tileTypes[tileType];
+    if (!tile) return '';
+    return `<img class="${className}" src="${tile.assetPath}" alt="" draggable="false" />`;
+  }
+
   private renderGame(): void {
     if (!this.currentLevel || !this.collectObjective) return;
     const objective = this.collectObjective.getSnapshot();
     const target = tileTypes[objective.tileType];
     const tutorialVisible = shouldShowTutorial(this.progress.state.tutorial);
+    const boardStateClasses = [
+      this.boardSettling ? 'is-settling' : '',
+      this.boardReshuffling ? 'is-reshuffling' : '',
+    ].filter(Boolean).join(' ');
 
     this.renderScreen('game', `
       <div class="game-layout ${tutorialVisible ? 'with-tutorial' : ''}">
@@ -460,20 +483,24 @@ export class GameApp {
               <strong>${objective.current} / ${objective.target} · ${target.name}</strong>
               <div class="progress" aria-label="Прогресс цели"><i style="width:${Math.min(100, (objective.current / objective.target) * 100)}%"></i></div>
             </div>
-            <div class="objective-icon" aria-hidden="true">${target.icon}</div>
+            <div class="objective-icon">${this.renderTileIcon(objective.tileType, 'objective-tile-icon')}</div>
           </div>
           <div class="move-counter">
             <span>Ходы</span>
             <strong>${this.movesLeft}</strong>
           </div>
         </section>
-        <div class="star-targets">3★ ${this.currentLevel.starThresholds.threeStarsMovesLeft}+ · 2★ ${this.currentLevel.starThresholds.twoStarsMovesLeft}+ оставшихся</div>
+        <div class="star-targets"><span>★★★ ${this.currentLevel.starThresholds.threeStarsMovesLeft}+</span><span>★★ ${this.currentLevel.starThresholds.twoStarsMovesLeft}+</span><small>ходов останется</small></div>
         <div class="board-stage">
-          <div class="board-wrap"><div class="board" role="grid" aria-label="Игровое поле 8 на 8">${this.renderBoard()}</div></div>
+          <div class="board-wrap ${boardStateClasses}">
+            <div class="board-sigil" aria-hidden="true"></div>
+            <div class="board" role="grid" aria-label="Игровое поле 8 на 8" aria-busy="${this.busy}">${this.renderBoard()}</div>
+            <div class="board-feedback ${this.boardMessage ? 'show' : ''}" role="status" aria-live="polite">${this.boardMessage}</div>
+          </div>
         </div>
         <div class="game-actions">
-          <button class="secondary" data-action="hint">Подсказка</button>
-          <button class="ghost" data-action="restart">Заново</button>
+          <button class="secondary" data-action="hint"><span aria-hidden="true">✦</span> Подсказка</button>
+          <button class="ghost" data-action="restart"><span aria-hidden="true">↻</span> Заново</button>
         </div>
       </div>
     `);
@@ -489,25 +516,86 @@ export class GameApp {
       this.progress.skipTutorial();
       this.renderGame();
     });
-    this.screen.querySelectorAll<HTMLButtonElement>('[data-tile]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const [row, col] = button.dataset.tile!.split(',').map(Number);
-        this.onTileClick({ row, col });
-      });
-    });
+    this.bindBoardInput();
   }
 
   private renderBoard(): string {
     return this.engine.board.flatMap((row, rowIndex) =>
-      row.map((tile, colIndex) => `
-        <button
-          class="tile ${this.selected?.row === rowIndex && this.selected?.col === colIndex ? 'selected' : ''}"
-          data-tile="${rowIndex},${colIndex}"
-          role="gridcell"
-          aria-label="${tileTypes[tile]?.name ?? 'Фишка'}, ряд ${rowIndex + 1}, колонка ${colIndex + 1}"
-        >${tileTypes[tile]?.icon ?? ''}</button>
-      `),
+      row.map((tile, colIndex) => {
+        const definition = tileTypes[tile];
+        const key = getTileKey(rowIndex, colIndex);
+        if (!definition) {
+          return `<span class="tile tile-empty" role="gridcell" aria-hidden="true"></span>`;
+        }
+
+        const className = getTileClassName(tile, {
+          selected: this.selected?.row === rowIndex && this.selected?.col === colIndex,
+          hinted: this.hintedTiles.has(key),
+          invalid: this.invalidTiles.has(key),
+          matched: this.matchedTiles.has(key),
+          settling: this.boardSettling,
+        });
+
+        return `
+          <button
+            class="${className}"
+            data-tile="${key}"
+            data-tile-type="${definition.id}"
+            role="gridcell"
+            aria-label="${definition.name}, ряд ${rowIndex + 1}, колонка ${colIndex + 1}"
+            aria-pressed="${this.selected?.row === rowIndex && this.selected?.col === colIndex}"
+          >
+            <span class="tile-surface" aria-hidden="true"></span>
+            <img class="tile-glyph" src="${definition.assetPath}" alt="" draggable="false" />
+          </button>
+        `;
+      }),
     ).join('');
+  }
+
+  private bindBoardInput(): void {
+    const board = this.screen.querySelector<HTMLElement>('.board');
+    if (!board) return;
+    let pointerStart: Position | null = null;
+
+    board.addEventListener('pointerdown', (event) => {
+      if (this.busy) return;
+      pointerStart = this.getTilePosition(event.target);
+    });
+
+    board.addEventListener('pointerup', (event) => {
+      if (this.busy || !pointerStart) return;
+      const first = pointerStart;
+      pointerStart = null;
+      const elementAtPoint = document.elementFromPoint(event.clientX, event.clientY);
+      const second = this.getTilePosition(elementAtPoint ?? event.target);
+      if (!second) return;
+
+      if (this.engine.areAdjacent(first, second)) {
+        void this.attemptSwap(first, second);
+      } else {
+        void this.onTileClick(second);
+      }
+    });
+
+    board.addEventListener('pointercancel', () => {
+      pointerStart = null;
+    });
+
+    board.addEventListener('click', (event) => {
+      // Pointer input is handled above. Keyboard-generated clicks have detail 0.
+      if (event.detail !== 0 || this.busy) return;
+      const position = this.getTilePosition(event.target);
+      if (position) void this.onTileClick(position);
+    });
+  }
+
+  private getTilePosition(target: EventTarget | null): Position | null {
+    if (!(target instanceof Element)) return null;
+    const tile = target.closest<HTMLElement>('[data-tile]');
+    if (!tile?.dataset.tile) return null;
+    const [row, col] = tile.dataset.tile.split(',').map(Number);
+    return Number.isInteger(row) && Number.isInteger(col) ? { row, col } : null;
   }
 
   private async onTileClick(position: Position): Promise<void> {
@@ -530,10 +618,26 @@ export class GameApp {
 
     const first = this.selected;
     this.selected = null;
-    this.engine.swap(first, position);
+    await this.attemptSwap(first, position);
+  }
+
+  private async attemptSwap(first: Position, second: Position): Promise<void> {
+    if (this.busy || !this.currentLevel) return;
+    this.busy = true;
+    this.selected = null;
+    this.engine.swap(first, second);
     let matches = this.engine.findMatches();
+
     if (matches.length === 0) {
-      this.engine.swap(first, position);
+      this.invalidTiles.add(getTileKey(first.row, first.col));
+      this.invalidTiles.add(getTileKey(second.row, second.col));
+      this.boardMessage = 'Нет комбинации';
+      this.renderGame();
+      await this.delay(220);
+      this.engine.swap(first, second);
+      this.invalidTiles.clear();
+      this.boardMessage = '';
+      this.busy = false;
       this.renderGame();
       return;
     }
@@ -543,19 +647,38 @@ export class GameApp {
       && this.progress.state.tutorial.step === 0) {
       this.progress.advanceTutorial();
     }
-    this.busy = true;
+
+    let cascade = 0;
     while (matches.length > 0) {
+      cascade++;
+      this.matchedTiles.clear();
+      matches.forEach((position) => this.matchedTiles.add(getTileKey(position.row, position.col)));
+      this.boardMessage = cascade > 1 ? `Каскад ×${cascade}` : `Комбинация ×${matches.length}`;
+      this.renderGame();
+      await this.delay(190);
+
       const removed = this.engine.clearMatches(matches);
       this.objectiveTracker?.handle({ type: 'tiles-removed', tileTypes: removed });
-      this.renderGame();
-      await this.delay(140);
       this.engine.collapse();
+      this.matchedTiles.clear();
+      this.boardSettling = true;
+      this.renderGame();
+      await this.delay(130);
+      this.boardSettling = false;
       matches = this.engine.findMatches();
     }
 
+    this.boardMessage = '';
     if (!this.engine.findPossibleMove()) {
+      this.boardReshuffling = true;
+      this.boardMessage = 'Ворон перемешивает поле…';
+      this.renderGame();
+      await this.delay(260);
       const reshuffled = this.engine.reshuffle();
       if (!reshuffled) this.engine.generateBoard();
+      await this.delay(160);
+      this.boardReshuffling = false;
+      this.boardMessage = '';
     }
 
     this.busy = false;
@@ -741,15 +864,19 @@ export class GameApp {
   }
 
   private showHint(): void {
+    if (this.busy) return;
     const move = this.engine.findPossibleMove();
     if (!move) return;
+    this.hintedTiles.clear();
     for (const position of move) {
-      this.screen
-        .querySelector<HTMLElement>(`[data-tile="${position.row},${position.col}"]`)
-        ?.classList.add('hint');
+      this.hintedTiles.add(getTileKey(position.row, position.col));
     }
+    this.boardMessage = 'Возможный ход';
+    this.renderGame();
     window.setTimeout(() => {
-      this.screen.querySelectorAll('.hint').forEach((element) => element.classList.remove('hint'));
+      this.hintedTiles.clear();
+      this.boardMessage = '';
+      if (this.screen.classList.contains('screen-game')) this.renderGame();
     }, 1500);
   }
 

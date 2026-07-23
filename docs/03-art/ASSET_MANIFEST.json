@@ -1,0 +1,383 @@
+{
+  "version": 1,
+  "direction": "romantic-gothic-restoration",
+  "statusValues": [
+    "planned",
+    "concept",
+    "approved",
+    "integrated"
+  ],
+  "assets": [
+    {
+      "key": "brand/wordmark",
+      "type": "brand",
+      "priority": "P0",
+      "status": "planned",
+      "master": "1080x420 transparent"
+    },
+    {
+      "key": "brand/raven-rose-emblem",
+      "type": "brand",
+      "priority": "P0",
+      "status": "planned",
+      "master": "1024x1024 transparent"
+    },
+    {
+      "key": "backgrounds/home-manor-night",
+      "type": "background",
+      "priority": "P0",
+      "status": "planned",
+      "master": "1080x1920"
+    },
+    {
+      "key": "backgrounds/level-map-west-wing",
+      "type": "background",
+      "priority": "P1",
+      "status": "planned",
+      "master": "1080x1920"
+    },
+    {
+      "key": "match3/tiles/rose",
+      "type": "tile",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "256x256 transparent"
+    },
+    {
+      "key": "match3/tiles/candle",
+      "type": "tile",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "256x256 transparent"
+    },
+    {
+      "key": "match3/tiles/key",
+      "type": "tile",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "256x256 transparent"
+    },
+    {
+      "key": "match3/tiles/crystal",
+      "type": "tile",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "256x256 transparent"
+    },
+    {
+      "key": "match3/tiles/bat",
+      "type": "tile",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "256x256 transparent"
+    },
+    {
+      "key": "match3/tiles/scroll",
+      "type": "tile",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "256x256 transparent"
+    },
+    {
+      "key": "match3/board/frame",
+      "type": "ui-frame",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "scalable 9-slice"
+    },
+    {
+      "key": "match3/board/cell",
+      "type": "ui-frame",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 scalable"
+    },
+    {
+      "key": "match3/fx/selection-ring",
+      "type": "vfx",
+      "priority": "P1",
+      "status": "planned",
+      "master": "256x256 transparent"
+    },
+    {
+      "key": "match3/fx/match-burst",
+      "type": "vfx",
+      "priority": "P1",
+      "status": "planned",
+      "master": "sprite sheet"
+    },
+    {
+      "key": "ui/icons/back",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/close",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/settings",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/home",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/play",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/manor",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/story",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/hint",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/restart",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/lock",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/star",
+      "type": "icon",
+      "priority": "P0",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/sound",
+      "type": "icon",
+      "priority": "P1",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/music",
+      "type": "icon",
+      "priority": "P1",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "ui/icons/reduced-motion",
+      "type": "icon",
+      "priority": "P1",
+      "status": "planned",
+      "master": "24px SVG"
+    },
+    {
+      "key": "rooms/hall/stage-0-ruined",
+      "type": "room-stage",
+      "priority": "P0",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/hall/stage-1-cleared",
+      "type": "room-stage",
+      "priority": "P0",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/hall/stage-2-lit",
+      "type": "room-stage",
+      "priority": "P0",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/hall/stage-3-restored",
+      "type": "room-stage",
+      "priority": "P0",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/library/stage-0-sealed",
+      "type": "room-stage",
+      "priority": "P1",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/library/stage-1-moonlit",
+      "type": "room-stage",
+      "priority": "P1",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/library/stage-2-shelves",
+      "type": "room-stage",
+      "priority": "P1",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/library/stage-3-desk",
+      "type": "room-stage",
+      "priority": "P1",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/garden/stage-0-overgrown",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/garden/stage-1-cleared",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/garden/stage-2-fountain",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/garden/stage-3-roses",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/crypt/stage-0-buried",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/crypt/stage-1-stairs",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/crypt/stage-2-seals",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/crypt/stage-3-braziers",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/tower/stage-0-broken",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/tower/stage-1-steps",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/tower/stage-2-observatory",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "rooms/tower/stage-3-clock",
+      "type": "room-stage",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1536x1024"
+    },
+    {
+      "key": "characters/evelyn/neutral",
+      "type": "character",
+      "priority": "P1",
+      "status": "planned",
+      "master": "1024x1536 transparent"
+    },
+    {
+      "key": "characters/evelyn/concerned",
+      "type": "character",
+      "priority": "P2",
+      "status": "planned",
+      "master": "1024x1536 transparent"
+    },
+    {
+      "key": "characters/adrian/neutral",
+      "type": "character",
+      "priority": "P1",
+      "status": "planned",
+      "master": "1024x1536 transparent"
+    },
+    {
+      "key": "characters/raven/guide",
+      "type": "character",
+      "priority": "P1",
+      "status": "planned",
+      "master": "1024x1024 transparent"
+    },
+    {
+      "key": "characters/unknown/silhouette",
+      "type": "character",
+      "priority": "P1",
+      "status": "planned",
+      "master": "1024x1536 transparent"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Старинный ключ">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0b5"/><stop offset=".27" stop-color="#d5a650"/><stop offset=".66" stop-color="#9b622a"/><stop offset="1" stop-color="#4b2a18"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#100914" flood-opacity=".85"/></filter>
+  </defs>
+  <g transform="rotate(-42 64 64)" filter="url(#shadow)" fill="url(#gold)" stroke="#f1d587" stroke-width="3" stroke-linejoin="round">
+    <path fill-rule="evenodd" d="M38 15a23 23 0 1 0 0 46 23 23 0 0 0 0-46Zm0 13a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z"/>
+    <path d="M36 57h14v51H36z"/>
+    <path d="M47 90h23v12H47zM47 72h16v11H47z"/>
+    <path d="M33 107h20v8H33z"/>
+  </g>
+  <circle cx="64" cy="64" r="51" fill="none" stroke="#d6b56d" stroke-opacity=".24" stroke-width="2"/>
+</svg>

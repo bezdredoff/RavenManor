@@ -28,6 +28,8 @@ _Status: implemented, pending project verification._
 
 ### FEATURE-040 — Match-3 board visual overhaul
 
+_Status: implemented, pending project verification._
+
 - integrate six authored tile slots and fallback assets;
 - redesign board frame, cells, objective HUD, moves, and star threshold display;
 - add clear selected, invalid-swap, match, fall, cascade, and hint states;

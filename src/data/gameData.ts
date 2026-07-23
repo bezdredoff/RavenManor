@@ -2,6 +2,7 @@ import levelDefinitionsJson from './levels/levels.json';
 import levelGroupsJson from './progression/level-groups.json';
 import { validateLevelCatalog } from './levelValidation';
 import { validateLevelGroups } from './levelGroupValidation';
+import { tileTypes } from './tileTypes';
 
 export type RoomUnlockRule =
   | Readonly<{ type: 'always' }>
@@ -31,14 +32,7 @@ export type {
   LevelGroupUnlockRule,
 } from './levelGroupTypes';
 
-export const tileTypes = [
-  { icon: '🌹', name: 'роза' },
-  { icon: '🕯️', name: 'свеча' },
-  { icon: '🗝️', name: 'ключ' },
-  { icon: '💎', name: 'кристалл' },
-  { icon: '🦇', name: 'летучая мышь' },
-  { icon: '📜', name: 'свиток' },
-] as const;
+export { tileTypes } from './tileTypes';
 
 export const levels = validateLevelCatalog(levelDefinitionsJson, {
   tileTypeCount: tileTypes.length,
