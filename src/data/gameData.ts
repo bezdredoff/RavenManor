@@ -1,3 +1,6 @@
+import levelDefinitionsJson from './levels/levels.json';
+import type { LevelDefinition } from './levelTypes';
+
 export type RoomDefinition = {
   id: string;
   icon: string;
@@ -7,14 +10,11 @@ export type RoomDefinition = {
   levelIds: number[];
 };
 
-export type LevelDefinition = {
-  id: number;
-  title: string;
-  targetTile: number;
-  targetCount: number;
-  moves: number;
-  requiredStars: number;
-};
+export type {
+  CollectObjectiveDefinition,
+  LevelDefinition,
+  LevelObjectiveDefinition,
+} from './levelTypes';
 
 export const tileTypes = [
   { icon: '🌹', name: 'роза' },
@@ -33,11 +33,8 @@ export const rooms: RoomDefinition[] = [
   { id: 'tower', icon: '🌙', title: 'Воронья башня', requiredStars: 18, description: 'Финал вертикального слайса и раскрытие силуэта.', levelIds: [9, 10] },
 ];
 
-export const levels: LevelDefinition[] = Array.from({ length: 10 }, (_, index) => ({
-  id: index + 1,
-  title: `Уровень ${index + 1}`,
-  targetTile: index % tileTypes.length,
-  targetCount: 12 + index * 2,
-  moves: 18 + Math.floor(index / 2),
-  requiredStars: index === 0 ? 0 : Math.max(0, index * 2 - 1),
-}));
+/**
+ * JSON is asserted to the TypeScript contract here. Runtime validation belongs
+ * to FEATURE-012 and will replace this trust boundary with explicit checks.
+ */
+export const levels = levelDefinitionsJson as LevelDefinition[];
