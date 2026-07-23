@@ -23,6 +23,11 @@ import {
 } from '../meta/RoomRestoration';
 import { getRoomUnlockState } from '../meta/RoomProgression';
 import { getRoomVisualState } from '../meta/RoomVisualState';
+import {
+  shouldOfferTutorial,
+  shouldShowTutorial,
+  type TutorialPreference,
+} from '../meta/TutorialState';
 import { CollectObjective } from '../objectives/CollectObjective';
 import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 
@@ -114,6 +119,7 @@ export class GameApp {
         <button class="primary" data-action="play">Играть</button>
         <button class="secondary" data-action="manor">Поместье</button>
         <button class="ghost" data-action="story">Продолжить историю</button>
+        <button class="ghost" data-action="settings">Настройки</button>
       </div>
       <p class="footer-note">Первые 10 уровней — вертикальный срез масштабируемой системы.</p>
     `;
@@ -121,6 +127,7 @@ export class GameApp {
     this.bind('play', () => this.showLevelMap());
     this.bind('manor', () => this.showManor());
     this.bind('story', () => this.showStory());
+    this.bind('settings', () => this.showSettings());
   }
 
   private showManor(): void {
@@ -412,6 +419,10 @@ export class GameApp {
     this.movesLeft = this.currentLevel.moves;
     this.busy = false;
     this.renderGame();
+
+    if (shouldOfferTutorial(this.progress.state.tutorial)) {
+      this.offerTutorial();
+    }
   }
 
   private getCollectObjectiveDefinition(level: LevelDefinition): CollectObjectiveDefinition {
@@ -429,6 +440,7 @@ export class GameApp {
 
     this.screen.innerHTML = `
       ${this.topbar(this.currentLevel.title, () => this.showLevelMap())}
+      ${this.renderTutorialBanner()}
       <section class="objective-card">
         <div>
           <strong>${objective.current} / ${objective.target} · ${target.name}</strong>
@@ -448,6 +460,14 @@ export class GameApp {
     this.bind('back', () => this.showLevelMap());
     this.bind('hint', () => this.showHint());
     this.bind('restart', () => this.startLevel(this.currentLevel!.id));
+    this.bind('tutorial-next', () => {
+      this.progress.advanceTutorial();
+      this.renderGame();
+    });
+    this.bind('tutorial-skip', () => {
+      this.progress.skipTutorial();
+      this.renderGame();
+    });
     this.screen.querySelectorAll<HTMLButtonElement>('[data-tile]').forEach((button) => {
       button.addEventListener('click', () => {
         const [row, col] = button.dataset.tile!.split(',').map(Number);
@@ -496,6 +516,10 @@ export class GameApp {
     }
 
     this.movesLeft--;
+    if (this.progress.state.tutorial.preference === 'enabled'
+      && this.progress.state.tutorial.step === 0) {
+      this.progress.advanceTutorial();
+    }
     this.busy = true;
     while (matches.length > 0) {
       const removed = this.engine.clearMatches(matches);
@@ -572,6 +596,107 @@ export class GameApp {
     this.bindModal('exit', () => {
       this.closeModal();
       this.showLevelMap();
+    });
+  }
+
+
+  private renderTutorialBanner(): string {
+    const tutorial = this.progress.state.tutorial;
+    if (!shouldShowTutorial(tutorial)) return '';
+
+    if (tutorial.step === 0) {
+      return `
+        <aside class="tutorial-banner" aria-live="polite">
+          <div class="tutorial-icon">↔</div>
+          <div>
+            <div class="chapter">Быстрая подсказка · 1/2</div>
+            <strong>Меняйте соседние фишки</strong>
+            <p>Соберите три или больше одинаковых фишек в ряд. Поле уже активно — можно сразу играть.</p>
+          </div>
+          <div class="tutorial-actions">
+            <button class="secondary compact" data-action="tutorial-next">Понятно</button>
+            <button class="ghost compact" data-action="tutorial-skip">Пропустить</button>
+          </div>
+        </aside>
+      `;
+    }
+
+    return `
+      <aside class="tutorial-banner" aria-live="polite">
+        <div class="tutorial-icon">★</div>
+        <div>
+          <div class="chapter">Быстрая подсказка · 2/2</div>
+          <strong>Следите за целью и ходами</strong>
+          <p>Комбинации из четырёх и каскады тоже засчитываются. Больше оставшихся ходов — больше звёзд.</p>
+        </div>
+        <div class="tutorial-actions">
+          <button class="secondary compact" data-action="tutorial-next">Готово</button>
+          <button class="ghost compact" data-action="tutorial-skip">Отключить</button>
+        </div>
+      </aside>
+    `;
+  }
+
+  private offerTutorial(): void {
+    this.openModal(`
+      <div class="portrait">🦉</div>
+      <div class="chapter">Необязательное обучение</div>
+      <h2>Показать две короткие подсказки?</h2>
+      <p class="subtitle">Они появятся прямо над полем и не будут останавливать игру. Обучение всегда можно включить снова в настройках.</p>
+      <div class="stack">
+        <button class="primary" data-action="tutorial-start">Показать подсказки</button>
+        <button class="ghost" data-action="tutorial-skip">Играть без обучения</button>
+      </div>
+    `);
+
+    this.bindModal('tutorial-start', () => {
+      this.progress.startTutorial();
+      this.closeModal();
+      this.renderGame();
+    });
+    this.bindModal('tutorial-skip', () => {
+      this.progress.skipTutorial();
+      this.closeModal();
+      this.renderGame();
+    });
+  }
+
+  private showSettings(): void {
+    const preference: TutorialPreference = this.progress.state.tutorial.preference;
+    const status = preference === 'undecided'
+      ? 'Будет предложено при запуске уровня'
+      : preference === 'enabled'
+        ? `Включено · шаг ${Math.min(2, this.progress.state.tutorial.step + 1)}/2`
+        : preference === 'completed'
+          ? 'Завершено'
+          : 'Отключено';
+
+    this.screen.innerHTML = `
+      ${this.topbar('Настройки', () => this.showHome())}
+      <div class="chapter">Игровые настройки</div>
+      <h2>Подсказки и обучение</h2>
+      <section class="settings-card">
+        <div>
+          <strong>Короткое обучение match-3</strong>
+          <p class="subtitle">Две контекстные подсказки без обязательного обучающего уровня.</p>
+        </div>
+        <div class="setting-status">${status}</div>
+        <div class="stack">
+          <button class="secondary" data-action="tutorial-restart">Показать снова</button>
+          <button class="ghost" data-action="tutorial-disable">Отключить подсказки</button>
+        </div>
+      </section>
+      <p class="footer-note">Новые механики позднее будут объясняться такими же короткими контекстными карточками.</p>
+    `;
+
+    this.bind('back', () => this.showHome());
+    this.bind('tutorial-restart', () => {
+      this.progress.restartTutorial();
+      this.showSettings();
+    });
+    this.bind('tutorial-disable', () => {
+      this.progress.skipTutorial();
+      this.showSettings();
     });
   }
 

@@ -32,7 +32,7 @@ const tasks: RestorationTaskDefinition[] = [
   },
 ];
 
-describe('ProgressStore star economy', () => {
+describe('ProgressStore', () => {
   it('awards only the improvement over the previous best result', () => {
     const store = new ProgressStore(tasks, new MemoryStorage());
 
@@ -63,12 +63,37 @@ describe('ProgressStore star economy', () => {
     });
   });
 
-  it('migrates the previous V2 save into the explicit V3 wallet', () => {
+  it('persists tutorial choices and tutorial progress', () => {
     const storage = new MemoryStorage();
-    storage.setItem('ravenManorStateV2', JSON.stringify({
+    const store = new ProgressStore(tasks, storage);
+
+    store.startTutorial();
+    store.advanceTutorial();
+
+    const reloaded = new ProgressStore(tasks, storage);
+    expect(reloaded.state.tutorial).toEqual({ preference: 'enabled', step: 1 });
+
+    reloaded.advanceTutorial();
+    expect(reloaded.state.tutorial).toEqual({ preference: 'completed', step: 2 });
+  });
+
+  it('lets the player skip and later restart the tutorial', () => {
+    const store = new ProgressStore(tasks, new MemoryStorage());
+
+    store.skipTutorial();
+    expect(store.state.tutorial.preference).toBe('skipped');
+
+    store.restartTutorial();
+    expect(store.state.tutorial).toEqual({ preference: 'enabled', step: 0 });
+  });
+
+  it('migrates a V3 save and does not interrupt a player with existing progress', () => {
+    const storage = new MemoryStorage();
+    storage.setItem('ravenManorStateV3', JSON.stringify({
       stars: { 1: 3 },
       completed: { 1: true },
       completedRestorationTasks: { 'hall-1': true },
+      starBalance: { earned: 3, spent: 1, available: 2 },
       storyStep: 2,
     }));
 
@@ -79,6 +104,21 @@ describe('ProgressStore star economy', () => {
       spent: 1,
       available: 2,
     });
-    expect(storage.getItem('ravenManorStateV3')).not.toBeNull();
+    expect(migrated.state.tutorial).toEqual({ preference: 'skipped', step: 2 });
+    expect(storage.getItem('ravenManorStateV4')).not.toBeNull();
+  });
+
+  it('keeps the tutorial undecided when migrating an untouched V3 save', () => {
+    const storage = new MemoryStorage();
+    storage.setItem('ravenManorStateV3', JSON.stringify({
+      stars: {},
+      completed: {},
+      completedRestorationTasks: {},
+      starBalance: { earned: 0, spent: 0, available: 0 },
+      storyStep: 0,
+    }));
+
+    const migrated = new ProgressStore(tasks, storage);
+    expect(migrated.state.tutorial).toEqual({ preference: 'undecided', step: 0 });
   });
 });
