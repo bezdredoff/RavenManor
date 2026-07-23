@@ -9,6 +9,7 @@ import {
   restorationTasks,
   type RestorationTaskDefinition,
 } from '../data/restorationTasks';
+import { roomVisuals } from '../data/roomVisuals';
 import { Match3Engine, type Position } from '../engine/Match3Engine';
 import { ProgressStore } from '../engine/ProgressStore';
 import {
@@ -17,6 +18,7 @@ import {
   getRestorationTaskStatus,
   getRoomRestorationTasks,
 } from '../meta/RoomRestoration';
+import { getRoomVisualState } from '../meta/RoomVisualState';
 import { CollectObjective } from '../objectives/CollectObjective';
 import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 
@@ -97,12 +99,23 @@ export class GameApp {
     const cards = rooms.map((room) => {
       const locked = this.progress.totalStars < room.requiredStars;
       const roomStars = room.levelIds.reduce((sum, id) => sum + (this.progress.state.stars[id] ?? 0), 0);
+      const visualState = getRoomVisualState(
+        room.id,
+        roomVisuals,
+        restorationTasks,
+        this.progress.state.completedRestorationTasks,
+      );
+      const restorationLabel = visualState.isComplete
+        ? 'Комната восстановлена'
+        : `Восстановление: ${visualState.completedTaskCount}/${visualState.totalTaskCount}`;
+
       return `
-        <article class="room-card ${locked ? 'locked' : ''}" ${locked ? '' : `data-room="${room.id}"`}>
-          <div class="room-icon">${locked ? '🔒' : room.icon}</div>
+        <article class="room-card ${locked ? 'locked' : ''} ${visualState.isComplete ? 'restored' : ''}" ${locked ? '' : `data-room="${room.id}"`}>
+          <div class="room-icon">${locked ? '🔒' : visualState.stage.placeholderIcon}</div>
           <div>
             <div class="room-title">${room.title}</div>
             <div class="room-meta">${locked ? `Нужно ${room.requiredStars} ★` : room.description}</div>
+            ${locked ? '' : `<div class="room-restoration-meta">${restorationLabel}</div>`}
           </div>
           <div class="room-stars">${roomStars}/6 ★</div>
         </article>
@@ -166,10 +179,12 @@ export class GameApp {
     const restorationCards = getRoomRestorationTasks(restorationTasks, room.id)
       .map((task) => this.renderRestorationTask(task))
       .join('');
+    const roomVisual = this.renderRoomVisual(room.id, room.title);
 
     this.screen.innerHTML = `
       ${this.topbar(room.title, () => this.showManor())}
       <p class="subtitle">${room.description}</p>
+      ${roomVisual}
       <section class="room-section">
         <div class="section-heading">
           <div>
@@ -194,6 +209,44 @@ export class GameApp {
     this.screen.querySelectorAll<HTMLButtonElement>('[data-restoration-task]').forEach((button) => {
       button.addEventListener('click', () => this.restoreTask(button.dataset.restorationTask!));
     });
+  }
+
+  private renderRoomVisual(roomId: string, roomTitle: string): string {
+    const state = getRoomVisualState(
+      roomId,
+      roomVisuals,
+      restorationTasks,
+      this.progress.state.completedRestorationTasks,
+    );
+    const roomTasks = getRoomRestorationTasks(restorationTasks, roomId);
+    const milestones = roomTasks.map((task, index) => {
+      const completed = Boolean(this.progress.state.completedRestorationTasks[task.id]);
+      return `
+        <div class="room-visual-milestone ${completed ? 'completed' : ''}">
+          <span>${completed ? '✓' : index + 1}</span>
+          <small>${task.title}</small>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <section
+        class="room-visual room-visual--${roomId} stage-${state.completedTaskCount}"
+        data-room-asset="${state.stage.assetKey}"
+        aria-label="${roomTitle}: ${state.stage.title}"
+      >
+        <div class="room-visual-scene">
+          <div class="room-visual-mist"></div>
+          <div class="room-visual-symbol" aria-hidden="true">${state.stage.placeholderIcon}</div>
+          <div class="room-visual-copy">
+            <div class="chapter">Состояние комнаты · ${state.completedTaskCount}/${state.totalTaskCount}</div>
+            <h2>${state.stage.title}</h2>
+            <p>${state.stage.description}</p>
+          </div>
+        </div>
+        <div class="room-visual-milestones">${milestones}</div>
+      </section>
+    `;
   }
 
   private renderRestorationTask(task: RestorationTaskDefinition): string {
