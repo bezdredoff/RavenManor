@@ -155,3 +155,40 @@ button:active { transform: scale(.98); }
   .tile { font-size: 20px; }
   .level-grid { gap: 8px; }
 }
+
+.room-section { margin-top: 22px; }
+.section-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+.section-heading h2 { margin-bottom: 8px; }
+.resource-inline { align-self: center; }
+.restoration-list { display: grid; gap: 10px; }
+.restoration-card {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(110deg, rgba(126,41,72,.12), rgba(25,20,31,.94));
+}
+.restoration-card h3 { margin-bottom: 4px; font-size: 16px; }
+.restoration-card button { width: auto; min-width: 74px; }
+.restoration-card.completed { border-color: #6f654d; background: linear-gradient(110deg, rgba(215,180,106,.12), rgba(25,20,31,.94)); }
+.restoration-card.locked { opacity: .55; }
+.restoration-status {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #5d4964;
+  border-radius: 50%;
+  color: var(--gold);
+  background: #100c14;
+  font-weight: bold;
+}
+button:disabled { cursor: default; transform: none; }
+
+@media (max-width: 420px) {
+  .restoration-card { grid-template-columns: 34px 1fr; }
+  .restoration-card button { grid-column: 2; width: 100%; }
+}
