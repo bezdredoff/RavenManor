@@ -14,7 +14,6 @@ import { Match3Engine, type Position } from '../engine/Match3Engine';
 import { ProgressStore } from '../engine/ProgressStore';
 import {
   completeRestorationTask,
-  getAvailableStars,
   getRestorationTaskStatus,
   getRoomRestorationTasks,
 } from '../meta/RoomRestoration';
@@ -24,7 +23,7 @@ import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 
 export class GameApp {
   private readonly root: HTMLElement;
-  private readonly progress = new ProgressStore();
+  private readonly progress = new ProgressStore(restorationTasks);
   private engine = new Match3Engine();
 
   private currentRoomId = 'hall';
@@ -69,11 +68,26 @@ export class GameApp {
   }
 
   private get availableStars(): number {
-    return getAvailableStars(
-      this.progress.totalStars,
-      restorationTasks,
-      this.progress.state.completedRestorationTasks,
-    );
+    return this.progress.availableStars;
+  }
+
+  private renderStarWallet(): string {
+    return `
+      <section class="star-wallet" aria-label="Баланс звёзд">
+        <div>
+          <span>Заработано</span>
+          <strong>★ ${this.progress.earnedStars}</strong>
+        </div>
+        <div>
+          <span>Потрачено</span>
+          <strong>★ ${this.progress.spentStars}</strong>
+        </div>
+        <div class="available">
+          <span>Доступно</span>
+          <strong>★ ${this.progress.availableStars}</strong>
+        </div>
+      </section>
+    `;
   }
 
   showHome(): void {
@@ -97,7 +111,7 @@ export class GameApp {
 
   private showManor(): void {
     const cards = rooms.map((room) => {
-      const locked = this.progress.totalStars < room.requiredStars;
+      const locked = this.progress.earnedStars < room.requiredStars;
       const roomStars = room.levelIds.reduce((sum, id) => sum + (this.progress.state.stars[id] ?? 0), 0);
       const visualState = getRoomVisualState(
         room.id,
@@ -127,6 +141,7 @@ export class GameApp {
       <div class="chapter">Глава I · Возвращение</div>
       <h2>Комнаты Raven Manor</h2>
       <p class="subtitle">Проходите уровни и открывайте новые части особняка.</p>
+      ${this.renderStarWallet()}
       <div class="room-list">${cards}</div>
       <button class="ghost reset" data-action="reset">Сбросить прогресс</button>
     `;
@@ -156,7 +171,7 @@ export class GameApp {
       }
 
       const objective = this.getCollectObjectiveDefinition(level);
-      const locked = this.progress.totalStars < level.requiredStars;
+      const locked = this.progress.earnedStars < level.requiredStars;
       const stars = this.progress.state.stars[level.id] ?? 0;
 
       return `
@@ -184,6 +199,7 @@ export class GameApp {
     this.screen.innerHTML = `
       ${this.topbar(room.title, () => this.showManor())}
       <p class="subtitle">${room.description}</p>
+      ${this.renderStarWallet()}
       ${roomVisual}
       <section class="room-section">
         <div class="section-heading">
@@ -287,10 +303,10 @@ export class GameApp {
       taskId,
       restorationTasks,
       this.progress.state.completedRestorationTasks,
-      this.progress.totalStars,
+      this.progress.availableStars,
     );
 
-    if (updatedTasks[taskId]) {
+    if (updatedTasks[taskId] && !this.progress.state.completedRestorationTasks[taskId]) {
       this.progress.completeRestorationTask(taskId);
     }
 
@@ -444,12 +460,17 @@ export class GameApp {
     if (!this.currentLevel) return;
     const ratio = this.movesLeft / this.currentLevel.moves;
     const stars = ratio >= 0.45 ? 3 : ratio >= 0.2 ? 2 : 1;
-    this.progress.saveLevel(this.currentLevel.id, stars);
+    const newlyEarned = this.progress.saveLevel(this.currentLevel.id, stars);
+    const rewardMessage = newlyEarned > 0
+      ? `Получено новых звёзд: ${newlyEarned} ★`
+      : 'Лучший результат уровня не улучшен.';
 
     this.openModal(`
       <div class="big-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
       <h2>Уровень пройден</h2>
       <p>Вы нашли ещё один фрагмент истории Raven Manor.</p>
+      <p class="reward-message">${rewardMessage}</p>
+      <div class="modal-balance">Доступно: ${this.progress.availableStars} ★</div>
       <div class="stack">
         <button class="primary" data-action="levels">К уровням</button>
         <button class="secondary" data-action="story">Сюжетная сцена</button>

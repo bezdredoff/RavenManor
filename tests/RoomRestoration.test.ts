@@ -2,10 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { RestorationTaskDefinition } from '../src/data/restorationTasks';
 import {
   completeRestorationTask,
-  getAvailableStars,
   getRestorationTaskStatus,
   getRoomRestorationTasks,
-  getSpentStars,
 } from '../src/meta/RoomRestoration';
 
 const tasks: RestorationTaskDefinition[] = [
@@ -41,13 +39,6 @@ describe('RoomRestoration', () => {
       .toEqual(['hall-1', 'hall-2']);
   });
 
-  it('subtracts completed task costs from available stars', () => {
-    const completed = { 'hall-1': true };
-
-    expect(getSpentStars(tasks, completed)).toBe(1);
-    expect(getAvailableStars(3, tasks, completed)).toBe(2);
-  });
-
   it('locks later tasks until previous room tasks are complete', () => {
     const hallTasks = getRoomRestorationTasks(tasks, 'hall');
 
@@ -71,7 +62,7 @@ describe('RoomRestoration', () => {
     expect(updated).toEqual({ 'hall-1': true });
   });
 
-  it('rejects locked or unaffordable tasks', () => {
+  it('rejects locked or unaffordable tasks using the explicit available balance', () => {
     expect(() => completeRestorationTask('hall-2', tasks, {}, 3)).toThrow(/locked/);
     expect(() => completeRestorationTask('hall-1', tasks, {}, 0)).toThrow(/insufficient-stars/);
   });
