@@ -19,8 +19,8 @@
       "key": "brand/raven-rose-emblem",
       "type": "brand",
       "priority": "P0",
-      "status": "planned",
-      "master": "1024x1024 transparent"
+      "status": "integrated",
+      "master": "scalable SVG prototype mark"
     },
     {
       "key": "backgrounds/home-manor-night",

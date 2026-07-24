@@ -106,3 +106,16 @@ is never baked into an illustration.
 - Keep all particle systems DOM/CSS based and bounded for low-end phones.
 - Follow `prefers-reduced-motion` automatically; no information may rely only
   on movement.
+
+## FEATURE-043 — final UX decisions
+
+- The remaining Home/tutorial bird emoji is replaced by an authored raven-and-
+  rose SVG mark.
+- Missing image assets use a branded `RM` fallback rather than the browser's
+  broken-image icon.
+- Audio is semantic and replaceable: UI code emits named cues rather than
+  referencing files directly.
+- The 320 × 568 viewport receives an explicit compact profile in addition to
+  CSS media queries.
+- Audio preferences live outside gameplay progress so a progress reset does not
+  reset player comfort settings.

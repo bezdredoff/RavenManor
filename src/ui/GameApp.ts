@@ -1,3 +1,5 @@
+import ravenMark from '../assets/ui/raven-mark.svg?url';
+import { AudioManager } from '../audio/AudioManager';
 import {
   levelGroups,
   levels,
@@ -32,6 +34,7 @@ import {
 import { CollectObjective } from '../objectives/CollectObjective';
 import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 import { getScreenClassName, type ScreenMode } from './layoutPolicy';
+import { getViewportProfile } from './responsivePolicy';
 import {
   createParticleIndexes,
   getMotionDuration,
@@ -61,6 +64,7 @@ const DIFFICULTY_LABELS: Record<LevelDifficulty, string> = {
 export class GameApp {
   private readonly root: HTMLElement;
   private readonly progress = new ProgressStore(restorationTasks);
+  private readonly audio = new AudioManager();
   private engine = new Match3Engine();
 
   private currentRoomId = 'hall';
@@ -85,7 +89,11 @@ export class GameApp {
 
   constructor(root: HTMLElement) {
     this.root = root;
+    this.audio.arm();
     this.renderShell();
+    this.syncViewportProfile();
+    window.addEventListener('resize', () => this.syncViewportProfile());
+    window.visualViewport?.addEventListener('resize', () => this.syncViewportProfile());
     this.showHome();
   }
 
@@ -96,6 +104,14 @@ export class GameApp {
         <div id="modal" class="modal"></div>
       </main>
     `;
+  }
+
+  private syncViewportProfile(): void {
+    const viewport = window.visualViewport;
+    const width = viewport?.width ?? window.innerWidth;
+    const height = viewport?.height ?? window.innerHeight;
+    const shell = this.root.querySelector<HTMLElement>('.app-shell');
+    if (shell) shell.dataset.layoutProfile = getViewportProfile(width, height);
   }
 
   private get screen(): HTMLElement {
@@ -111,6 +127,7 @@ export class GameApp {
     this.currentScreenMode = mode;
     this.screen.className = `${getScreenClassName(mode)}${isNavigation ? ' screen-enter' : ''}`;
     this.screen.innerHTML = content;
+    this.bindImageStates(this.screen);
   }
 
   private topbar(title: string, back?: () => void): string {
@@ -154,7 +171,7 @@ export class GameApp {
     this.renderScreen('home', `
       ${this.topbar('Raven Manor')}
       <section class="hero">
-        <div class="raven">🦅</div>
+        <div class="raven-mark"><img src="${ravenMark}" alt="" draggable="false" /></div>
         <h1>Raven Manor</h1>
         <p class="subtitle">Проходите match-3 уровни, восстанавливайте поместье и раскрывайте тайну семьи Блэквуд.</p>
       </section>
@@ -240,7 +257,10 @@ export class GameApp {
     });
     this.playRecentRoomUnlock();
     this.screen.querySelectorAll<HTMLElement>('[data-room]').forEach((card) => {
-      const openRoom = () => this.showRoom(card.dataset.room!);
+      const openRoom = () => {
+        this.audio.play('ui');
+        this.showRoom(card.dataset.room!);
+      };
       card.addEventListener('click', openRoom);
       card.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -296,7 +316,10 @@ export class GameApp {
     this.bind('back', () => this.showHome());
     this.bind('manor', () => this.showManor());
     this.screen.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((button) => {
-      button.addEventListener('click', () => this.startLevel(Number(button.dataset.level)));
+      button.addEventListener('click', () => {
+        this.audio.play('ui');
+        this.startLevel(Number(button.dataset.level));
+      });
     });
   }
 
@@ -519,6 +542,7 @@ export class GameApp {
       unlockedRoomTitle: newlyUnlockedRoom?.title,
     };
     this.recentlyUnlockedRoomId = newlyUnlockedRoom?.id ?? this.recentlyUnlockedRoomId;
+    this.audio.play(newlyUnlockedRoom ? 'unlock' : 'restore');
     this.showRoom(this.currentRoomId);
     this.playRestorationReveal();
   }
@@ -551,6 +575,7 @@ export class GameApp {
     this.boardMessage = '';
     this.cascadeLevel = 0;
     this.swapOffsets.clear();
+    this.audio.play('story');
     this.renderGame();
 
     if (shouldOfferTutorial(this.progress.state.tutorial)) {
@@ -718,16 +743,19 @@ export class GameApp {
   private async onTileClick(position: Position): Promise<void> {
     if (this.busy || !this.currentLevel) return;
     if (!this.selected) {
+      this.audio.play('select');
       this.selected = position;
       this.renderGame();
       return;
     }
     if (this.selected.row === position.row && this.selected.col === position.col) {
+      this.audio.play('select');
       this.selected = null;
       this.renderGame();
       return;
     }
     if (!this.engine.areAdjacent(this.selected, position)) {
+      this.audio.play('select');
       this.selected = position;
       this.renderGame();
       return;
@@ -746,6 +774,7 @@ export class GameApp {
     let matches = this.engine.findMatches();
 
     if (matches.length === 0) {
+      this.audio.play('invalid');
       this.invalidTiles.add(getTileKey(first.row, first.col));
       this.invalidTiles.add(getTileKey(second.row, second.col));
       this.boardMessage = 'Нет комбинации';
@@ -772,6 +801,7 @@ export class GameApp {
       this.matchedTiles.clear();
       matches.forEach((position) => this.matchedTiles.add(getTileKey(position.row, position.col)));
       this.boardMessage = cascade > 1 ? `Каскад ×${cascade}` : `Комбинация ×${matches.length}`;
+      this.audio.play(cascade > 1 ? 'cascade' : 'match');
       this.renderGame();
       await this.motionDelay('clear');
 
@@ -790,6 +820,7 @@ export class GameApp {
     this.cascadeLevel = 0;
     if (!this.engine.findPossibleMove()) {
       this.boardReshuffling = true;
+      this.audio.play('reshuffle');
       this.boardMessage = 'Ворон перемешивает поле…';
       this.renderGame();
       await this.motionDelay('reshuffle');
@@ -814,6 +845,7 @@ export class GameApp {
   }
 
   private async swapWithMotion(first: Position, second: Position): Promise<void> {
+    this.audio.play('swap');
     this.engine.swap(first, second);
     const deltaX = second.col - first.col;
     const deltaY = second.row - first.row;
@@ -828,6 +860,7 @@ export class GameApp {
     if (!this.currentLevel) return;
     const stars = calculateLevelStars(this.currentLevel, this.movesLeft);
     const newlyEarned = this.progress.saveLevel(this.currentLevel.id, stars);
+    this.audio.play('win');
     const rewardMessage = newlyEarned > 0
       ? `Получено новых звёзд: ${newlyEarned} ★`
       : 'Лучший результат уровня не улучшен.';
@@ -862,6 +895,7 @@ export class GameApp {
   }
 
   private loseLevel(): void {
+    this.audio.play('loss');
     this.openModal(`
       <div class="result-vfx result-vfx--loss" aria-hidden="true">${this.renderVfxParticles('loss', 'result-particle')}</div>
       <div class="result-emblem result-emblem--loss" aria-hidden="true">☾</div>
@@ -922,7 +956,7 @@ export class GameApp {
 
   private offerTutorial(): void {
     this.openModal(`
-      <div class="portrait">🦉</div>
+      <div class="tutorial-raven"><img src="${ravenMark}" alt="" draggable="false" /></div>
       <div class="chapter">Необязательное обучение</div>
       <h2>Показать две короткие подсказки?</h2>
       <p class="subtitle">Они появятся прямо над полем и не будут останавливать игру. Обучение всегда можно включить снова в настройках.</p>
@@ -953,6 +987,10 @@ export class GameApp {
         : preference === 'completed'
           ? 'Завершено'
           : 'Отключено';
+    const audio = this.audio.settings;
+    const audioSupported = this.audio.supported;
+    const musicPercent = Math.round(audio.musicVolume * 100);
+    const effectsPercent = Math.round(audio.effectsVolume * 100);
 
     this.renderScreen('settings', `
       ${this.topbar('Настройки', () => this.showHome())}
@@ -968,6 +1006,28 @@ export class GameApp {
           <button class="secondary" data-action="tutorial-restart">Показать снова</button>
           <button class="ghost" data-action="tutorial-disable">Отключить подсказки</button>
         </div>
+      </section>
+      <div class="chapter settings-section-label">Аудио</div>
+      <h2>Музыка и звуки</h2>
+      <section class="settings-card audio-settings-card">
+        <div class="setting-row setting-row--status">
+          <div>
+            <strong>Звук игры</strong>
+            <p class="subtitle">Тихая процедурная атмосфера и короткие игровые сигналы. Браузер включает звук после первого касания.</p>
+          </div>
+          <button class="${audio.muted || !audioSupported ? 'ghost' : 'secondary'} compact audio-toggle" data-action="audio-toggle" aria-pressed="${audio.muted}" ${audioSupported ? '' : 'disabled'}>
+            ${audioSupported ? (audio.muted ? 'Включить звук' : 'Выключить звук') : 'Звук недоступен'}
+          </button>
+        </div>
+        <label class="volume-control">
+          <span><strong>Музыка</strong><output data-audio-output="music">${musicPercent}%</output></span>
+          <input type="range" min="0" max="100" step="1" value="${musicPercent}" data-audio-volume="music" ${audio.muted || !audioSupported ? 'disabled' : ''} aria-label="Громкость музыки" />
+        </label>
+        <label class="volume-control">
+          <span><strong>Эффекты</strong><output data-audio-output="effects">${effectsPercent}%</output></span>
+          <input type="range" min="0" max="100" step="1" value="${effectsPercent}" data-audio-volume="effects" ${audio.muted || !audioSupported ? 'disabled' : ''} aria-label="Громкость эффектов" />
+        </label>
+        <button class="ghost" data-action="audio-preview" ${audio.muted || !audioSupported ? 'disabled' : ''}>Проверить эффекты</button>
       </section>
       <div class="chapter settings-section-label">Доступность</div>
       <h2>Анимации и эффекты</h2>
@@ -990,9 +1050,17 @@ export class GameApp {
       this.progress.skipTutorial();
       this.showSettings();
     });
+    this.bind('audio-toggle', () => {
+      this.audio.updateSettings({ muted: !this.audio.settings.muted });
+      this.showSettings();
+    });
+    this.bind('audio-preview', () => this.audio.previewEffects());
+    this.bindAudioVolume('music');
+    this.bindAudioVolume('effects');
   }
 
   private showStory(): void {
+    this.audio.play('story');
     const scene = storyScenes[this.progress.advanceStory(storyScenes.length)];
     const presentation = getStoryScenePresentation(scene);
     this.openModal(`
@@ -1019,6 +1087,7 @@ export class GameApp {
     if (this.busy) return;
     const move = this.engine.findPossibleMove();
     if (!move) return;
+    this.audio.play('hint');
     this.hintedTiles.clear();
     for (const position of move) {
       this.hintedTiles.add(getTileKey(position.row, position.col));
@@ -1033,11 +1102,34 @@ export class GameApp {
   }
 
   private bind(action: string, handler: () => void): void {
-    this.screen.querySelector<HTMLElement>(`[data-action="${action}"]`)?.addEventListener('click', handler);
+    this.screen.querySelector<HTMLElement>(`[data-action="${action}"]`)?.addEventListener('click', () => {
+      this.audio.play('ui');
+      handler();
+    });
   }
 
   private bindModal(action: string, handler: () => void): void {
-    this.modal.querySelector<HTMLElement>(`[data-action="${action}"]`)?.addEventListener('click', handler);
+    this.modal.querySelector<HTMLElement>(`[data-action="${action}"]`)?.addEventListener('click', () => {
+      this.audio.play('ui');
+      handler();
+    });
+  }
+
+  private bindAudioVolume(kind: 'music' | 'effects'): void {
+    const input = this.screen.querySelector<HTMLInputElement>(`[data-audio-volume="${kind}"]`);
+    const output = this.screen.querySelector<HTMLOutputElement>(`[data-audio-output="${kind}"]`);
+    input?.addEventListener('input', () => {
+      const volume = Number(input.value) / 100;
+      if (kind === 'music') {
+        this.audio.updateSettings({ musicVolume: volume });
+      } else {
+        this.audio.updateSettings({ effectsVolume: volume });
+      }
+      if (output) output.value = `${Math.round(volume * 100)}%`;
+    });
+    input?.addEventListener('change', () => {
+      if (kind === 'effects') this.audio.previewEffects();
+    });
   }
 
   private openModal(content: string, cardClass = ''): void {
@@ -1049,6 +1141,7 @@ export class GameApp {
     this.modal.classList.remove('is-closing');
     this.modal.innerHTML = `<div class="${className}">${content}</div>`;
     this.modal.classList.add('show');
+    this.bindImageStates(this.modal);
   }
 
   private closeModal(): void {
@@ -1060,6 +1153,28 @@ export class GameApp {
       this.modal.innerHTML = '';
       this.modalCloseTimer = null;
     }, getMotionDuration('modalExit', this.prefersReducedMotion()));
+  }
+
+  private bindImageStates(scope: HTMLElement): void {
+    scope.querySelectorAll<HTMLImageElement>('img').forEach((image) => {
+      const markLoaded = () => image.classList.remove('asset-pending');
+      const showFallback = () => {
+        const fallback = document.createElement('span');
+        fallback.className = 'asset-fallback';
+        fallback.textContent = 'RM';
+        fallback.setAttribute('role', 'img');
+        fallback.setAttribute('aria-label', 'Изображение временно недоступно');
+        image.replaceWith(fallback);
+      };
+
+      if (image.complete) {
+        if (image.naturalWidth === 0) showFallback();
+      } else {
+        image.classList.add('asset-pending');
+        image.addEventListener('load', markLoaded, { once: true });
+        image.addEventListener('error', showFallback, { once: true });
+      }
+    });
   }
 
   private renderMatchVfx(): string {
