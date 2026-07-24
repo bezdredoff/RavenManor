@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Призрачный ворон">
+  <defs>
+    <linearGradient id="feather" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#d7d8ff"/><stop offset=".28" stop-color="#8d86c8"/><stop offset=".72" stop-color="#463362"/><stop offset="1" stop-color="#16101f"/>
+    </linearGradient>
+    <radialGradient id="mist"><stop stop-color="#b7bfff" stop-opacity=".7"/><stop offset="1" stop-color="#7f60ad" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="64" cy="70" rx="54" ry="45" fill="url(#mist)" opacity=".5"/>
+  <path d="M63 42c-15-18-35-22-53-18 10 8 17 18 21 31L8 68c16 2 29-2 39-10-5 17-3 34 5 51l12-25 12 25c8-17 10-34 5-51 10 8 23 12 39 10L97 55c4-13 11-23 21-31-18-4-38 0-53 18Z" fill="url(#feather)" stroke="#d9d1ff" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M50 43c6-9 22-9 28 0l-6 26-8 11-8-11Z" fill="#262034" stroke="#b7addb" stroke-width="2"/>
+  <path d="m64 53 20 7-20 8Z" fill="#d6b56d" stroke="#fff0b0" stroke-width="2"/>
+  <circle cx="56" cy="49" r="3.5" fill="#f6d77f"/>
+  <path d="M31 55c10-4 18-4 26-1M97 55c-10-4-18-4-26-1" fill="none" stroke="#f2e9ff" stroke-width="2" opacity=".5"/>
+</svg>

@@ -11,7 +11,13 @@ export type AudioCue =
   | 'loss'
   | 'restore'
   | 'unlock'
-  | 'story';
+  | 'story'
+  | 'specialCreate'
+  | 'rocket'
+  | 'bomb'
+  | 'raven'
+  | 'prism'
+  | 'specialCombo';
 
 export type CueDefinition = Readonly<{
   frequencies: readonly number[];
@@ -34,6 +40,12 @@ const CUES: Readonly<Record<AudioCue, CueDefinition>> = {
   restore: { frequencies: [330, 440, 554, 660], durationMs: 650, gain: 0.1, wave: 'triangle' },
   unlock: { frequencies: [392, 494, 659, 784], durationMs: 800, gain: 0.11, wave: 'sine' },
   story: { frequencies: [262, 392], durationMs: 300, gain: 0.06, wave: 'sine' },
+  specialCreate: { frequencies: [523, 659, 784], durationMs: 320, gain: 0.1, wave: 'sine' },
+  rocket: { frequencies: [240, 480, 960], durationMs: 360, gain: 0.1, wave: 'sawtooth' },
+  bomb: { frequencies: [147, 98, 73], durationMs: 460, gain: 0.12, wave: 'triangle' },
+  raven: { frequencies: [740, 620, 470], durationMs: 420, gain: 0.09, wave: 'triangle' },
+  prism: { frequencies: [392, 587, 880, 1175], durationMs: 560, gain: 0.1, wave: 'sine' },
+  specialCombo: { frequencies: [196, 392, 659, 988], durationMs: 680, gain: 0.12, wave: 'triangle' },
 };
 
 export function getCueDefinition(cue: AudioCue): CueDefinition {

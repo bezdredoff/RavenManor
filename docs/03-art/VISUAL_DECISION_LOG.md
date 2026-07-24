@@ -119,3 +119,16 @@ is never baked into an illustration.
   CSS media queries.
 - Audio preferences live outside gameplay progress so a progress reset does not
   reset player comfort settings.
+
+## FEATURE-048 — Gothic relics for special tiles
+
+Decision: special tiles use distinct authored relic silhouettes instead of
+adding modern rockets/bombs directly to the Romantic Gothic board.
+
+- rocket → ceremonial silver bolt;
+- bomb → explosive alchemical rune;
+- paper-plane equivalent → ghost raven;
+- colour clear → lunar prism.
+
+The assets are prototype SVGs, but their silhouette and semantic roles are now
+stable production slots.

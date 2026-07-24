@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Лунная призма">
+  <defs>
+    <linearGradient id="moon" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fffdf1"/><stop offset=".25" stop-color="#b8dcff"/><stop offset=".52" stop-color="#c694ff"/><stop offset=".78" stop-color="#eb7398"/><stop offset="1" stop-color="#5e336e"/>
+    </linearGradient>
+    <radialGradient id="halo"><stop stop-color="#ffffff" stop-opacity=".8"/><stop offset=".4" stop-color="#bd9cff" stop-opacity=".4"/><stop offset="1" stop-color="#7b4c9a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="57" fill="url(#halo)"/>
+  <path d="M64 9 94 38l-7 50-23 31-23-31-7-50Z" fill="url(#moon)" stroke="#fff4cb" stroke-width="4" stroke-linejoin="round"/>
+  <path d="m64 9-9 38 9 72 9-72Zm-30 29 21 9 32 41M94 38l-21 9-32 41" fill="none" stroke="#fff" stroke-width="2.4" opacity=".72"/>
+  <path d="M48 70c9-18 23-25 39-21-12 2-21 10-24 24-4 15 0 27 10 36-19-8-30-22-25-39Z" fill="#fffbe3" opacity=".6"/>
+  <circle cx="39" cy="27" r="4" fill="#fff4bd"/><circle cx="101" cy="66" r="3" fill="#ffd0df"/><circle cx="26" cy="83" r="3" fill="#cfeaff"/>
+</svg>

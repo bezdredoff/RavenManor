@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "direction": "romantic-gothic-restoration",
   "statusValues": [
     "planned",
@@ -77,6 +77,34 @@
       "priority": "P0",
       "status": "integrated",
       "master": "256x256 transparent"
+    },
+    {
+      "key": "match3/specials/rocket",
+      "type": "special-tile",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 transparent SVG; CSS rotation for row/column"
+    },
+    {
+      "key": "match3/specials/bomb-rune",
+      "type": "special-tile",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 transparent SVG"
+    },
+    {
+      "key": "match3/specials/ghost-raven",
+      "type": "special-tile",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 transparent SVG"
+    },
+    {
+      "key": "match3/specials/lunar-prism",
+      "type": "special-tile",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 transparent SVG"
     },
     {
       "key": "match3/board/frame",

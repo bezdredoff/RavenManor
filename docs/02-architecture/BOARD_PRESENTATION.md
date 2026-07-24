@@ -57,3 +57,12 @@ advice evaluates all legal moves using the current objective.
 Victory presentation resolves the next unlocked unfinished level after saving
 the current win. This means a win that satisfies a group threshold can continue
 directly into the newly unlocked group.
+
+## FEATURE-048 special layer
+
+Special metadata is resolved independently from base tile art. The board button
+keeps the base tile CSS colour while `specialPresentation.ts` replaces the glyph
+with one of four authored special assets and adds a semantic accessible label.
+
+Transient UI state additionally tracks newly created special positions. This is
+not saved and exists only for the bounded creation pulse after collapse.

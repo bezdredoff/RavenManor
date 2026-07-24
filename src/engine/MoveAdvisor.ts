@@ -1,4 +1,9 @@
 import { Match3Engine, type Move } from './Match3Engine';
+import {
+  applySpecialCreations,
+  planDirectSpecialResolution,
+  planMatchedResolution,
+} from './SpecialTileResolver';
 
 export type HintObjective = Readonly<{
   tileType: number;
@@ -12,12 +17,13 @@ export type MoveEvaluation = Readonly<{
   totalRemoved: number;
   largestCombination: number;
   followUpMoves: number;
+  specialPower?: number;
 }>;
 
 /**
  * Evaluates every legal move using only information already visible on the
  * board. Random refill tiles are deliberately excluded, while deterministic
- * cascades caused by the current board are included.
+ * cascades and special-tile effects are included.
  */
 export function findBestMove(
   engine: Match3Engine,
@@ -35,25 +41,57 @@ export function evaluateMove(
   move: Move,
   objective: HintObjective,
 ): MoveEvaluation {
-  const simulation = Match3Engine.fromBoard(engine.board, engine.tileTypeCount);
+  const simulation = Match3Engine.fromBoard(
+    engine.board,
+    engine.tileTypeCount,
+    engine.specials,
+  );
+  const directCombo = simulation.getDirectSpecialCombo(move[0], move[1]);
   simulation.swap(move[0], move[1]);
 
   let objectiveTilesRemoved = 0;
   let totalRemoved = 0;
   let largestCombination = 0;
-  let groups = simulation.findMatchGroups();
+  let specialPower = 0;
+  let firstResolution = true;
 
+  if (directCombo) {
+    const plan = planDirectSpecialResolution(
+      simulation,
+      move[0],
+      move[1],
+      directCombo,
+      objective.tileType,
+    );
+    const removed = simulation.clearMatches(plan.clearPositions);
+    objectiveTilesRemoved += removed.filter((tile) => tile === objective.tileType).length;
+    totalRemoved += removed.length;
+    largestCombination = Math.max(largestCombination, plan.clearPositions.length);
+    specialPower += plan.specialPower;
+    simulation.collapse(false);
+    firstResolution = false;
+  }
+
+  let groups = simulation.findMatchGroups();
   while (groups.length > 0) {
     largestCombination = Math.max(
       largestCombination,
       ...groups.map((group) => group.length),
     );
-    const matches = simulation.findMatches();
-    const removed = simulation.clearMatches(matches);
+    const plan = planMatchedResolution(
+      simulation,
+      firstResolution ? move : null,
+      objective.tileType,
+      firstResolution,
+    );
+    const removed = simulation.clearMatches(plan.clearPositions);
     objectiveTilesRemoved += removed.filter((tile) => tile === objective.tileType).length;
     totalRemoved += removed.length;
+    specialPower += plan.specialPower;
+    applySpecialCreations(simulation, plan.creations);
     simulation.collapse(false);
     groups = simulation.findMatchGroups();
+    firstResolution = false;
   }
 
   const remaining = Math.max(0, objective.remaining);
@@ -64,14 +102,16 @@ export function evaluateMove(
     totalRemoved,
     largestCombination,
     followUpMoves: simulation.findPossibleMoves().length,
+    specialPower,
   };
 }
 
 /**
  * Lower sort value means a better hint.
  *
- * Priority: finish level → objective progress → total clear → largest merged
- * combination → deterministic follow-up mobility → stable board order.
+ * Priority: finish level → objective progress → immediate clear → special
+ * reward/activation → largest combination → deterministic follow-up mobility
+ * → stable board order.
  */
 export function compareMoveEvaluations(
   first: MoveEvaluation,
@@ -81,6 +121,7 @@ export function compareMoveEvaluations(
     Number(second.completesObjective) - Number(first.completesObjective),
     second.objectiveProgress - first.objectiveProgress,
     second.totalRemoved - first.totalRemoved,
+    (second.specialPower ?? 0) - (first.specialPower ?? 0),
     second.largestCombination - first.largestCombination,
     second.followUpMoves - first.followUpMoves,
   ];

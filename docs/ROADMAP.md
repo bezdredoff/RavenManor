@@ -161,3 +161,46 @@ Status: patch prepared.
 - activation/controller-change handling followed by one reload;
 - content-derived service-worker cache version;
 - migration instructions for already installed pre-047B builds.
+
+
+## Wave 2 — Gameplay depth and chapter expansion
+
+### FEATURE-048 — Special tiles and power combinations
+
+_Status: implemented, pending project/device verification._
+
+- line-4 row/column rockets;
+- T/L explosive rune;
+- `2×2` objective-aware ghost raven;
+- line-5 lunar prism;
+- four bounded direct special combinations;
+- chain activation, collapse, reshuffle, Hint, analytics, SVG, sound, and tests;
+- no save migration or level-data change.
+
+### FEATURE-049 — Board shapes, blockers, and objective types
+
+_Status: next._
+
+- board masks and non-rectangular playable shapes;
+- chains, debris/crates, and non-spreading fog;
+- multi-collect and blocker-clear objectives;
+- special effects damage blockers through the shared position resolver.
+
+### FEATURE-050 — Meta integration and boosters
+
+- active restoration task on the level map and win result;
+- restoration milestones unlock mechanics and level groups;
+- Silver Hammer and Shuffle inventory;
+- restoration-completion rewards.
+
+### FEATURE-051 — Expansion to 30 levels
+
+- twenty new levels across five room arcs;
+- progressive mechanic introduction and wave-shaped balance;
+- content validation and repeated-run telemetry.
+
+### FEATURE-052 — Story journal and chapter expansion
+
+- replayable archive of viewed scenes;
+- locked/new/read states grouped by room;
+- twenty additional narrative events for the 30-level chapter.

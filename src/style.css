@@ -1985,3 +1985,119 @@ body {
     gap: .35rem;
   }
 }
+
+/* FEATURE-048 — special tiles and power combinations. */
+.special-tile {
+  --special-glow: rgba(240,213,142,.62);
+  border-color: rgba(255,229,157,.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.26),
+    inset 0 -5px 12px rgba(0,0,0,.2),
+    0 0 0 1px rgba(31,18,38,.9),
+    0 0 13px var(--special-glow),
+    0 3px 7px rgba(0,0,0,.58);
+}
+.special-tile::after {
+  inset: 3%;
+  border: 1px solid rgba(255,240,190,.32);
+  background:
+    conic-gradient(from 20deg, transparent, rgba(255,255,255,.13), transparent 25%, rgba(214,181,109,.12), transparent 55%),
+    radial-gradient(circle, var(--special-glow), transparent 69%);
+  animation: special-aura-turn 4.8s linear infinite;
+}
+.special-aura {
+  position: absolute;
+  inset: 5%;
+  z-index: 0;
+  border: 1px dashed rgba(255,234,166,.5);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: special-aura-pulse 1.2s ease-in-out infinite alternate;
+}
+.tile-glyph--special {
+  position: relative;
+  z-index: 2;
+  width: 96%;
+  height: 96%;
+  filter: drop-shadow(0 4px 4px rgba(0,0,0,.72)) drop-shadow(0 0 6px var(--special-glow));
+}
+.special--rocket { --special-glow: rgba(169,202,255,.68); }
+.special--rocket-column .tile-glyph--special { transform: rotate(90deg); }
+.special--bomb { --special-glow: rgba(197,112,255,.68); }
+.special--raven { --special-glow: rgba(153,154,255,.62); }
+.special--prism {
+  --special-glow: rgba(225,174,255,.8);
+  --tile-accent: #f1d6ff;
+  --tile-deep: #30204d;
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255,255,255,.24), transparent 27%),
+    linear-gradient(145deg, #594f89, #241434 65%);
+}
+.special-created {
+  z-index: 7;
+  animation: special-created-pop .42s var(--ease-emphasis);
+}
+.special-tile.matched .tile-glyph--special {
+  animation: special-activation-flare .24s ease-out forwards;
+}
+
+@keyframes special-created-pop {
+  0% { opacity: .2; transform: scale(.42) rotate(-12deg); filter: brightness(2); }
+  55% { opacity: 1; transform: scale(1.18) rotate(4deg); filter: brightness(1.5); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes special-aura-turn { to { transform: rotate(360deg); } }
+@keyframes special-aura-pulse {
+  from { opacity: .35; transform: scale(.86) rotate(-6deg); }
+  to { opacity: .9; transform: scale(1.05) rotate(6deg); }
+}
+@keyframes special-activation-flare {
+  0% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  60% { opacity: 1; transform: scale(1.35); filter: brightness(2.25) saturate(1.5); }
+  100% { opacity: 0; transform: scale(.18) rotate(18deg); filter: brightness(3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .special-tile::after,
+  .special-aura,
+  .special-created,
+  .special-tile.matched .tile-glyph--special {
+    animation: none;
+  }
+  .special-created { outline: 3px solid rgba(255,229,157,.8); }
+}
+
+.special-guide-grid {
+  display: grid;
+  gap: .65rem;
+  margin: .8rem 0 1rem;
+}
+.special-guide-card {
+  display: grid;
+  grid-template-columns: 64px minmax(0,1fr);
+  align-items: center;
+  gap: .7rem;
+  padding: .65rem;
+  border: 1px solid rgba(214,181,109,.24);
+  border-radius: var(--radius-card);
+  background: linear-gradient(145deg, rgba(70,42,82,.7), rgba(17,11,23,.88));
+}
+.special-guide-card strong,
+.special-guide-card small { display: block; }
+.special-guide-card small { margin-top: .12rem; color: var(--color-gold); }
+.special-guide-card p { margin: .3rem 0 0; color: var(--color-muted); font-size: .82rem; }
+.special-guide-icon {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,229,157,.48);
+  border-radius: 1rem;
+  background: radial-gradient(circle, rgba(182,139,255,.25), rgba(11,8,16,.55));
+  box-shadow: 0 0 14px rgba(193,145,255,.18);
+}
+.special-guide-icon img { width: 92%; height: 92%; object-fit: contain; }
+@media (max-height: 650px) {
+  .special-guide-card { grid-template-columns: 52px minmax(0,1fr); padding: .5rem; }
+  .special-guide-icon { width: 48px; height: 48px; }
+}
