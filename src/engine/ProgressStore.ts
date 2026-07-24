@@ -23,6 +23,7 @@ export type ProgressState = {
   starBalance: StarBalance;
   tutorial: TutorialState;
   storyStep: number;
+  viewedStoryScenes: Record<number, boolean>;
 };
 
 export type ProgressStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -38,6 +39,7 @@ const createEmptyState = (): ProgressState => ({
   starBalance: createStarBalance(),
   tutorial: createTutorialState(),
   storyStep: 0,
+  viewedStoryScenes: {},
 });
 
 export class ProgressStore {
@@ -115,11 +117,22 @@ export class ProgressStore {
     this.persist();
   }
 
+  /** @deprecated Story scenes are now associated with individual levels. */
   advanceStory(maxSteps: number): number {
-    const current = Math.min(this.state.storyStep, maxSteps - 1);
-    this.state.storyStep = (current + 1) % maxSteps;
+    const current = Math.min(this.state.storyStep, Math.max(0, maxSteps - 1));
+    this.state.storyStep = Math.min(current + 1, maxSteps);
     this.persist();
     return current;
+  }
+
+  isStoryViewed(levelId: number): boolean {
+    return Boolean(this.state.viewedStoryScenes[levelId]);
+  }
+
+  markStoryViewed(levelId: number): void {
+    if (this.state.viewedStoryScenes[levelId]) return;
+    this.state.viewedStoryScenes[levelId] = true;
+    this.persist();
   }
 
   reset(): void {
@@ -160,10 +173,12 @@ export class ProgressStore {
           ),
           tutorial: restoreTutorialState(parsed.tutorial, hasExistingProgress),
           storyStep: parsed.storyStep ?? 0,
+          viewedStoryScenes: parsed.viewedStoryScenes ?? {},
         },
         migrated: Boolean(legacyV3Raw || legacyV2Raw)
           || !parsed.starBalance
-          || !parsed.tutorial,
+          || !parsed.tutorial
+          || !parsed.viewedStoryScenes,
       };
     } catch {
       return { state: createEmptyState(), migrated: false };

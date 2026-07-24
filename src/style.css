@@ -1768,3 +1768,126 @@ body {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .5rem;
 }
+
+/* FEATURE-046 — story expansion, collapsible star wallet, and restoration feedback. */
+.star-wallet-control {
+  position: relative;
+  min-width: var(--touch-target);
+}
+
+.resource {
+  cursor: pointer;
+}
+
+.star-wallet-popover {
+  position: absolute;
+  top: calc(100% + .35rem);
+  right: 0;
+  z-index: 24;
+  width: min(286px, calc(100vw - 1.5rem));
+  margin: 0;
+  box-shadow: 0 .9rem 2rem rgba(0,0,0,.58);
+  transform-origin: top right;
+  animation: star-wallet-open 160ms var(--ease-out) both;
+}
+
+.star-wallet-popover[hidden] {
+  display: none;
+}
+
+@keyframes star-wallet-open {
+  from { opacity: 0; transform: translateY(-4px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.restoration-card.insufficient-stars {
+  border-color: rgba(214,181,109,.28);
+}
+
+.restoration-card.insufficient-stars button {
+  border-color: rgba(214,181,109,.4);
+}
+
+.toast {
+  position: absolute;
+  z-index: 45;
+  right: max(calc(var(--safe-right) + .75rem), .75rem);
+  bottom: max(calc(var(--safe-bottom) + .8rem), .8rem);
+  left: max(calc(var(--safe-left) + .75rem), .75rem);
+  max-width: 420px;
+  margin: 0 auto;
+  padding: .72rem .85rem;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10px);
+  border: 1px solid rgba(214,181,109,.38);
+  border-radius: var(--radius-md);
+  background: rgba(18,14,23,.96);
+  box-shadow: 0 .8rem 2rem rgba(0,0,0,.58);
+  color: #eee2ec;
+  font-family: var(--font-ui);
+  font-size: .78rem;
+  line-height: 1.38;
+  text-align: center;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast--warning {
+  border-color: rgba(214,181,109,.65);
+  background: linear-gradient(135deg, rgba(110,35,62,.92), rgba(18,14,23,.98));
+}
+
+.story-scene-heading small {
+  color: #e3d7e4;
+  font-family: var(--font-ui);
+  font-size: .68rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.story-beat-progress {
+  display: flex;
+  justify-content: center;
+  gap: .34rem;
+  min-height: 6px;
+}
+
+.story-beat-progress span {
+  width: 1.1rem;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: rgba(167,167,188,.24);
+}
+
+.story-beat-progress span.active {
+  background: var(--color-gold);
+  box-shadow: 0 0 .45rem rgba(214,181,109,.35);
+}
+
+@media (max-width: 360px), (max-height: 650px) {
+  .star-wallet-popover {
+    width: min(270px, calc(100vw - 1rem));
+  }
+
+  .story-scene-heading small {
+    font-size: .62rem;
+  }
+
+  .story-dialogue p {
+    font-size: .79rem;
+    line-height: 1.44;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-wallet-popover,
+  .toast {
+    animation: none;
+    transition: none;
+  }
+}

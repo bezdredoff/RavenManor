@@ -6,8 +6,12 @@ import gatesBackground from '../assets/story/backgrounds/gates.svg?url';
 import ravenWindowBackground from '../assets/story/backgrounds/raven-window.svg?url';
 import hallBackground from '../assets/story/backgrounds/hall.svg?url';
 import towerBackground from '../assets/story/backgrounds/tower.svg?url';
+import libraryBackground from '../assets/rooms/library/stage-2.svg?url';
+import gardenBackground from '../assets/rooms/garden/stage-2.svg?url';
+import cryptBackground from '../assets/rooms/crypt/stage-2.svg?url';
 import type {
   StoryBackgroundKey,
+  StoryDialogueBeat,
   StoryPortraitKey,
   StorySceneDefinition,
 } from '../data/storyScenes';
@@ -23,6 +27,9 @@ const backgroundAssets: Record<StoryBackgroundKey, string> = {
   gates: gatesBackground,
   'raven-window': ravenWindowBackground,
   hall: hallBackground,
+  library: libraryBackground,
+  garden: gardenBackground,
+  crypt: cryptBackground,
   tower: towerBackground,
 };
 
@@ -33,11 +40,12 @@ export type StoryScenePresentation = {
 
 export function getStoryScenePresentation(
   scene: StorySceneDefinition,
+  beat: StoryDialogueBeat,
 ): StoryScenePresentation {
-  const portraitAsset = portraitAssets[scene.portraitKey];
+  const portraitAsset = portraitAssets[beat.portraitKey];
   const backgroundAsset = backgroundAssets[scene.backgroundKey];
 
-  if (!portraitAsset) throw new Error(`Missing story portrait: ${scene.portraitKey}`);
+  if (!portraitAsset) throw new Error(`Missing story portrait: ${beat.portraitKey}`);
   if (!backgroundAsset) throw new Error(`Missing story background: ${scene.backgroundKey}`);
 
   return { portraitAsset, backgroundAsset };

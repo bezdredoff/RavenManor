@@ -29,6 +29,7 @@ import {
   getRoomRestorationTasks,
 } from '../meta/RoomRestoration';
 import { getRoomUnlockState } from '../meta/RoomProgression';
+import { getNextUnviewedStoryScene, getStorySceneForLevel } from '../meta/StoryProgression';
 import { getRoomVisualState } from '../meta/RoomVisualState';
 import {
   shouldOfferTutorial,
@@ -48,6 +49,7 @@ import {
 import { getTileClassName, getTileKey } from './tilePresentation';
 import { getRoomSceneAsset } from './roomPresentation';
 import { getStoryScenePresentation } from './storyPresentation';
+import { getRestorationBlockedMessage } from './restorationFeedback';
 import { getStoryContinueLabel, resolveStoryContinuation } from './storyFlow';
 
 type SwapOffset = Readonly<{ x: number; y: number }>;
@@ -91,6 +93,8 @@ export class GameApp {
   private pendingRoomReveal: RoomReveal | null = null;
   private recentlyUnlockedRoomId: string | null = null;
   private modalCloseTimer: number | null = null;
+  private toastTimer: number | null = null;
+  private starWalletExpanded = false;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -107,6 +111,7 @@ export class GameApp {
       <main class="app-shell">
         <section id="screen"></section>
         <div id="modal" class="modal"></div>
+        <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
       </main>
     `;
   }
@@ -127,12 +132,18 @@ export class GameApp {
     return this.root.querySelector('#modal') as HTMLElement;
   }
 
+  private get toast(): HTMLElement {
+    return this.root.querySelector('#toast') as HTMLElement;
+  }
+
   private renderScreen(mode: ScreenMode, content: string): void {
     const isNavigation = this.currentScreenMode !== mode;
+    if (isNavigation) this.starWalletExpanded = false;
     this.currentScreenMode = mode;
     this.screen.className = `${getScreenClassName(mode)}${isNavigation ? ' screen-enter' : ''}`;
     this.screen.innerHTML = content;
     this.bindImageStates(this.screen);
+    this.bindStarWalletToggle();
   }
 
   private topbar(title: string, back?: () => void): string {
@@ -142,8 +153,19 @@ export class GameApp {
           ? '<button class="icon-button" data-action="back" aria-label="Назад"><span aria-hidden="true">‹</span></button>'
           : '<div class="topbar-spacer" aria-hidden="true"></div>'}
         <div class="brand" title="${title}">${title}</div>
-        <div class="resource" title="Доступные звёзды" aria-label="Доступно звёзд: ${this.availableStars}">
-          <span aria-hidden="true">★</span><strong>${this.availableStars}</strong>
+        <div class="star-wallet-control">
+          <button
+            type="button"
+            class="resource"
+            data-action="star-wallet-toggle"
+            aria-expanded="${this.starWalletExpanded}"
+            aria-controls="star-wallet-popover"
+            title="Показать баланс звёзд"
+            aria-label="Доступно звёзд: ${this.availableStars}. Показать подробный баланс"
+          >
+            <span aria-hidden="true">★</span><strong>${this.availableStars}</strong>
+          </button>
+          ${this.renderStarWallet()}
         </div>
       </header>
     `;
@@ -155,7 +177,12 @@ export class GameApp {
 
   private renderStarWallet(): string {
     return `
-      <section class="star-wallet" aria-label="Баланс звёзд">
+      <section
+        id="star-wallet-popover"
+        class="star-wallet star-wallet-popover"
+        aria-label="Баланс звёзд"
+        ${this.starWalletExpanded ? '' : 'hidden'}
+      >
         <div>
           <span>Заработано</span>
           <strong>★ ${this.progress.earnedStars}</strong>
@@ -173,6 +200,11 @@ export class GameApp {
   }
 
   showHome(): void {
+    const nextStoryScene = getNextUnviewedStoryScene(
+      storyScenes,
+      this.progress.state.completed,
+      this.progress.state.viewedStoryScenes,
+    );
     this.renderScreen('home', `
       ${this.topbar('Raven Manor')}
       <section class="hero">
@@ -183,7 +215,7 @@ export class GameApp {
       <div class="stack">
         <button class="primary" data-action="play">Играть</button>
         <button class="secondary" data-action="manor">Поместье</button>
-        <button class="ghost" data-action="story">Продолжить историю</button>
+        <button class="ghost" data-action="story" ${nextStoryScene ? '' : 'disabled'}>${nextStoryScene ? 'Продолжить историю' : 'Новых сюжетных сцен нет'}</button>
         <button class="ghost" data-action="settings">Настройки</button>
       </div>
       <p class="footer-note">Глава I · Возвращение в Raven Manor</p>
@@ -191,7 +223,7 @@ export class GameApp {
 
     this.bind('play', () => this.showLevelMap());
     this.bind('manor', () => this.showManor());
-    this.bind('story', () => this.showStory());
+    if (nextStoryScene) this.bind('story', () => this.showStory(nextStoryScene.afterLevelId));
     this.bind('settings', () => this.showSettings());
   }
 
@@ -244,7 +276,6 @@ export class GameApp {
       <div class="chapter">Глава I · Возвращение</div>
       <h2>Комнаты Raven Manor</h2>
       <p class="subtitle">Комнаты открываются через восстановление. Match-3 уровни имеют отдельную прогрессию.</p>
-      ${this.renderStarWallet()}
       <button class="primary wide-action" data-action="levels">Перейти к уровням</button>
       <div class="room-list">${cards}</div>
       <button class="ghost reset" data-action="reset">Сбросить прогресс</button>
@@ -313,7 +344,6 @@ export class GameApp {
       <div class="chapter">Match-3 кампания</div>
       <h2>Выберите уровень</h2>
       <p class="subtitle">Первые три уровня доступны сразу. Внутри каждой группы можно выбирать порядок прохождения.</p>
-      ${this.renderStarWallet()}
       <button class="secondary wide-action" data-action="manor">Вернуться в поместье</button>
       <div class="level-group-list">${groupCards}</div>
     `);
@@ -375,7 +405,6 @@ export class GameApp {
     this.renderScreen('room', `
       ${this.topbar(room.title, () => this.showManor())}
       <p class="subtitle">${room.description}</p>
-      ${this.renderStarWallet()}
       ${roomVisual}
       <section class="room-section">
         <div class="section-heading">
@@ -383,7 +412,6 @@ export class GameApp {
             <div class="chapter">Восстановление</div>
             <h2>Задачи комнаты</h2>
           </div>
-          <div class="resource resource-inline">★ ${this.availableStars}</div>
         </div>
         <div class="restoration-list">${restorationCards}</div>
       </section>
@@ -470,7 +498,7 @@ export class GameApp {
       this.availableStars,
     );
     const completed = status === 'completed';
-    const disabled = status !== 'available';
+    const disabled = completed || status === 'locked';
     const buttonLabel = status === 'completed'
       ? 'Выполнено'
       : status === 'locked'
@@ -478,7 +506,7 @@ export class GameApp {
         : `${task.starCost} ★`;
 
     return `
-      <article class="restoration-card ${completed ? 'completed' : ''} ${status === 'locked' ? 'locked' : ''}">
+      <article class="restoration-card ${completed ? 'completed' : ''} ${status === 'locked' ? 'locked' : ''} ${status === 'insufficient-stars' ? 'insufficient-stars' : ''}">
         <div class="restoration-status">${completed ? '✓' : task.order}</div>
         <div>
           <h3>${task.title}</h3>
@@ -488,6 +516,7 @@ export class GameApp {
           class="${completed ? 'ghost' : 'secondary'} compact"
           ${disabled ? 'disabled' : ''}
           data-restoration-task="${task.id}"
+          data-restoration-status="${status}"
         >${buttonLabel}</button>
       </article>
     `;
@@ -496,6 +525,21 @@ export class GameApp {
   private restoreTask(taskId: string): void {
     const task = restorationTasks.find((candidate) => candidate.id === taskId);
     if (!task) return;
+
+    const roomTasks = getRoomRestorationTasks(restorationTasks, task.roomId);
+    const status = getRestorationTaskStatus(
+      task,
+      roomTasks,
+      this.progress.state.completedRestorationTasks,
+      this.availableStars,
+    );
+    const blockedMessage = getRestorationBlockedMessage(status, task, this.availableStars);
+    if (blockedMessage) {
+      this.audio.play('invalid');
+      this.showToast(blockedMessage, 'warning');
+      return;
+    }
+    if (status !== 'available') return;
 
     const beforeVisual = getRoomVisualState(
       this.currentRoomId,
@@ -892,7 +936,7 @@ export class GameApp {
           : '<button class="primary" data-action="next-level">Следующий уровень</button>'}
         <button class="${nextLevelId === null ? 'primary' : 'secondary'}" data-action="levels">К уровням</button>
         <button class="secondary" data-action="manor">В поместье</button>
-        <button class="ghost" data-action="story">${nextLevelId === null ? 'Сюжетная сцена → к уровням' : 'Сюжетная сцена → следующий уровень'}</button>
+        <button class="ghost" data-action="story">${this.progress.isStoryViewed(completedLevelId) ? 'Повторить сюжетную сцену' : 'Сюжетная сцена'}${nextLevelId === null ? ' → к уровням' : ' → следующий уровень'}</button>
       </div>
     `, 'modal-card--result modal-card--win');
 
@@ -912,7 +956,7 @@ export class GameApp {
     });
     this.bindModal('story', () => {
       this.closeModal();
-      this.showStory(nextLevelId);
+      this.showStory(completedLevelId, nextLevelId);
     });
   }
 
@@ -1085,35 +1129,67 @@ export class GameApp {
     this.bindAudioVolume('effects');
   }
 
-  private showStory(nextLevelId?: number | null): void {
+  private showStory(levelId: number, nextLevelId?: number | null): void {
+    const scene = getStorySceneForLevel(storyScenes, levelId);
+    if (!scene) {
+      this.showToast('Для этого уровня сюжетная сцена пока не подготовлена.', 'warning');
+      return;
+    }
+
     this.audio.play('story');
-    const scene = storyScenes[this.progress.advanceStory(storyScenes.length)];
-    const presentation = getStoryScenePresentation(scene);
-    const continueLabel = getStoryContinueLabel(nextLevelId);
+    this.showStoryBeat(scene, 0, nextLevelId);
+  }
+
+  private showStoryBeat(
+    scene: (typeof storyScenes)[number],
+    beatIndex: number,
+    nextLevelId?: number | null,
+  ): void {
+    const beat = scene.beats[beatIndex];
+    const presentation = getStoryScenePresentation(scene, beat);
+    const isFinalBeat = beatIndex === scene.beats.length - 1;
+    const continueLabel = isFinalBeat
+      ? getStoryContinueLabel(nextLevelId)
+      : 'Далее';
+    const progressDots = scene.beats.map((_, index) => (
+      `<span class="${index <= beatIndex ? 'active' : ''}"></span>`
+    )).join('');
+
     this.openModal(`
-      <article class="story-scene story-scene--${scene.portraitSide}" aria-label="Сюжетная сцена: ${scene.speaker}">
+      <article class="story-scene story-scene--${beat.portraitSide}" aria-label="Сюжетная сцена: ${beat.speaker}">
         <div class="story-scene-art">
           <img class="story-background" src="${presentation.backgroundAsset}" alt="" draggable="false" />
           <div class="story-atmosphere" aria-hidden="true"></div>
           <img class="story-portrait" src="${presentation.portraitAsset}" alt="" draggable="false" />
           <div class="story-scene-heading">
             <div class="chapter">${scene.chapter}</div>
-            <strong>${scene.speaker}</strong>
+            <small>${scene.title}</small>
+            <strong>${beat.speaker}</strong>
           </div>
         </div>
         <div class="story-dialogue">
-          <p>${scene.text}</p>
+          <div class="story-beat-progress" aria-label="Реплика ${beatIndex + 1} из ${scene.beats.length}">${progressDots}</div>
+          <p>${beat.text}</p>
           <button class="primary" data-action="continue">${continueLabel}</button>
         </div>
       </article>
     `, 'modal-card--story modal-card--cinematic');
+
     this.bindModal('continue', () => {
+      if (!isFinalBeat) {
+        this.showStoryBeat(scene, beatIndex + 1, nextLevelId);
+        return;
+      }
+
+      this.progress.markStoryViewed(scene.afterLevelId);
       const continuation = resolveStoryContinuation(nextLevelId);
       this.closeModal();
       if (continuation.kind === 'level') {
         this.startLevel(continuation.levelId);
       } else if (continuation.kind === 'level-map') {
         this.showLevelMap();
+      } else {
+        this.showHome();
       }
     });
   }
@@ -1142,6 +1218,34 @@ export class GameApp {
       this.boardMessage = '';
       if (this.screen.classList.contains('screen-game')) this.renderGame();
     }, 1900);
+  }
+
+  private bindStarWalletToggle(): void {
+    const button = this.screen.querySelector<HTMLButtonElement>('[data-action="star-wallet-toggle"]');
+    const popover = this.screen.querySelector<HTMLElement>('#star-wallet-popover');
+    if (!button || !popover) return;
+
+    button.addEventListener('click', () => {
+      this.audio.play('ui');
+      this.starWalletExpanded = !this.starWalletExpanded;
+      button.setAttribute('aria-expanded', String(this.starWalletExpanded));
+      button.setAttribute(
+        'aria-label',
+        `Доступно звёзд: ${this.availableStars}. ${this.starWalletExpanded ? 'Скрыть' : 'Показать'} подробный баланс`,
+      );
+      popover.hidden = !this.starWalletExpanded;
+    });
+  }
+
+  private showToast(message: string, tone: 'warning' | 'info' = 'info'): void {
+    if (this.toastTimer !== null) window.clearTimeout(this.toastTimer);
+    this.toast.textContent = message;
+    this.toast.className = `toast show toast--${tone}`;
+    this.toastTimer = window.setTimeout(() => {
+      this.toast.className = 'toast';
+      this.toast.textContent = '';
+      this.toastTimer = null;
+    }, 2600);
   }
 
   private bind(action: string, handler: () => void): void {

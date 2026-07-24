@@ -59,3 +59,16 @@
 Record device/browser, viewport, level, action, expected result, actual result,
 severity, screenshot/video, and reproducibility. Do not tune balance from one
 random-board attempt; collect repeated runs.
+
+## FEATURE-046 story and star-wallet regression
+
+- Complete each level 1-10 and confirm it opens a different scene.
+- Confirm every scene contains multiple dialogue beats and does not loop to an
+  earlier scene after all ten are viewed.
+- Skip a post-win scene, return Home, and confirm the unviewed scene is offered.
+- Confirm the top-right star counter is the only default wallet display.
+- Tap the counter and confirm earned/spent/available appears in a popover.
+- Tap again and confirm the popover closes without moving the page.
+- Confirm Room task headings do not repeat the available-star counter.
+- With zero available stars, tap the next unlocked restoration task.
+- Confirm no star is spent and a readable missing-star notification appears.

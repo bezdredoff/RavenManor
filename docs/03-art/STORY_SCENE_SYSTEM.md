@@ -1,58 +1,77 @@
 # Story Scene System
 
-## Presentation
+## Vertical-slice contract
 
-Story is presented as a compact visual-novel card rather than a generic text
-modal. Every scene has:
+The ten prototype levels each own one authored story scene. Scenes no longer
+rotate through a short reusable list.
 
-- a portrait-oriented environment backdrop;
-- a transparent character or creature portrait;
-- speaker, chapter label, and dialogue;
-- left/right portrait placement;
-- one clear continuation action.
+```text
+level 1 -> scene 1
+...
+level 10 -> scene 10
+```
 
-The scene card is constrained to the visual viewport. On short phones it may
-scroll inside the modal, but the page behind it never scrolls.
+Every scene contains at least four dialogue beats. A beat may change speaker,
+portrait, and portrait side while retaining the scene backdrop and title. This
+creates a compact visual-novel conversation rather than one short paragraph.
 
-## Data and art separation
+## Data model
 
-`storyScenes.ts` stores narrative data and semantic asset keys.
-`storyPresentation.ts` resolves those keys to files. This permits independent
-writers, artists, and AI agents to extend the story without embedding paths or
-markup in narrative data.
+`storyScenes.ts` stores:
+
+- the level that unlocks the scene;
+- chapter and scene title;
+- semantic background key;
+- ordered dialogue beats;
+- speaker, text, portrait key, and portrait side per beat.
+
+`storyPresentation.ts` resolves semantic keys to local SVG assets. Existing room
+art may also be used as a story backdrop, so writing and art can evolve without
+embedding file paths in narrative data.
+
+## Progression
+
+`ProgressState.viewedStoryScenes` records viewed scenes by level ID.
+
+- the victory screen always opens the scene associated with the completed level;
+- replaying a level may replay its scene;
+- Home offers the earliest completed but unviewed scene;
+- after all unlocked scenes are viewed, Home shows no new-story action;
+- story progression never wraps back to scene 1.
+
+The additional field is restored into existing `ravenManorStateV4` saves without
+changing the storage key.
 
 ## Continuation context
 
-A story opened from Home is independent navigation. Its button says
-`Продолжить` and simply closes the scene.
+A scene opened from Home returns to Home after its final beat.
 
-A story opened from a victory result receives the already calculated next-level
-context:
+A scene opened from a victory retains the already calculated destination:
 
-- when another unlocked unfinished level exists, the story button says
-  `Следующий уровень` and starts it directly;
-- after the final available level, the button says `К уровням` and opens the
-  level map.
+- `Следующий уровень` starts the next unlocked unfinished level;
+- `К уровням` opens the map after the final available level.
 
-The completed board must never reappear as the destination after a post-win
-story scene. `storyFlow.ts` owns this pure navigation decision so it can be
-unit-tested independently of modal rendering.
+Intermediate beats use `Далее`; only the final beat performs navigation and
+marks the scene viewed.
 
-## Current vertical-slice scenes
+## Current narrative arc
 
-1. Evelyn returns to the manor gates.
-2. The raven tells her that the house remembers.
-3. Lord Adrian explains the ancient contract.
-4. An unknown silhouette recalls the stolen night in the tower.
+1. The unsigned letter opens the manor gates.
+2. Evelyn meets the reflectionless Lord Adrian.
+3. A damaged portrait reveals an erased childhood.
+4. Her mother's diary exposes the Night Circle contract.
+5. Moon roses return the name Lucian.
+6. Evelyn finds her own empty sarcophagus.
+7. Adrian confesses his role as guardian.
+8. Evelyn finds the order she wrote to erase her memory.
+9. Lucian recounts the stolen night in the tower.
+10. The tower opens and a deeper part of the contract awakens.
 
-The integrated vector portraits are style-consistent production placeholders,
-not the final character illustration benchmark. Final painted portraits may be
-swapped into the same slots without changing story progression.
+## Mobile and accessibility
 
-## Accessibility
-
-- dialogue remains text, never baked into artwork;
-- speaker names are visible and included in the scene label;
-- decorative images have empty alternative text;
-- continuation uses a standard touch-safe button;
-- reduced-motion mode must not remove narrative information.
+- dialogue remains selectable text, never baked into art;
+- beat progress is visible but decorative;
+- the scene card scrolls internally on short phones;
+- the page behind the modal never scrolls;
+- each continuation action is touch-safe;
+- reduced motion removes decorative travel but not dialogue or progression.
