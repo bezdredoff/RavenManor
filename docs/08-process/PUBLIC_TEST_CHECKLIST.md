@@ -72,3 +72,21 @@ random-board attempt; collect repeated runs.
 - Confirm Room task headings do not repeat the available-star counter.
 - With zero available stars, tap the next unlocked restoration task.
 - Confirm no star is spent and a readable missing-star notification appears.
+
+
+## FEATURE-047 infrastructure and PWA
+
+- Corrupt a disposable test save and confirm the game recovers with a warning.
+- Export a save, reset progress, import it, and confirm level/story/room state.
+- Confirm audio preferences are not changed by save import.
+- Export local analytics and verify level attempts, hints, wins/losses, and
+  duration are present.
+- Export diagnostics and confirm viewport, version, PWA status, errors, save,
+  and analytics are present.
+- Confirm analytics can be cleared without resetting game progress.
+- In a production preview, install the app where supported.
+- After one complete online load, enable airplane mode and reopen/reload the PWA.
+- Confirm Home, Levels, Manor, Settings, story, and previously loaded gameplay
+  assets remain available offline.
+- Return online, deploy a newer cache version, and verify update checking does
+  not erase the V4 save.

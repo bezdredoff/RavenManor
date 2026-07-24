@@ -102,12 +102,25 @@ _Status: implemented, pending project verification._
 - remove the duplicate room-task star counter;
 - notify the player when an unlocked restoration task is unaffordable.
 
-### FEATURE-047 — Visual consistency and confirmed device fixes
+### FEATURE-047 — Playtest infrastructure, local analytics, and PWA
 
-- collect another short round of real-device observations;
-- fix confirmed responsive, input, audio, contrast, and navigation issues;
-- replace prototype art that fails recognition or style review;
-- verify the full vertical slice again before gameplay expansion.
+_Status: implemented, pending production/device verification._
+
+- recover from malformed or unavailable local storage without a blank screen;
+- export/import versioned saves and voluntary diagnostics;
+- collect bounded local-only playtest analytics with JSON export;
+- show build/version and technical status in Settings;
+- add short duplicate-action guards and idle asset warm-up;
+- publish a portrait standalone PWA with install prompt, icons, and offline cache;
+- preserve V4 gameplay progress, audio preferences, balance, and game rules.
+
+### Next — evidence-driven fixes only
+
+- distribute the installable build to a wider device set;
+- analyse exported reports and repeated level runs;
+- fix confirmed defects or balance outliers;
+- postpone special tiles, blockers, boosters, and content expansion until the
+  vertical-slice retention and comprehension questions have evidence.
 
 ## Recommended visual production order
 

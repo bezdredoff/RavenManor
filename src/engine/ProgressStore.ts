@@ -1,3 +1,4 @@
+import { getSafeStorage } from '../platform/SafeStorage';
 import type { RestorationTaskDefinition } from '../data/restorationTasks';
 import {
   awardStars,
@@ -26,11 +27,20 @@ export type ProgressState = {
   viewedStoryScenes: Record<number, boolean>;
 };
 
+export type ProgressExportEnvelope = Readonly<{
+  format: 'raven-manor-save';
+  formatVersion: 1;
+  appVersion: string;
+  exportedAt: string;
+  state: ProgressState;
+}>;
+
 export type ProgressStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 const STORAGE_KEY = 'ravenManorStateV4';
 const LEGACY_V3_STORAGE_KEY = 'ravenManorStateV3';
 const LEGACY_V2_STORAGE_KEY = 'ravenManorStateV2';
+const CORRUPT_BACKUP_KEY = 'ravenManorCorruptSaveBackupV1';
 
 const createEmptyState = (): ProgressState => ({
   stars: {},
@@ -42,12 +52,35 @@ const createEmptyState = (): ProgressState => ({
   viewedStoryScenes: {},
 });
 
+const normalizeStars = (value: unknown): Record<number, number> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([key, raw]) => [Number(key), Math.max(0, Math.min(3, Math.floor(Number(raw))))] as const)
+      .filter(([key, stars]) => Number.isInteger(key) && key > 0 && Number.isFinite(stars)),
+  );
+};
+
+const normalizeBooleanRecord = <K extends number | string>(
+  value: unknown,
+  keyParser: (key: string) => K | null,
+): Record<K, boolean> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {} as Record<K, boolean>;
+  const entries = Object.entries(value).flatMap(([key, raw]) => {
+    const parsedKey = keyParser(key);
+    return parsedKey === null || raw !== true ? [] : [[parsedKey, true] as const];
+  });
+  return Object.fromEntries(entries) as Record<K, boolean>;
+};
+
 export class ProgressStore {
   state: ProgressState;
+  recoveryNotice: string | null = null;
+  storageAvailable = true;
 
   constructor(
     private readonly restorationTasks: readonly RestorationTaskDefinition[] = [],
-    private readonly storage: ProgressStorage = localStorage,
+    private readonly storage: ProgressStorage = getSafeStorage(),
   ) {
     const { state, migrated } = this.load();
     this.state = state;
@@ -135,6 +168,35 @@ export class ProgressStore {
     this.persist();
   }
 
+  exportData(appVersion: string): ProgressExportEnvelope {
+    return {
+      format: 'raven-manor-save',
+      formatVersion: 1,
+      appVersion,
+      exportedAt: new Date().toISOString(),
+      state: JSON.parse(JSON.stringify(this.state)) as ProgressState,
+    };
+  }
+
+  importData(raw: string): void {
+    const parsed = JSON.parse(raw) as Partial<ProgressExportEnvelope> | Partial<ProgressState>;
+    const candidate = 'format' in parsed && parsed.format === 'raven-manor-save'
+      ? parsed.state
+      : parsed;
+    if (!candidate || typeof candidate !== 'object') {
+      throw new Error('Файл не содержит сохранение Raven Manor.');
+    }
+    const record = candidate as Partial<ProgressState>;
+    const hasRecognisedField = ['stars', 'completed', 'completedRestorationTasks', 'starBalance', 'tutorial', 'viewedStoryScenes']
+      .some((field) => field in record);
+    if (!hasRecognisedField) {
+      throw new Error('Файл не похож на сохранение Raven Manor.');
+    }
+    this.state = this.normalizeState(record);
+    this.recoveryNotice = null;
+    this.persist();
+  }
+
   reset(): void {
     this.state = createEmptyState();
     this.storage.removeItem(LEGACY_V3_STORAGE_KEY);
@@ -142,50 +204,85 @@ export class ProgressStore {
     this.persist();
   }
 
-  private load(): { state: ProgressState; migrated: boolean } {
-    const currentRaw = this.storage.getItem(STORAGE_KEY);
-    const legacyV3Raw = currentRaw ? null : this.storage.getItem(LEGACY_V3_STORAGE_KEY);
-    const legacyV2Raw = currentRaw || legacyV3Raw
-      ? null
-      : this.storage.getItem(LEGACY_V2_STORAGE_KEY);
-    const raw = currentRaw ?? legacyV3Raw ?? legacyV2Raw;
+  private normalizeState(parsed: Partial<ProgressState>): ProgressState {
+    const stars = normalizeStars(parsed.stars);
+    const completed = normalizeBooleanRecord<number>(parsed.completed, (key) => {
+      const value = Number(key);
+      return Number.isInteger(value) && value > 0 ? value : null;
+    });
+    const completedRestorationTasks = normalizeBooleanRecord<string>(
+      parsed.completedRestorationTasks,
+      (key) => key.trim() || null,
+    );
+    const viewedStoryScenes = normalizeBooleanRecord<number>(parsed.viewedStoryScenes, (key) => {
+      const value = Number(key);
+      return Number.isInteger(value) && value > 0 ? value : null;
+    });
+    const hasExistingProgress = Object.values(completed).some(Boolean)
+      || Object.values(completedRestorationTasks).some(Boolean);
 
+    return {
+      stars,
+      completed,
+      completedRestorationTasks,
+      starBalance: restoreStarBalance(
+        parsed.starBalance,
+        stars,
+        this.restorationTasks,
+        completedRestorationTasks,
+      ),
+      tutorial: restoreTutorialState(parsed.tutorial, hasExistingProgress),
+      storyStep: Number.isFinite(parsed.storyStep) ? Math.max(0, Math.floor(Number(parsed.storyStep))) : 0,
+      viewedStoryScenes,
+    };
+  }
+
+  private load(): { state: ProgressState; migrated: boolean } {
+    let currentRaw: string | null = null;
+    let legacyV3Raw: string | null = null;
+    let legacyV2Raw: string | null = null;
+    try {
+      currentRaw = this.storage.getItem(STORAGE_KEY);
+      legacyV3Raw = currentRaw ? null : this.storage.getItem(LEGACY_V3_STORAGE_KEY);
+      legacyV2Raw = currentRaw || legacyV3Raw
+        ? null
+        : this.storage.getItem(LEGACY_V2_STORAGE_KEY);
+    } catch {
+      this.storageAvailable = false;
+      this.recoveryNotice = 'Локальное хранилище недоступно. Прогресс сохранится только до закрытия страницы.';
+      return { state: createEmptyState(), migrated: false };
+    }
+
+    const raw = currentRaw ?? legacyV3Raw ?? legacyV2Raw;
     if (!raw) return { state: createEmptyState(), migrated: false };
 
     try {
       const parsed = JSON.parse(raw) as Partial<ProgressState>;
-      const stars = parsed.stars ?? {};
-      const completed = parsed.completed ?? {};
-      const completedRestorationTasks = parsed.completedRestorationTasks ?? {};
-      const hasExistingProgress = Object.values(completed).some(Boolean)
-        || Object.values(completedRestorationTasks).some(Boolean);
-
       return {
-        state: {
-          stars,
-          completed,
-          completedRestorationTasks,
-          starBalance: restoreStarBalance(
-            parsed.starBalance,
-            stars,
-            this.restorationTasks,
-            completedRestorationTasks,
-          ),
-          tutorial: restoreTutorialState(parsed.tutorial, hasExistingProgress),
-          storyStep: parsed.storyStep ?? 0,
-          viewedStoryScenes: parsed.viewedStoryScenes ?? {},
-        },
+        state: this.normalizeState(parsed),
         migrated: Boolean(legacyV3Raw || legacyV2Raw)
           || !parsed.starBalance
           || !parsed.tutorial
           || !parsed.viewedStoryScenes,
       };
     } catch {
-      return { state: createEmptyState(), migrated: false };
+      try {
+        this.storage.setItem(CORRUPT_BACKUP_KEY, raw);
+      } catch {
+        this.storageAvailable = false;
+      }
+      this.recoveryNotice = 'Повреждённое сохранение отложено в резервную копию. Игра запущена с чистым прогрессом.';
+      return { state: createEmptyState(), migrated: true };
     }
   }
 
   private persist(): void {
-    this.storage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+    try {
+      this.storage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+      this.storageAvailable = true;
+    } catch {
+      this.storageAvailable = false;
+      this.recoveryNotice = 'Не удалось записать прогресс в память браузера.';
+    }
   }
 }
