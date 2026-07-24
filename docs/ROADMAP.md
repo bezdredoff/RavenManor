@@ -49,12 +49,14 @@ _Status: implemented, pending project verification._
 
 ### FEATURE-042 — Motion and VFX polish
 
-- swap, invalid swap, clear, fall, cascade, reshuffle, hint, win, loss,
-  restoration, and room-unlock motion;
-- particles based on gold glints, candle sparks, dust, petals, mist, and raven
-  feathers;
-- screen transitions and timing guidelines;
-- reduced-motion behaviour and tests.
+_Status: implemented, pending project verification._
+
+- visible swap and invalid-return travel;
+- clear, settle, cascade, reshuffle, and hint polish;
+- bounded gold, tile-colour, mist, and unlock particles;
+- win/loss, screen, modal, restoration, room-unlock, and story motion;
+- named timing policy and automatic reduced-motion behaviour;
+- motion-policy tests and mobile acceptance checklist.
 
 ### FEATURE-043 — Audio and final UX polish
 

@@ -32,9 +32,24 @@ import {
 import { CollectObjective } from '../objectives/CollectObjective';
 import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 import { getScreenClassName, type ScreenMode } from './layoutPolicy';
+import {
+  createParticleIndexes,
+  getMotionDuration,
+  type MotionDurationName,
+  type VfxKind,
+} from './motionPolicy';
 import { getTileClassName, getTileKey } from './tilePresentation';
 import { getRoomSceneAsset } from './roomPresentation';
 import { getStoryScenePresentation } from './storyPresentation';
+
+type SwapOffset = Readonly<{ x: number; y: number }>;
+
+type RoomReveal = Readonly<{
+  roomId: string;
+  previousAsset: string;
+  taskTitle: string;
+  unlockedRoomTitle?: string;
+}>;
 
 const DIFFICULTY_LABELS: Record<LevelDifficulty, string> = {
   easy: 'Легко',
@@ -61,6 +76,12 @@ export class GameApp {
   private boardSettling = false;
   private boardReshuffling = false;
   private boardMessage = '';
+  private cascadeLevel = 0;
+  private readonly swapOffsets = new Map<string, SwapOffset>();
+  private currentScreenMode: ScreenMode | null = null;
+  private pendingRoomReveal: RoomReveal | null = null;
+  private recentlyUnlockedRoomId: string | null = null;
+  private modalCloseTimer: number | null = null;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -86,7 +107,9 @@ export class GameApp {
   }
 
   private renderScreen(mode: ScreenMode, content: string): void {
-    this.screen.className = getScreenClassName(mode);
+    const isNavigation = this.currentScreenMode !== mode;
+    this.currentScreenMode = mode;
+    this.screen.className = `${getScreenClassName(mode)}${isNavigation ? ' screen-enter' : ''}`;
     this.screen.innerHTML = content;
   }
 
@@ -175,7 +198,7 @@ export class GameApp {
       const sceneAsset = getRoomSceneAsset(visualState.stage.assetKey);
       return `
         <article
-          class="room-card room-card--visual ${locked ? 'locked' : ''} ${visualState.isComplete ? 'restored' : ''}"
+          class="room-card room-card--visual ${locked ? 'locked' : ''} ${visualState.isComplete ? 'restored' : ''} ${this.recentlyUnlockedRoomId === room.id ? 'just-unlocked' : ''}"
           ${locked ? '' : `data-room="${room.id}" role="button" tabindex="0"`}
           aria-label="${locked ? `${room.title}. ${lockedLabel}` : `Открыть комнату ${room.title}`}"
         >
@@ -210,9 +233,12 @@ export class GameApp {
     this.bind('reset', () => {
       if (confirm('Сбросить весь прогресс?')) {
         this.progress.reset();
+        this.pendingRoomReveal = null;
+        this.recentlyUnlockedRoomId = null;
         this.showManor();
       }
     });
+    this.playRecentRoomUnlock();
     this.screen.querySelectorAll<HTMLElement>('[data-room]').forEach((card) => {
       const openRoom = () => this.showRoom(card.dataset.room!);
       card.addEventListener('click', openRoom);
@@ -369,15 +395,33 @@ export class GameApp {
     }).join('');
 
     const sceneAsset = getRoomSceneAsset(state.stage.assetKey);
+    const reveal = this.pendingRoomReveal?.roomId === roomId
+      ? this.pendingRoomReveal
+      : null;
+    const revealParticles = reveal
+      ? this.renderVfxParticles(reveal.unlockedRoomTitle ? 'unlock' : 'restoration', 'restoration-spark')
+      : '';
     return `
       <section
-        class="room-visual room-visual--${roomId} stage-${state.completedTaskCount}"
+        class="room-visual room-visual--${roomId} stage-${state.completedTaskCount} ${reveal ? 'is-revealing' : ''}"
         data-room-asset="${state.stage.assetKey}"
         aria-label="${roomTitle}: ${state.stage.title}"
       >
         <div class="room-visual-scene">
           <img class="room-visual-image" src="${sceneAsset}" alt="" draggable="false" />
           <div class="room-visual-vignette" aria-hidden="true"></div>
+          ${reveal ? `
+            <div class="room-restoration-reveal" data-restoration-reveal role="status" aria-live="polite">
+              <img class="room-restoration-before" src="${reveal.previousAsset}" alt="" draggable="false" />
+              <div class="room-restoration-flash" aria-hidden="true"></div>
+              <div class="room-restoration-particles" aria-hidden="true">${revealParticles}</div>
+              <div class="room-restoration-message">
+                <span>Восстановлено</span>
+                <strong>${reveal.taskTitle}</strong>
+                ${reveal.unlockedRoomTitle ? `<small>Открыта комната «${reveal.unlockedRoomTitle}»</small>` : ''}
+              </div>
+            </div>
+          ` : ''}
           <div class="room-visual-copy">
             <div class="room-visual-stage-label">Состояние ${state.completedTaskCount}/${state.totalTaskCount}</div>
             <h2>${state.stage.title}</h2>
@@ -422,6 +466,24 @@ export class GameApp {
   }
 
   private restoreTask(taskId: string): void {
+    const task = restorationTasks.find((candidate) => candidate.id === taskId);
+    if (!task) return;
+
+    const beforeVisual = getRoomVisualState(
+      this.currentRoomId,
+      roomVisuals,
+      restorationTasks,
+      this.progress.state.completedRestorationTasks,
+    );
+    const unlockedBefore = new Set(
+      rooms
+        .filter((room) => getRoomUnlockState(
+          room,
+          restorationTasks,
+          this.progress.state.completedRestorationTasks,
+        ).unlocked)
+        .map((room) => room.id),
+    );
     const updatedTasks = completeRestorationTask(
       taskId,
       restorationTasks,
@@ -429,10 +491,36 @@ export class GameApp {
       this.progress.availableStars,
     );
 
-    if (updatedTasks[taskId] && !this.progress.state.completedRestorationTasks[taskId]) {
-      this.progress.completeRestorationTask(taskId);
+    if (!updatedTasks[taskId] || this.progress.state.completedRestorationTasks[taskId]) {
+      this.showRoom(this.currentRoomId);
+      return;
     }
+
+    this.progress.completeRestorationTask(taskId);
+    const afterVisual = getRoomVisualState(
+      this.currentRoomId,
+      roomVisuals,
+      restorationTasks,
+      this.progress.state.completedRestorationTasks,
+    );
+    const newlyUnlockedRoom = rooms.find((room) => (
+      !unlockedBefore.has(room.id)
+      && getRoomUnlockState(
+        room,
+        restorationTasks,
+        this.progress.state.completedRestorationTasks,
+      ).unlocked
+    ));
+
+    this.pendingRoomReveal = {
+      roomId: this.currentRoomId,
+      previousAsset: getRoomSceneAsset(beforeVisual.stage.assetKey),
+      taskTitle: task.title,
+      unlockedRoomTitle: newlyUnlockedRoom?.title,
+    };
+    this.recentlyUnlockedRoomId = newlyUnlockedRoom?.id ?? this.recentlyUnlockedRoomId;
     this.showRoom(this.currentRoomId);
+    this.playRestorationReveal();
   }
 
   private startLevel(levelId: number): void {
@@ -461,6 +549,8 @@ export class GameApp {
     this.boardSettling = false;
     this.boardReshuffling = false;
     this.boardMessage = '';
+    this.cascadeLevel = 0;
+    this.swapOffsets.clear();
     this.renderGame();
 
     if (shouldOfferTutorial(this.progress.state.tutorial)) {
@@ -490,6 +580,7 @@ export class GameApp {
     const boardStateClasses = [
       this.boardSettling ? 'is-settling' : '',
       this.boardReshuffling ? 'is-reshuffling' : '',
+      this.cascadeLevel > 1 ? `has-cascade cascade-${Math.min(this.cascadeLevel, 4)}` : '',
     ].filter(Boolean).join(' ');
 
     this.renderScreen('game', `
@@ -515,7 +606,8 @@ export class GameApp {
           <div class="board-wrap ${boardStateClasses}">
             <div class="board-sigil" aria-hidden="true"></div>
             <div class="board" role="grid" aria-label="Игровое поле 8 на 8" aria-busy="${this.busy}">${this.renderBoard()}</div>
-            <div class="board-feedback ${this.boardMessage ? 'show' : ''}" role="status" aria-live="polite">${this.boardMessage}</div>
+            <div class="board-match-vfx" aria-hidden="true">${this.renderMatchVfx()}</div>
+            <div class="board-feedback ${this.boardMessage ? 'show' : ''} ${this.cascadeLevel > 1 ? 'cascade' : ''}" role="status" aria-live="polite">${this.boardMessage}</div>
           </div>
         </div>
         <div class="game-actions">
@@ -548,17 +640,22 @@ export class GameApp {
           return `<span class="tile tile-empty" role="gridcell" aria-hidden="true"></span>`;
         }
 
-        const className = getTileClassName(tile, {
+        const swapOffset = this.swapOffsets.get(key);
+        const className = [getTileClassName(tile, {
           selected: this.selected?.row === rowIndex && this.selected?.col === colIndex,
           hinted: this.hintedTiles.has(key),
           invalid: this.invalidTiles.has(key),
           matched: this.matchedTiles.has(key),
           settling: this.boardSettling,
-        });
+        }), swapOffset ? 'swapping' : ''].filter(Boolean).join(' ');
+        const swapStyle = swapOffset
+          ? `style="--swap-x:${swapOffset.x};--swap-y:${swapOffset.y}"`
+          : '';
 
         return `
           <button
             class="${className}"
+            ${swapStyle}
             data-tile="${key}"
             data-tile-type="${definition.id}"
             role="gridcell"
@@ -645,7 +742,7 @@ export class GameApp {
     if (this.busy || !this.currentLevel) return;
     this.busy = true;
     this.selected = null;
-    this.engine.swap(first, second);
+    await this.swapWithMotion(first, second);
     let matches = this.engine.findMatches();
 
     if (matches.length === 0) {
@@ -653,10 +750,10 @@ export class GameApp {
       this.invalidTiles.add(getTileKey(second.row, second.col));
       this.boardMessage = 'Нет комбинации';
       this.renderGame();
-      await this.delay(220);
-      this.engine.swap(first, second);
+      await this.motionDelay('invalidHold');
       this.invalidTiles.clear();
       this.boardMessage = '';
+      await this.swapWithMotion(first, second);
       this.busy = false;
       this.renderGame();
       return;
@@ -671,11 +768,12 @@ export class GameApp {
     let cascade = 0;
     while (matches.length > 0) {
       cascade++;
+      this.cascadeLevel = cascade;
       this.matchedTiles.clear();
       matches.forEach((position) => this.matchedTiles.add(getTileKey(position.row, position.col)));
       this.boardMessage = cascade > 1 ? `Каскад ×${cascade}` : `Комбинация ×${matches.length}`;
       this.renderGame();
-      await this.delay(190);
+      await this.motionDelay('clear');
 
       const removed = this.engine.clearMatches(matches);
       this.objectiveTracker?.handle({ type: 'tiles-removed', tileTypes: removed });
@@ -683,20 +781,24 @@ export class GameApp {
       this.matchedTiles.clear();
       this.boardSettling = true;
       this.renderGame();
-      await this.delay(130);
+      await this.motionDelay('settle');
       this.boardSettling = false;
       matches = this.engine.findMatches();
     }
 
     this.boardMessage = '';
+    this.cascadeLevel = 0;
     if (!this.engine.findPossibleMove()) {
       this.boardReshuffling = true;
       this.boardMessage = 'Ворон перемешивает поле…';
       this.renderGame();
-      await this.delay(260);
+      await this.motionDelay('reshuffle');
       const reshuffled = this.engine.reshuffle();
       if (!reshuffled) this.engine.generateBoard();
-      await this.delay(160);
+      this.boardSettling = true;
+      this.renderGame();
+      await this.motionDelay('settle');
+      this.boardSettling = false;
       this.boardReshuffling = false;
       this.boardMessage = '';
     }
@@ -711,6 +813,17 @@ export class GameApp {
     }
   }
 
+  private async swapWithMotion(first: Position, second: Position): Promise<void> {
+    this.engine.swap(first, second);
+    const deltaX = second.col - first.col;
+    const deltaY = second.row - first.row;
+    this.swapOffsets.set(getTileKey(first.row, first.col), { x: deltaX, y: deltaY });
+    this.swapOffsets.set(getTileKey(second.row, second.col), { x: -deltaX, y: -deltaY });
+    this.renderGame();
+    await this.motionDelay('swap');
+    this.swapOffsets.clear();
+  }
+
   private winLevel(): void {
     if (!this.currentLevel) return;
     const stars = calculateLevelStars(this.currentLevel, this.movesLeft);
@@ -720,6 +833,8 @@ export class GameApp {
       : 'Лучший результат уровня не улучшен.';
 
     this.openModal(`
+      <div class="result-vfx result-vfx--win" aria-hidden="true">${this.renderVfxParticles('win', 'result-particle')}</div>
+      <div class="result-emblem result-emblem--win" aria-hidden="true">✦</div>
       <div class="big-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
       <h2>Уровень пройден</h2>
       <p>Победы открывают новые группы уровней. Звёзды можно тратить на восстановление поместья.</p>
@@ -730,7 +845,7 @@ export class GameApp {
         <button class="secondary" data-action="manor">В поместье</button>
         <button class="ghost" data-action="story">Сюжетная сцена</button>
       </div>
-    `);
+    `, 'modal-card--result modal-card--win');
 
     this.bindModal('levels', () => {
       this.closeModal();
@@ -748,13 +863,15 @@ export class GameApp {
 
   private loseLevel(): void {
     this.openModal(`
+      <div class="result-vfx result-vfx--loss" aria-hidden="true">${this.renderVfxParticles('loss', 'result-particle')}</div>
+      <div class="result-emblem result-emblem--loss" aria-hidden="true">☾</div>
       <h2>Ходы закончились</h2>
       <p class="subtitle">Можно повторить попытку или выбрать другой открытый уровень.</p>
       <div class="stack">
         <button class="primary" data-action="retry">Повторить</button>
         <button class="ghost" data-action="exit">К уровням</button>
       </div>
-    `);
+    `, 'modal-card--result modal-card--loss');
     this.bindModal('retry', () => {
       this.closeModal();
       this.startLevel(this.currentLevel!.id);
@@ -852,6 +969,15 @@ export class GameApp {
           <button class="ghost" data-action="tutorial-disable">Отключить подсказки</button>
         </div>
       </section>
+      <div class="chapter settings-section-label">Доступность</div>
+      <h2>Анимации и эффекты</h2>
+      <section class="settings-card">
+        <div>
+          <strong>Сокращение движения</strong>
+          <p class="subtitle">Игра автоматически следует системной настройке <em>Reduce Motion</em>. При её включении отключаются частицы, перелёты и декоративные движения, но все состояния остаются видимыми.</p>
+        </div>
+        <div class="setting-status">${this.prefersReducedMotion() ? 'Сокращённые эффекты активны' : 'Полные эффекты активны'}</div>
+      </section>
       <p class="footer-note">Новые механики позднее будут объясняться такими же короткими контекстными карточками.</p>
     `);
 
@@ -885,7 +1011,7 @@ export class GameApp {
           <button class="primary" data-action="continue">Продолжить</button>
         </div>
       </article>
-    `, 'modal-card--story');
+    `, 'modal-card--story modal-card--cinematic');
     this.bindModal('continue', () => this.closeModal());
   }
 
@@ -915,17 +1041,88 @@ export class GameApp {
   }
 
   private openModal(content: string, cardClass = ''): void {
-    const className = ['modal-card', cardClass].filter(Boolean).join(' ');
+    if (this.modalCloseTimer !== null) {
+      window.clearTimeout(this.modalCloseTimer);
+      this.modalCloseTimer = null;
+    }
+    const className = ['modal-card', 'modal-card-enter', cardClass].filter(Boolean).join(' ');
+    this.modal.classList.remove('is-closing');
     this.modal.innerHTML = `<div class="${className}">${content}</div>`;
     this.modal.classList.add('show');
   }
 
   private closeModal(): void {
-    this.modal.classList.remove('show');
-    this.modal.innerHTML = '';
+    if (!this.modal.classList.contains('show')) return;
+    this.modal.classList.add('is-closing');
+    this.modalCloseTimer = window.setTimeout(() => {
+      if (!this.modal.classList.contains('is-closing')) return;
+      this.modal.classList.remove('show', 'is-closing');
+      this.modal.innerHTML = '';
+      this.modalCloseTimer = null;
+    }, getMotionDuration('modalExit', this.prefersReducedMotion()));
+  }
+
+  private renderMatchVfx(): string {
+    if (this.prefersReducedMotion() || this.matchedTiles.size === 0) return '';
+    return Array.from(this.matchedTiles).flatMap((key) => {
+      const [row, col] = key.split(',').map(Number);
+      const tileType = this.engine.board[row]?.[col];
+      const tile = tileType === undefined ? null : tileTypes[tileType];
+      const left = (col + .5) * 12.5;
+      const top = (row + .5) * 12.5;
+      return createParticleIndexes('match').map((particle) => `
+        <i
+          class="match-spark ${tile ? `match-spark--${tile.id}` : ''}"
+          style="--left:${left};--top:${top};--particle:${particle}"
+        ></i>
+      `);
+    }).join('');
+  }
+
+  private renderVfxParticles(kind: VfxKind, className: string): string {
+    const reducedMotion = this.prefersReducedMotion();
+    return createParticleIndexes(kind, reducedMotion).map((index) => {
+      const x = 8 + ((index * 37) % 84);
+      const y = 12 + ((index * 53) % 76);
+      const angle = (index * 47) % 360;
+      const delay = (index % 7) * 45;
+      const size = 4 + (index % 3) * 2;
+      return `<i class="${className} ${className}--${kind}" style="--i:${index};--x:${x};--y:${y};--angle:${angle};--delay:${delay}ms;--particle-size:${size}px"></i>`;
+    }).join('');
+  }
+
+  private playRestorationReveal(): void {
+    const revealElement = this.screen.querySelector<HTMLElement>('[data-restoration-reveal]');
+    if (!revealElement) return;
+    const reducedMotion = this.prefersReducedMotion();
+    window.setTimeout(() => {
+      revealElement.classList.add('is-finished');
+      window.setTimeout(() => revealElement.remove(), reducedMotion ? 0 : 180);
+      this.pendingRoomReveal = null;
+    }, getMotionDuration('restorationReveal', reducedMotion));
+  }
+
+  private playRecentRoomUnlock(): void {
+    if (!this.recentlyUnlockedRoomId) return;
+    const unlockedId = this.recentlyUnlockedRoomId;
+    const card = this.screen.querySelector<HTMLElement>(`[data-room="${unlockedId}"]`);
+    if (!card) return;
+    window.setTimeout(() => {
+      card.classList.remove('just-unlocked');
+      if (this.recentlyUnlockedRoomId === unlockedId) this.recentlyUnlockedRoomId = null;
+    }, getMotionDuration('roomUnlock', this.prefersReducedMotion()));
+  }
+
+  private prefersReducedMotion(): boolean {
+    return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  }
+
+  private motionDelay(name: MotionDurationName): Promise<void> {
+    return this.delay(getMotionDuration(name, this.prefersReducedMotion()));
   }
 
   private delay(ms: number): Promise<void> {
+    if (ms <= 0) return Promise.resolve();
     return new Promise((resolve) => window.setTimeout(resolve, ms));
   }
 }
