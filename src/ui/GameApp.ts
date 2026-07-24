@@ -1154,12 +1154,13 @@ export class GameApp {
         <div class="setting-row setting-row--status">
           <div>
             <strong>Устанавливаемая PWA-сборка</strong>
-            <p class="subtitle">После первого онлайн-запуска опубликованная версия может открываться без сети и запускаться с главного экрана телефона.</p>
+            <p class="subtitle">При первом онлайн-запуске сборка целиком сохраняется на устройстве. Перед авиарежимом проверьте, что статус подтверждает офлайн-готовность.</p>
           </div>
           <div class="setting-status">${getPwaStatusLabel(pwaStatus)}</div>
         </div>
         <div class="stack">
           ${pwaStatus.installAvailable ? '<button class="primary" data-action="pwa-install">Установить приложение</button>' : ''}
+          ${pwaStatus.serviceWorkerReady ? '<button class="secondary" data-action="pwa-offline-check">Проверить офлайн-готовность</button>' : ''}
           ${pwaStatus.serviceWorkerReady ? '<button class="ghost" data-action="pwa-update">Проверить обновление</button>' : ''}
         </div>
       </section>
@@ -1208,6 +1209,7 @@ export class GameApp {
     this.bind('audio-music-preview', () => this.audio.previewMusic());
     this.bind('audio-preview', () => this.audio.previewEffects());
     this.bind('pwa-install', () => { void this.installPwa(); });
+    this.bind('pwa-offline-check', () => { void this.checkPwaOfflineReadiness(); });
     this.bind('pwa-update', () => { void this.checkPwaUpdate(); });
     this.bind('save-export', () => this.exportSave());
     this.bind('save-import', () => this.screen.querySelector<HTMLInputElement>('[data-save-import-file]')?.click());
@@ -1308,6 +1310,17 @@ export class GameApp {
           ? 'Установка отменена.'
           : 'Установка доступна через меню браузера.',
       outcome === 'accepted' ? 'info' : 'warning',
+    );
+  }
+
+  private async checkPwaOfflineReadiness(): Promise<void> {
+    const status = await this.pwa.refreshOfflineStatus();
+    this.showSettings();
+    this.showToast(
+      status.offlineReady
+        ? `Офлайн-версия готова: ${status.cachedAssets}/${status.totalAssets} файлов.`
+        : `Офлайн-кэш ещё не завершён: ${status.cachedAssets}/${status.totalAssets || '—'} файлов.`,
+      status.offlineReady ? 'info' : 'warning',
     );
   }
 
