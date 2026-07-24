@@ -68,9 +68,8 @@ body {
 }
 
 .topbar {
-  position: sticky;
-  top: calc(var(--safe-top) + .55rem);
-  z-index: 10;
+  position: relative;
+  z-index: 2;
   min-height: 48px;
   display: grid;
   grid-template-columns: var(--touch-target) minmax(0,1fr) auto;
@@ -78,8 +77,7 @@ body {
   gap: .55rem;
   margin: 0 0 .75rem;
   padding: .2rem 0 .45rem;
-  background: linear-gradient(180deg, rgba(18,13,23,.98) 70%, rgba(18,13,23,0));
-  backdrop-filter: blur(10px);
+  background: transparent;
 }
 
 .topbar-spacer {
