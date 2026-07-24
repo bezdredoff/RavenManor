@@ -91,7 +91,18 @@ _Status: implemented, pending project verification._
 - add independent music preview and music-theme tests;
 - preserve existing saves, progression, effects, and mobile layout.
 
-### FEATURE-046 — Visual consistency and confirmed device fixes
+### FEATURE-046 — Story depth and star-wallet UX
+
+_Status: implemented, pending project verification._
+
+- add one multi-beat story scene for every prototype level;
+- stop viewed scenes from cycling back to the beginning;
+- let Home surface completed but unviewed scenes;
+- hide the detailed star wallet behind the top-right available-star counter;
+- remove the duplicate room-task star counter;
+- notify the player when an unlocked restoration task is unaffordable.
+
+### FEATURE-047 — Visual consistency and confirmed device fixes
 
 - collect another short round of real-device observations;
 - fix confirmed responsive, input, audio, contrast, and navigation issues;

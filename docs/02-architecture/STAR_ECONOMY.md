@@ -1,74 +1,56 @@
 # Star Economy
 
-## Purpose
-
-The star wallet separates three values that previously had to be reconstructed
-from level results and restoration task definitions:
+## Core invariant
 
 ```text
 earned stars - spent stars = available stars
 ```
 
-The wallet is persisted in `ProgressState.starBalance` and rendered in the
-manor and room screens.
+`ProgressState.starBalance` persists all three values. Level replays award only
+improvement over the previous best result, and restoration tasks spend their
+configured cost exactly once.
+
+## Default UI
+
+The persistent top-right counter shows only available stars:
+
+```text
+★ 4
+```
+
+The detailed `Заработано / Потрачено / Доступно` wallet is hidden by default.
+Pressing the counter toggles a compact popover. This avoids repeating the same
+information on Level, Manor, and Room screens while keeping the full accounting
+available on demand.
+
+Room task headings do not render another available-star counter. The top-right
+control is the single persistent source of wallet information.
+
+## Insufficient-star interaction
+
+The next sequential restoration task remains pressable when it is unlocked but
+unaffordable. Pressing it:
+
+1. spends nothing;
+2. leaves progression unchanged;
+3. plays the invalid-action cue;
+4. shows a temporary notification with the missing amount;
+5. suggests completing or improving a level.
+
+Locked future tasks and completed tasks remain disabled.
 
 ## Files
 
 ```text
-src/meta/StarEconomy.ts       Pure wallet operations and legacy migration
-src/engine/ProgressStore.ts   Persistent level rewards and restoration spending
-src/meta/RoomRestoration.ts   Sequential task and affordability rules
-src/ui/GameApp.ts             Wallet presentation and reward feedback
+src/meta/StarEconomy.ts          Pure wallet operations and migration
+src/engine/ProgressStore.ts      Persistent rewards and spending
+src/meta/RoomRestoration.ts      Sequence and affordability status
+src/ui/restorationFeedback.ts    Player-facing blocked-spend message
+src/ui/GameApp.ts                Counter, popover, tasks, and notification
 ```
 
-## Balance contract
+## Save compatibility
 
-```ts
-type StarBalance = {
-  earned: number;
-  spent: number;
-  available: number;
-};
-```
-
-All values are non-negative integers. `available` is recalculated whenever a
-save is loaded, so the invariant cannot be broken by stale saved data.
-
-## Earning rules
-
-A level stores the best star result earned for that level. Replaying a level
-awards only the improvement over the previous best result:
-
-```text
-first result: 1 star  -> +1 earned
-improve to 3 stars   -> +2 earned
-replay with 2 stars  -> +0 earned
-```
-
-Level groups unlock from distinct completed levels, not from star totals. Rooms
-unlock from persisted restoration milestones. Spending changes `available` but
-cannot undo a completed level or restoration task.
-
-## Spending rules
-
-A restoration task spends its configured `starCost` exactly once. The task is
-marked complete and the wallet is updated in the same `ProgressStore` action.
-A completed task cannot spend again, and a cost greater than `available` is
-rejected.
-
-## Save migration
-
-FEATURE-015 writes `ravenManorStateV3`. When only the previous V2 save exists:
-
-- `earned` is reconstructed from best level-star results;
-- `spent` is reconstructed from completed restoration tasks and their costs;
-- `available` is calculated as `earned - spent`;
-- the migrated state is immediately persisted as V3.
-
-The reset action clears legacy V2 data and writes a fresh V3 state.
-
-## Extension rules
-
-Future sources of stars must call the wallet award operation instead of editing
-balance fields directly. Future star sinks must use the spending operation.
-UI code may read the three values but must not recalculate or mutate them.
+The star balance remains in `ravenManorStateV4`. FEATURE-046 adds story-view
+metadata to the same state but does not change star values or require a new
+storage key.

@@ -87,6 +87,20 @@ describe('ProgressStore', () => {
     expect(store.state.tutorial).toEqual({ preference: 'enabled', step: 0 });
   });
 
+
+  it('persists viewed story scenes without cycling them', () => {
+    const storage = new MemoryStorage();
+    const store = new ProgressStore(tasks, storage);
+
+    expect(store.isStoryViewed(4)).toBe(false);
+    store.markStoryViewed(4);
+    store.markStoryViewed(4);
+
+    const reloaded = new ProgressStore(tasks, storage);
+    expect(reloaded.isStoryViewed(4)).toBe(true);
+    expect(reloaded.state.viewedStoryScenes).toEqual({ 4: true });
+  });
+
   it('migrates a V3 save and does not interrupt a player with existing progress', () => {
     const storage = new MemoryStorage();
     storage.setItem('ravenManorStateV3', JSON.stringify({
