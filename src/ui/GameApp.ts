@@ -18,6 +18,13 @@ import {
 import { roomVisuals } from '../data/roomVisuals';
 import { storyScenes } from '../data/storyScenes';
 import { Match3Engine, type Position } from '../engine/Match3Engine';
+import {
+  applySpecialCreations,
+  findCreatedSpecialPositions,
+  planDirectSpecialResolution,
+  planMatchedResolution,
+  type SpecialResolutionPlan,
+} from '../engine/SpecialTileResolver';
 import { findBestMove } from '../engine/MoveAdvisor';
 import { ProgressStore } from '../engine/ProgressStore';
 import {
@@ -49,6 +56,7 @@ import {
   type VfxKind,
 } from './motionPolicy';
 import { getTileClassName, getTileKey } from './tilePresentation';
+import { getSpecialPresentation, specialAssets } from './specialPresentation';
 import { getRoomSceneAsset } from './roomPresentation';
 import { getStoryScenePresentation } from './storyPresentation';
 import { getRestorationBlockedMessage } from './restorationFeedback';
@@ -93,6 +101,7 @@ export class GameApp {
   private readonly matchedTiles = new Set<string>();
   private readonly invalidTiles = new Set<string>();
   private readonly hintedTiles = new Set<string>();
+  private readonly createdSpecialTiles = new Set<string>();
   private boardSettling = false;
   private boardReshuffling = false;
   private boardMessage = '';
@@ -110,7 +119,7 @@ export class GameApp {
     this.errors = errors;
     this.audio.arm();
     void this.pwa.register();
-    preloadImageAssets([ravenMark, ...tileTypes.map((tile) => tile.assetPath)]);
+    preloadImageAssets([ravenMark, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets]);
     this.renderShell();
     this.syncViewportProfile();
     window.addEventListener('resize', () => this.syncViewportProfile());
@@ -650,6 +659,7 @@ export class GameApp {
     this.matchedTiles.clear();
     this.invalidTiles.clear();
     this.hintedTiles.clear();
+    this.createdSpecialTiles.clear();
     this.boardSettling = false;
     this.boardReshuffling = false;
     this.boardMessage = '';
@@ -746,17 +756,33 @@ export class GameApp {
           return `<span class="tile tile-empty" role="gridcell" aria-hidden="true"></span>`;
         }
 
+        const position = { row: rowIndex, col: colIndex };
+        const special = this.engine.getSpecial(position);
+        const specialPresentation = special ? getSpecialPresentation(special) : null;
         const swapOffset = this.swapOffsets.get(key);
-        const className = [getTileClassName(tile, {
-          selected: this.selected?.row === rowIndex && this.selected?.col === colIndex,
-          hinted: this.hintedTiles.has(key),
-          invalid: this.invalidTiles.has(key),
-          matched: this.matchedTiles.has(key),
-          settling: this.boardSettling,
-        }), swapOffset ? 'swapping' : ''].filter(Boolean).join(' ');
+        const className = [
+          getTileClassName(tile, {
+            selected: this.selected?.row === rowIndex && this.selected?.col === colIndex,
+            hinted: this.hintedTiles.has(key),
+            invalid: this.invalidTiles.has(key),
+            matched: this.matchedTiles.has(key),
+            settling: this.boardSettling,
+          }),
+          specialPresentation ? `special-tile ${specialPresentation.cssClass}` : '',
+          this.createdSpecialTiles.has(key) ? 'special-created' : '',
+          swapOffset ? 'swapping' : '',
+        ].filter(Boolean).join(' ');
         const swapStyle = swapOffset
           ? `style="--swap-x:${swapOffset.x};--swap-y:${swapOffset.y}"`
           : '';
+        const glyph = specialPresentation ?? {
+          name: definition.name,
+          assetPath: definition.assetPath,
+          cssClass: '',
+        };
+        const accessibleName = specialPresentation
+          ? `${specialPresentation.name}, создана из фишки ${definition.name}`
+          : definition.name;
 
         return `
           <button
@@ -764,12 +790,14 @@ export class GameApp {
             ${swapStyle}
             data-tile="${key}"
             data-tile-type="${definition.id}"
+            ${special ? `data-special="${special.kind}"` : ''}
             role="gridcell"
-            aria-label="${definition.name}, ряд ${rowIndex + 1}, колонка ${colIndex + 1}"
+            aria-label="${accessibleName}, ряд ${rowIndex + 1}, колонка ${colIndex + 1}"
             aria-pressed="${this.selected?.row === rowIndex && this.selected?.col === colIndex}"
           >
             <span class="tile-surface" aria-hidden="true"></span>
-            <img class="tile-glyph" src="${definition.assetPath}" alt="" draggable="false" />
+            ${specialPresentation ? '<span class="special-aura" aria-hidden="true"></span>' : ''}
+            <img class="tile-glyph ${specialPresentation ? 'tile-glyph--special' : ''}" src="${glyph.assetPath}" alt="" draggable="false" />
           </button>
         `;
       }),
@@ -848,13 +876,14 @@ export class GameApp {
   }
 
   private async attemptSwap(first: Position, second: Position): Promise<void> {
-    if (this.busy || !this.currentLevel) return;
+    if (this.busy || !this.currentLevel || !this.collectObjective) return;
     this.busy = true;
     this.selected = null;
+    const directCombo = this.engine.getDirectSpecialCombo(first, second);
     await this.swapWithMotion(first, second);
-    let matches = this.engine.findMatches();
+    const initialMatches = this.engine.findMatches();
 
-    if (matches.length === 0) {
+    if (initialMatches.length === 0 && !directCombo) {
       this.analytics.recordMove(false);
       this.audio.play('invalid');
       this.invalidTiles.add(getTileKey(first.row, first.col));
@@ -877,31 +906,73 @@ export class GameApp {
       this.progress.advanceTutorial();
     }
 
+    const objectiveTileType = this.collectObjective.getSnapshot().tileType;
     let cascade = 0;
-    while (matches.length > 0) {
+    let firstResolution = true;
+    let pendingDirectCombo = directCombo;
+
+    while (pendingDirectCombo || this.engine.findMatches().length > 0) {
       cascade++;
       this.cascadeLevel = cascade;
+      const plan = pendingDirectCombo
+        ? planDirectSpecialResolution(
+          this.engine,
+          first,
+          second,
+          pendingDirectCombo,
+          objectiveTileType,
+        )
+        : planMatchedResolution(
+          this.engine,
+          firstResolution ? [first, second] : null,
+          objectiveTileType,
+          firstResolution,
+        );
+
+      if (plan.clearPositions.length === 0) break;
       this.matchedTiles.clear();
-      matches.forEach((position) => this.matchedTiles.add(getTileKey(position.row, position.col)));
-      this.boardMessage = cascade > 1 ? `Каскад ×${cascade}` : `Комбинация ×${matches.length}`;
-      this.audio.play(cascade > 1 ? 'cascade' : 'match');
+      plan.clearPositions.forEach((position) => (
+        this.matchedTiles.add(getTileKey(position.row, position.col))
+      ));
+      const fallbackMessage = cascade > 1
+        ? `Каскад ×${cascade}`
+        : `Комбинация ×${plan.clearPositions.length}`;
+      this.boardMessage = plan.message
+        ? cascade > 1 ? `Каскад ×${cascade} · ${plan.message}` : plan.message
+        : fallbackMessage;
+      this.playResolutionAudio(plan, cascade);
+      this.recordSpecialAnalytics(plan);
       this.renderGame();
       await this.motionDelay('clear');
 
-      const removed = this.engine.clearMatches(matches);
+      const removed = this.engine.clearMatches(plan.clearPositions);
       this.objectiveTracker?.handle({ type: 'tiles-removed', tileTypes: removed });
+      applySpecialCreations(this.engine, plan.creations);
       this.engine.collapse();
       this.matchedTiles.clear();
+      this.createdSpecialTiles.clear();
+      for (const position of findCreatedSpecialPositions(this.engine, plan.creations)) {
+        this.createdSpecialTiles.add(getTileKey(position.row, position.col));
+      }
       this.boardSettling = true;
       this.renderGame();
       await this.motionDelay('settle');
       this.boardSettling = false;
-      matches = this.engine.findMatches();
+
+      if (this.createdSpecialTiles.size > 0) {
+        this.renderGame();
+        await this.delay(this.prefersReducedMotion() ? 0 : 260);
+        this.createdSpecialTiles.clear();
+      }
+
+      pendingDirectCombo = null;
+      firstResolution = false;
     }
 
     await this.motionDelay('feedbackHold');
     this.boardMessage = '';
     this.cascadeLevel = 0;
+    this.createdSpecialTiles.clear();
     if (!this.engine.findPossibleMove()) {
       this.boardReshuffling = true;
       this.audio.play('reshuffle');
@@ -925,6 +996,56 @@ export class GameApp {
       this.loseLevel();
     } else {
       this.renderGame();
+    }
+  }
+
+  private playResolutionAudio(plan: SpecialResolutionPlan, cascade: number): void {
+    if (plan.directCombo) {
+      this.audio.play('specialCombo');
+      return;
+    }
+    if (plan.activations.some(({ special }) => special.kind === 'prism')) {
+      this.audio.play('prism');
+      return;
+    }
+    if (plan.activations.some(({ special }) => special.kind === 'bomb')) {
+      this.audio.play('bomb');
+      return;
+    }
+    if (plan.activations.some(({ special }) => special.kind === 'rocket')) {
+      this.audio.play('rocket');
+      return;
+    }
+    if (plan.activations.some(({ special }) => special.kind === 'raven')) {
+      this.audio.play('raven');
+      return;
+    }
+    if (plan.creations.length > 0) {
+      this.audio.play('specialCreate');
+      return;
+    }
+    this.audio.play(cascade > 1 ? 'cascade' : 'match');
+  }
+
+  private recordSpecialAnalytics(plan: SpecialResolutionPlan): void {
+    for (const creation of plan.creations) {
+      this.analytics.recordAction('special_created', {
+        kind: creation.special.kind,
+        direction: creation.special.kind === 'rocket' ? creation.special.direction : null,
+        levelId: this.currentLevel?.id ?? null,
+      });
+    }
+    for (const activation of plan.activations) {
+      this.analytics.recordAction('special_activated', {
+        kind: activation.special.kind,
+        levelId: this.currentLevel?.id ?? null,
+      });
+    }
+    if (plan.directCombo) {
+      this.analytics.recordAction('special_combo', {
+        combo: plan.directCombo,
+        levelId: this.currentLevel?.id ?? null,
+      });
     }
   }
 
@@ -1030,7 +1151,7 @@ export class GameApp {
           <div>
             <div class="chapter">Быстрая подсказка · 1/2</div>
             <strong>Меняйте соседние фишки</strong>
-            <p>Соберите три или больше одинаковых фишек в ряд либо квадрат 2×2. Поле уже активно — можно сразу играть.</p>
+            <p>Соберите три или больше одинаковых фишек. Линии из 4–5, формы T/L и квадраты 2×2 создают усиления.</p>
           </div>
           <div class="tutorial-actions">
             <button class="secondary compact" data-action="tutorial-next">Понятно</button>
@@ -1046,7 +1167,7 @@ export class GameApp {
         <div>
           <div class="chapter">Быстрая подсказка · 2/2</div>
           <strong>Следите за целью и ходами</strong>
-          <p>Линии, квадраты 2×2 и каскады засчитываются. Больше оставшихся ходов — больше звёзд.</p>
+          <p>Ракеты чистят линии, руны взрывают область, ворон ищет полезную цель, а призма очищает выбранный цвет.</p>
         </div>
         <div class="tutorial-actions">
           <button class="secondary compact" data-action="tutorial-next">Готово</button>
@@ -1078,6 +1199,57 @@ export class GameApp {
       this.closeModal();
       this.renderGame();
     });
+  }
+
+  private showSpecialGuide(): void {
+    const entries = [
+      {
+        special: { kind: 'rocket', direction: 'row', baseTile: 0 } as const,
+        title: 'Серебряная ракета',
+        creation: 'Линия из 4 одинаковых фишек',
+        effect: 'Очищает целый ряд или колонку.',
+      },
+      {
+        special: { kind: 'bomb', baseTile: 0 } as const,
+        title: 'Взрывная руна',
+        creation: 'Комбинация в форме T или L',
+        effect: 'Очищает область 3×3.',
+      },
+      {
+        special: { kind: 'raven', baseTile: 0 } as const,
+        title: 'Призрачный ворон',
+        creation: 'Квадрат 2×2',
+        effect: 'Очищает соседей и летит к полезной цели.',
+      },
+      {
+        special: { kind: 'prism', baseTile: 0 } as const,
+        title: 'Лунная призма',
+        creation: 'Линия из 5 или больше',
+        effect: 'Поменяйте с обычной фишкой, чтобы очистить весь её цвет.',
+      },
+    ];
+    const cards = entries.map((entry) => {
+      const presentation = getSpecialPresentation(entry.special);
+      return `
+        <article class="special-guide-card ${presentation.cssClass}">
+          <div class="special-guide-icon"><img src="${presentation.assetPath}" alt="" draggable="false" /></div>
+          <div>
+            <strong>${entry.title}</strong>
+            <small>${entry.creation}</small>
+            <p>${entry.effect}</p>
+          </div>
+        </article>
+      `;
+    }).join('');
+
+    this.openModal(`
+      <div class="chapter">Справочник комбинаций</div>
+      <h2>Готические усиления</h2>
+      <p class="subtitle">Усиление активируется, когда попадает в комбинацию. Поддерживаются также пары: ракета + ракета, ракета + руна, руна + руна и призма + обычная фишка.</p>
+      <div class="special-guide-grid">${cards}</div>
+      <button class="primary" data-action="close-special-guide">Понятно</button>
+    `, 'modal-card--special-guide');
+    this.bindModal('close-special-guide', () => this.closeModal());
   }
 
   private showSettings(): void {
@@ -1113,6 +1285,15 @@ export class GameApp {
           <button class="secondary" data-action="tutorial-restart">Показать снова</button>
           <button class="ghost" data-action="tutorial-disable">Отключить подсказки</button>
         </div>
+      </section>
+      <div class="chapter settings-section-label">Игровое поле</div>
+      <h2>Усиления</h2>
+      <section class="settings-card">
+        <div>
+          <strong>Сильные комбинации</strong>
+          <p class="subtitle">Линии из 4–5, формы T/L и квадраты 2×2 создают специальные фишки.</p>
+        </div>
+        <button class="secondary" data-action="special-guide">Открыть справочник усилений</button>
       </section>
       <div class="chapter settings-section-label">Аудио</div>
       <h2>Музыка и звуки</h2>
@@ -1202,6 +1383,7 @@ export class GameApp {
       this.progress.skipTutorial();
       this.showSettings();
     });
+    this.bind('special-guide', () => this.showSpecialGuide());
     this.bind('audio-toggle', () => {
       this.audio.updateSettings({ muted: !this.audio.settings.muted });
       this.showSettings();
@@ -1432,7 +1614,9 @@ export class GameApp {
       ? 'Лучший ход · завершает цель'
       : bestMove.objectiveProgress > 0
         ? `Лучший ход · +${bestMove.objectiveProgress} к цели`
-        : 'Лучший доступный ход';
+        : (bestMove.specialPower ?? 0) > 0
+          ? 'Лучший ход · создаёт или активирует усиление'
+          : 'Лучший доступный ход';
     this.renderGame();
     window.setTimeout(() => {
       this.hintedTiles.clear();

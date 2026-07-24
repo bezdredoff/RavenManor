@@ -2,58 +2,49 @@
 
 ## Purpose
 
-The Hint button must recommend the move that best helps the player win the
-current level. It must not simply return the first legal swap found during a
-board scan.
+The Hint button recommends the move that best helps the current objective. It
+evaluates every legal swap, including direct special combinations.
 
-The implementation lives in:
+Implementation:
 
 ```text
 src/engine/MoveAdvisor.ts
+src/engine/SpecialTileResolver.ts
 ```
-
-The match engine remains responsible for legal swaps, match groups, clearing,
-and collapse rules. `GameApp` supplies the current collect objective and only
-renders the returned move.
 
 ## Ranking contract
 
-Every legal move is evaluated and compared lexicographically:
+Moves are compared lexicographically:
 
-1. completes the current objective immediately;
+1. immediately completes the objective;
 2. removes more still-needed objective tiles;
-3. removes more tiles in total;
-4. creates a larger merged combination;
-5. leaves more deterministic follow-up moves;
-6. appears earlier in stable row/column board order.
+3. removes more tiles immediately;
+4. creates or activates more valuable special power;
+5. creates a larger merged source combination;
+6. leaves more deterministic follow-up moves;
+7. stable board scan order.
 
-Objective progress is clamped to the number of tiles still required. Removing
-four roses when only one rose remains therefore contributes `+1` objective
-progress, while the excess clear can still win later tie-breakers.
+Objective progress remains more important than a visually larger unrelated
+special effect.
 
-## Guaranteed cascade policy
+## Guaranteed simulation
 
-The advisor includes cascades caused by tiles already visible on the board.
-After each clear it collapses surviving tiles without generating random refill
-tiles, then resolves any new guaranteed match.
+The advisor uses exactly the same special resolver as live gameplay. It includes:
 
-Random future tiles are not scored because they would make the same board
-produce inconsistent recommendations and would be difficult for players to
-understand or for tests to reproduce.
+- direct special combinations;
+- activation chains;
+- a Raven's deterministic objective-first target;
+- specials created by the player's initial match;
+- cascades caused by already visible tiles.
 
-## Match shapes
+It excludes random future refill tiles. Surviving tiles collapse into empty
+space, making repeated Hint presses deterministic.
 
-The advisor uses the same rules as normal gameplay:
+## Dead-board contract
 
-- horizontal line of three or more;
-- vertical line of three or more;
-- square `2×2` of four identical tiles.
+A board is playable when it has either:
 
-Overlapping shapes are merged. A tile is removed, scored, and counted toward an
-objective only once.
+- a swap that creates a normal line/square match; or
+- a supported direct special combination.
 
-## Performance
-
-The board contains at most 112 adjacent swaps on an `8×8` grid. The advisor
-simulates only legal swaps and creates no animation, DOM nodes, save changes, or
-random refills. Evaluation runs only after the player explicitly presses Hint.
+Reshuffle moves base tiles and special metadata together.

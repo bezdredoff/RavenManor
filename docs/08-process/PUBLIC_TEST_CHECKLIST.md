@@ -105,3 +105,18 @@ random-board attempt; collect repeated runs.
 - Repeat the button on the new version and confirm it reports the exact current
   version.
 - Confirm offline update checks explain that an internet connection is needed.
+
+## FEATURE-048 special tiles
+
+- create row and column rockets with lines of four;
+- create a rune with a T/L shape;
+- create a raven with a `2×2` square;
+- create a prism with a line of five;
+- activate each special through a matching clear;
+- swap Prism + normal, Rocket + Rocket, Rocket + Rune, and Rune + Rune;
+- confirm chain activations count each tile once;
+- confirm Raven prioritises the current collect target;
+- confirm Hint may recommend special creation/activation but still prioritises
+  immediate objective progress;
+- confirm reshuffle preserves specials and touch input never scrolls the page;
+- repeat at `320×568` and with reduced motion enabled.

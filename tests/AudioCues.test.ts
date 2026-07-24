@@ -4,6 +4,7 @@ import { getCueDefinition, type AudioCue } from '../src/audio/AudioCues';
 const cues: AudioCue[] = [
   'ui', 'select', 'hint', 'swap', 'invalid', 'match', 'cascade',
   'reshuffle', 'win', 'loss', 'restore', 'unlock', 'story',
+  'specialCreate', 'rocket', 'bomb', 'raven', 'prism', 'specialCombo',
 ];
 
 describe('audio cue definitions', () => {

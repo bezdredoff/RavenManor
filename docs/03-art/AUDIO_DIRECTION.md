@@ -52,3 +52,17 @@ sound effect.
 The music bus applies its own conservative scaling after this user setting.
 These values remain prototype hypotheses and must be revisited after a device
 playtest with headphones and phone speakers.
+
+## FEATURE-048 special effects
+
+Special-tile cues are procedural and semantic:
+
+- `specialCreate`: short ascending reveal;
+- `rocket`: metallic rising sweep;
+- `bomb`: low rune impact;
+- `raven`: spectral descending phrase;
+- `prism`: bright moon-glass shimmer;
+- `specialCombo`: wider layered reward chord.
+
+They use the existing Effects bus, mute state, first-gesture activation, and
+visibility suspension. They do not change the background theme.

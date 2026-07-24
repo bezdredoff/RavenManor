@@ -67,3 +67,44 @@ describe('best-move advisor', () => {
     )).toBeLessThan(0);
   });
 });
+
+describe('special-aware move advice', () => {
+  it('evaluates direct prism activation as a legal objective-first move', () => {
+    const engine = Match3Engine.fromBoard([
+      [0, 2, 1, 3, 2],
+      [1, 2, 3, 2, 0],
+      [2, 3, 2, 0, 1],
+      [3, 2, 0, 1, 2],
+      [2, 0, 1, 2, 3],
+    ], 4);
+    engine.setSpecial({ row: 0, col: 0 }, { kind: 'prism', baseTile: 0 });
+
+    const best = findBestMove(engine, { tileType: 2, remaining: 5 });
+
+    expect(best?.move).toEqual([
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+    ]);
+    expect(best?.completesObjective).toBe(true);
+    expect(best?.specialPower).toBeGreaterThan(0);
+  });
+
+  it('uses special power after equal objective and clear value', () => {
+    const moveA = [{ row: 1, col: 0 }, { row: 1, col: 1 }] as const;
+    const moveB = [{ row: 1, col: 1 }, { row: 1, col: 2 }] as const;
+    const baseline: MoveEvaluation = {
+      move: moveA,
+      completesObjective: false,
+      objectiveProgress: 1,
+      totalRemoved: 3,
+      largestCombination: 3,
+      followUpMoves: 2,
+      specialPower: 0,
+    };
+
+    expect(compareMoveEvaluations(
+      { ...baseline, move: moveB, specialPower: 3 },
+      baseline,
+    )).toBeLessThan(0);
+  });
+});
