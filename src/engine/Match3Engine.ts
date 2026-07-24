@@ -354,6 +354,51 @@ export class Match3Engine {
     return this.resolveClear(matches).removedTileTypes;
   }
 
+  canHammer(position: Position): boolean {
+    return this.isActive(position)
+      && (this.board[position.row][position.col] >= 0 || this.hasObstacle(position));
+  }
+
+  hitCell(position: Position): ClearResult {
+    if (!this.canHammer(position)) {
+      return { removedTileTypes: [], obstacleDamage: [], clearedObstacleKinds: [] };
+    }
+
+    const obstacle = this.getObstacle(position);
+    if (obstacle) {
+      const remainingLayers = obstacle.layers - 1;
+      const cleared = remainingLayers <= 0;
+      this.obstacles[position.row][position.col] = cleared
+        ? null
+        : { kind: obstacle.kind, layers: remainingLayers as 1 };
+      if (cleared && obstacle.kind === 'rubble') {
+        this.board[position.row][position.col] = -1;
+        this.specials[position.row][position.col] = null;
+      }
+      const damage: ObstacleDamage = {
+        position,
+        kind: obstacle.kind,
+        remainingLayers: Math.max(0, remainingLayers),
+        cleared,
+      };
+      return {
+        removedTileTypes: [],
+        obstacleDamage: [damage],
+        clearedObstacleKinds: cleared ? [obstacle.kind] : [],
+      };
+    }
+
+    const tile = this.board[position.row][position.col];
+    const special = this.getSpecial(position);
+    this.board[position.row][position.col] = -1;
+    this.specials[position.row][position.col] = null;
+    return {
+      removedTileTypes: tile >= 0 && special?.kind !== 'prism' ? [tile] : [],
+      obstacleDamage: [],
+      clearedObstacleKinds: [],
+    };
+  }
+
   collapse(refill = true): void {
     for (let col = 0; col < this.size; col++) {
       let segment: number[] = [];

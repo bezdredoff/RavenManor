@@ -1,6 +1,14 @@
 import { getSafeStorage } from '../platform/SafeStorage';
 import type { RestorationTaskDefinition } from '../data/restorationTasks';
 import {
+  addBoosterRewards,
+  createBoosterInventory,
+  normalizeBoosterInventory,
+  spendBooster,
+  type BoosterInventory,
+  type BoosterKind,
+} from '../boosters/BoosterTypes';
+import {
   awardStars,
   createStarBalance,
   restoreStarBalance,
@@ -25,6 +33,7 @@ export type ProgressState = {
   tutorial: TutorialState;
   storyStep: number;
   viewedStoryScenes: Record<number, boolean>;
+  boosters: BoosterInventory;
 };
 
 export type ProgressExportEnvelope = Readonly<{
@@ -50,6 +59,7 @@ const createEmptyState = (): ProgressState => ({
   tutorial: createTutorialState(),
   storyStep: 0,
   viewedStoryScenes: {},
+  boosters: createBoosterInventory(),
 });
 
 const normalizeStars = (value: unknown): Record<number, number> => {
@@ -100,6 +110,10 @@ export class ProgressStore {
     return this.state.starBalance.available;
   }
 
+  getBoosterCount(kind: BoosterKind): number {
+    return this.state.boosters[kind];
+  }
+
   /** @deprecated Use earnedStars when checking progression thresholds. */
   get totalStars(): number {
     return this.earnedStars;
@@ -126,6 +140,16 @@ export class ProgressStore {
 
     this.state.starBalance = spendStars(this.state.starBalance, task.starCost);
     this.state.completedRestorationTasks[taskId] = true;
+    this.state.boosters = addBoosterRewards(this.state.boosters, task.rewards ?? []);
+    this.persist();
+    return true;
+  }
+
+
+  useBooster(kind: BoosterKind): boolean {
+    const next = spendBooster(this.state.boosters, kind);
+    if (!next) return false;
+    this.state.boosters = next;
     this.persist();
     return true;
   }
@@ -187,7 +211,7 @@ export class ProgressStore {
       throw new Error('Файл не содержит сохранение Raven Manor.');
     }
     const record = candidate as Partial<ProgressState>;
-    const hasRecognisedField = ['stars', 'completed', 'completedRestorationTasks', 'starBalance', 'tutorial', 'viewedStoryScenes']
+    const hasRecognisedField = ['stars', 'completed', 'completedRestorationTasks', 'starBalance', 'tutorial', 'viewedStoryScenes', 'boosters']
       .some((field) => field in record);
     if (!hasRecognisedField) {
       throw new Error('Файл не похож на сохранение Raven Manor.');
@@ -221,6 +245,15 @@ export class ProgressStore {
     const hasExistingProgress = Object.values(completed).some(Boolean)
       || Object.values(completedRestorationTasks).some(Boolean);
 
+    const boosters = parsed.boosters
+      ? normalizeBoosterInventory(parsed.boosters)
+      : this.restorationTasks.reduce(
+          (inventory, task) => completedRestorationTasks[task.id]
+            ? addBoosterRewards(inventory, task.rewards ?? [])
+            : inventory,
+          createBoosterInventory(),
+        );
+
     return {
       stars,
       completed,
@@ -234,6 +267,7 @@ export class ProgressStore {
       tutorial: restoreTutorialState(parsed.tutorial, hasExistingProgress),
       storyStep: Number.isFinite(parsed.storyStep) ? Math.max(0, Math.floor(Number(parsed.storyStep))) : 0,
       viewedStoryScenes,
+      boosters,
     };
   }
 
@@ -263,7 +297,8 @@ export class ProgressStore {
         migrated: Boolean(legacyV3Raw || legacyV2Raw)
           || !parsed.starBalance
           || !parsed.tutorial
-          || !parsed.viewedStoryScenes,
+          || !parsed.viewedStoryScenes
+          || !parsed.boosters,
       };
     } catch {
       try {

@@ -3,21 +3,10 @@ import levelGroupsJson from './progression/level-groups.json';
 import { validateLevelCatalog } from './levelValidation';
 import { validateLevelGroups } from './levelGroupValidation';
 import { tileTypes } from './tileTypes';
+import { restorationTasks } from './restorationTasks';
 
-export type RoomUnlockRule =
-  | Readonly<{ type: 'always' }>
-  | Readonly<{
-      type: 'room-restoration';
-      roomId: string;
-      completedTasks: number;
-    }>;
-
-export type RoomDefinition = Readonly<{
-  id: string;
-  title: string;
-  description: string;
-  unlock: RoomUnlockRule;
-}>;
+import type { RoomDefinition } from './roomTypes';
+export type { RoomDefinition, RoomUnlockRule } from './roomTypes';
 
 export type {
   ClearObstacleObjectiveDefinition,
@@ -40,7 +29,7 @@ export const levels = validateLevelCatalog(levelDefinitionsJson, {
   tileTypeCount: tileTypes.length,
 });
 
-export const levelGroups = validateLevelGroups(levelGroupsJson, levels);
+export const levelGroups = validateLevelGroups(levelGroupsJson, levels, restorationTasks);
 
 export const rooms: readonly RoomDefinition[] = [
   {

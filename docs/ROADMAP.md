@@ -179,7 +179,7 @@ _Status: implemented, pending project/device verification._
 
 ### FEATURE-049 — Board shapes, blockers, and objective types
 
-_Status: next._
+_Status: implemented, pending project/device verification._
 
 - board masks and non-rectangular playable shapes;
 - chains, debris/crates, and non-spreading fog;
@@ -187,6 +187,8 @@ _Status: next._
 - special effects damage blockers through the shared position resolver.
 
 ### FEATURE-050 — Meta integration and boosters
+
+_Status: implemented, pending project/device verification._
 
 - active restoration task on the level map and win result;
 - restoration milestones unlock mechanics and level groups;
@@ -213,4 +215,11 @@ _Status: next._
 - special-tile, hint, gravity, and reshuffle integration;
 - obstacle art, procedural audio, guide text, and revised levels 4–10.
 
-Next planned: FEATURE-050 meta integration and active boosters.
+## Completed — FEATURE-050
+
+- restoration-task level-group gates with legacy replay protection;
+- active repair guidance on the level map and victory result;
+- Silver Hammer and Shuffle inventory, rewards, migration, UI, SVG, and sound;
+- optional full-room completion rewards.
+
+Next planned: FEATURE-051 expansion to 30 levels.

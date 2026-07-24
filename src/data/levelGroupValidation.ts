@@ -4,6 +4,7 @@ import {
   type LevelGroupUnlockRule,
 } from './levelGroupTypes';
 import type { LevelDefinition } from './levelTypes';
+import type { RestorationTaskDefinition } from './restorationTasks';
 
 export type LevelGroupValidationIssue = Readonly<{
   path: string;
@@ -33,10 +34,12 @@ const GROUP_KEYS = new Set([
 ]);
 const ALWAYS_UNLOCK_KEYS = new Set(['type']);
 const GROUP_UNLOCK_KEYS = new Set(['type', 'groupId', 'count']);
+const RESTORATION_UNLOCK_KEYS = new Set(['type', 'taskId']);
 
 export function validateLevelGroups(
   value: unknown,
   levels: readonly LevelDefinition[],
+  restorationTasks: readonly RestorationTaskDefinition[] = [],
 ): LevelGroupDefinition[] {
   const issues: LevelGroupValidationIssue[] = [];
   if (!Array.isArray(value)) {
@@ -85,6 +88,7 @@ export function validateLevelGroups(
       rawGroup.unlock,
       path,
       groups,
+      restorationTasks,
       issues,
     );
 
@@ -172,6 +176,7 @@ function readUnlockRule(
   value: unknown,
   groupPath: string,
   validatedGroups: readonly LevelGroupDefinition[],
+  restorationTasks: readonly RestorationTaskDefinition[],
   issues: LevelGroupValidationIssue[],
 ): LevelGroupUnlockRule | null {
   const path = `${groupPath}.unlock`;
@@ -185,8 +190,22 @@ function readUnlockRule(
     return { type: 'always' };
   }
 
+  if (value.type === 'restoration-task') {
+    reportUnexpectedKeys(value, RESTORATION_UNLOCK_KEYS, path, issues);
+    const taskId = readNonEmptyString(value.taskId, `${path}.taskId`, issues);
+    if (taskId === null) return null;
+    if (!restorationTasks.some((task) => task.id === taskId)) {
+      issues.push({
+        path: `${path}.taskId`,
+        message: `references unknown restoration task "${taskId}"`,
+      });
+      return null;
+    }
+    return { type: 'restoration-task', taskId };
+  }
+
   if (value.type !== 'complete-in-group') {
-    issues.push({ path: `${path}.type`, message: 'must be "always" or "complete-in-group"' });
+    issues.push({ path: `${path}.type`, message: 'must be "always", "complete-in-group", or "restoration-task"' });
     return null;
   }
 

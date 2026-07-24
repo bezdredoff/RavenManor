@@ -16,20 +16,41 @@
       "unlock"
     ],
     "properties": {
-      "schemaVersion": { "const": 1 },
-      "id": { "type": "string", "minLength": 1 },
-      "title": { "type": "string", "minLength": 1 },
-      "description": { "type": "string", "minLength": 1 },
+      "schemaVersion": {
+        "const": 1
+      },
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "title": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": {
+        "type": "string",
+        "minLength": 1
+      },
       "levelIds": {
         "type": "array",
         "minItems": 1,
         "uniqueItems": true,
-        "items": { "type": "integer", "minimum": 1 }
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
       },
       "unlock": {
         "oneOf": [
-          { "$ref": "#/definitions/always" },
-          { "$ref": "#/definitions/completeInGroup" }
+          {
+            "$ref": "#/definitions/always"
+          },
+          {
+            "$ref": "#/definitions/completeInGroup"
+          },
+          {
+            "$ref": "#/definitions/restorationTask"
+          }
         ]
       }
     }
@@ -38,17 +59,52 @@
     "always": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["type"],
-      "properties": { "type": { "const": "always" } }
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "always"
+        }
+      }
     },
     "completeInGroup": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["type", "groupId", "count"],
+      "required": [
+        "type",
+        "groupId",
+        "count"
+      ],
       "properties": {
-        "type": { "const": "complete-in-group" },
-        "groupId": { "type": "string", "minLength": 1 },
-        "count": { "type": "integer", "minimum": 1 }
+        "type": {
+          "const": "complete-in-group"
+        },
+        "groupId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "restorationTask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "taskId"
+      ],
+      "properties": {
+        "type": {
+          "const": "restoration-task"
+        },
+        "taskId": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     }
   }

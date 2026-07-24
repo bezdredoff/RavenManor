@@ -66,3 +66,14 @@ Special-tile cues are procedural and semantic:
 
 They use the existing Effects bus, mute state, first-gesture activation, and
 visibility suspension. They do not change the background theme.
+
+## FEATURE-050 booster cues
+
+- `hammer`: short low metal impact followed by a small magical overtone;
+- `boosterShuffle`: rising four-note rearrangement cue, distinct from automatic
+  dead-board reshuffle;
+- `boosterReward`: warm ascending reward phrase used when restoration grants
+  inventory.
+
+All three remain procedural Web Audio cues and respect the existing effects
+volume and mute settings.

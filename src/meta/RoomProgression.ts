@@ -1,4 +1,4 @@
-import type { RoomDefinition } from '../data/gameData';
+import type { RoomDefinition } from '../data/roomTypes';
 import type { RestorationTaskDefinition } from '../data/restorationTasks';
 
 export type RoomUnlockState = Readonly<{

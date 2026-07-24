@@ -20,7 +20,10 @@ export type AudioCue =
   | 'specialCombo'
   | 'chainBreak'
   | 'rubbleBreak'
-  | 'fogClear';
+  | 'fogClear'
+  | 'hammer'
+  | 'boosterShuffle'
+  | 'boosterReward';
 
 export type CueDefinition = Readonly<{
   frequencies: readonly number[];
@@ -52,6 +55,9 @@ const CUES: Readonly<Record<AudioCue, CueDefinition>> = {
   chainBreak: { frequencies: [310, 245, 190], durationMs: 230, gain: 0.11, wave: 'square' },
   rubbleBreak: { frequencies: [135, 92, 64], durationMs: 330, gain: 0.12, wave: 'triangle' },
   fogClear: { frequencies: [420, 560, 740], durationMs: 390, gain: 0.07, wave: 'sine' },
+  hammer: { frequencies: [210, 135, 420], durationMs: 300, gain: 0.12, wave: 'triangle' },
+  boosterShuffle: { frequencies: [277, 370, 494, 659], durationMs: 470, gain: 0.09, wave: 'triangle' },
+  boosterReward: { frequencies: [523, 659, 784, 1047], durationMs: 620, gain: 0.1, wave: 'sine' },
 };
 
 export function getCueDefinition(cue: AudioCue): CueDefinition {

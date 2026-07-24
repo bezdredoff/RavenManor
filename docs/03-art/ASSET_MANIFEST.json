@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "direction": "romantic-gothic-restoration",
   "statusValues": [
     "planned",
@@ -483,6 +483,20 @@
       "priority": "P0",
       "status": "integrated",
       "master": "300x420 transparent SVG prototype"
+    },
+    {
+      "key": "ui/boosters/silver-hammer",
+      "type": "booster-icon",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 transparent SVG"
+    },
+    {
+      "key": "ui/boosters/raven-shuffle",
+      "type": "booster-icon",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 transparent SVG"
     }
   ]
 }
