@@ -138,12 +138,12 @@ random-board attempt; collect repeated runs.
 
 ## FEATURE-050 connected meta and boosters
 
-- On a clean save, confirm levels 1–3 are open and levels 4–10 are repair-gated.
+- On a clean save, confirm levels 1–3 are open and later groups are repair-gated.
 - Complete a level and confirm the result explains the next restoration task.
 - Earn enough stars and use **Выполнить ремонт** directly from the win modal.
 - Confirm `Зажечь люстру` opens levels 4–6.
-- Confirm `Починить стеллажи` opens levels 7–9.
-- Confirm `Починить фонтан` opens level 10.
+- Confirm `Открыть ставни` opens levels 7–9 and `Починить стеллажи` opens levels 10–12.
+- Confirm `Починить фонтан` opens levels 16–18.
 - Import an older save with a completed gated level and confirm that group
   remains replayable.
 - Complete `Убрать обломки` and confirm two Silver Hammers are awarded.
@@ -158,3 +158,29 @@ random-board attempt; collect repeated runs.
 - Export/import the save and confirm booster counts remain unchanged.
 - Test the gameplay layout at 320×568, 360×800, 390×844, and 430×932.
 - Confirm the new booster row never causes document scroll or hides the board.
+
+## FEATURE-051 thirty-level chapter
+
+- On a clean save, confirm exactly levels 1–3 are initially playable.
+- Confirm the map contains 10 groups and 30 unique levels.
+- Confirm each restoration gate opens exactly the advertised three-level group:
+  - chandelier → 4–6;
+  - library shutters → 7–9;
+  - library shelves → 10–12;
+  - garden vines → 13–15;
+  - garden fountain → 16–18;
+  - crypt stairs → 19–21;
+  - crypt seals → 22–24;
+  - tower steps → 25–27;
+  - observatory → 28–30.
+- Confirm room finales appear at levels 6, 12, 18, 24, and 30.
+- Play at least three generated boards for every level.
+- Record losses where a particular blocker remains rather than immediately
+  changing the move limit.
+- Confirm levels without a milestone story scene do not show a dead story CTA.
+- Confirm milestone scenes appear after 1, 3, 6, 9, 12, 15, 21, 24, 27, and 30.
+- Import a pre-051 save and confirm completed gated groups remain replayable.
+- Confirm the 30-level map scrolls inside the application frame on all target
+  phone sizes without the header overlaying content.
+- Confirm PWA update, offline launch, save export/import, audio, and analytics
+  still work after the larger data bundle is deployed.

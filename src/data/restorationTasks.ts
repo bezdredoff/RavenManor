@@ -59,9 +59,9 @@ export const restorationTasks: RestorationTaskDefinition[] = [
     unlocks: [
       {
         type: 'level-group',
-        levelGroupId: 'whispers',
+        levelGroupId: 'hall-restoration',
         title: 'Открыты уровни 4–6',
-        description: 'Составные цели, цепи и завалы теперь доступны на карте.',
+        description: 'Вторая половина арки Вестибюля вводит составные цели, цепи и завалы.',
       },
       {
         type: 'mechanic',
@@ -90,26 +90,18 @@ export const restorationTasks: RestorationTaskDefinition[] = [
     starCost: 1,
     order: 1,
     rewards: [{ kind: 'shuffle', amount: 2 }],
-    unlocks: [{
-      type: 'booster',
-      booster: 'shuffle',
-      title: 'Открыто Перемешивание',
-      description: 'Перестраивает доступные фишки без траты хода и сохраняет препятствия.',
-    }],
-  },
-  {
-    id: 'library-repair-shelves',
-    roomId: 'library',
-    title: 'Починить стеллажи',
-    description: 'Укрепить полки с редкими семейными архивами.',
-    starCost: 1,
-    order: 2,
     unlocks: [
       {
+        type: 'booster',
+        booster: 'shuffle',
+        title: 'Открыто Перемешивание',
+        description: 'Перестраивает доступные фишки без траты хода и сохраняет препятствия.',
+      },
+      {
         type: 'level-group',
-        levelGroupId: 'deepening-mystery',
+        levelGroupId: 'library-entry',
         title: 'Открыты уровни 7–9',
-        description: 'Туман, сложные формы поля и многослойные препятствия ждут дальше.',
+        description: 'Первые испытания Библиотеки вводят туман и сложные формы поля.',
       },
       {
         type: 'mechanic',
@@ -118,6 +110,20 @@ export const restorationTasks: RestorationTaskDefinition[] = [
         description: 'Новые уровни используют закрытые клетки, коридоры и туман.',
       },
     ],
+  },
+  {
+    id: 'library-repair-shelves',
+    roomId: 'library',
+    title: 'Починить стеллажи',
+    description: 'Укрепить полки с редкими семейными архивами.',
+    starCost: 1,
+    order: 2,
+    unlocks: [{
+      type: 'level-group',
+      levelGroupId: 'library-archive',
+      title: 'Открыты уровни 10–12',
+      description: 'Запретный архив объединяет многослойные препятствия и несколько целей.',
+    }],
   },
   {
     id: 'library-unlock-desk',
@@ -141,6 +147,12 @@ export const restorationTasks: RestorationTaskDefinition[] = [
     starCost: 1,
     order: 1,
     rewards: [{ kind: 'hammer', amount: 1 }],
+    unlocks: [{
+      type: 'level-group',
+      levelGroupId: 'garden-entry',
+      title: 'Открыты уровни 13–15',
+      description: 'Расчищенные дорожки ведут к первым испытаниям Зимнего сада.',
+    }],
   },
   {
     id: 'garden-repair-fountain',
@@ -151,9 +163,9 @@ export const restorationTasks: RestorationTaskDefinition[] = [
     order: 2,
     unlocks: [{
       type: 'level-group',
-      levelGroupId: 'prototype-finale',
-      title: 'Открыт уровень 10',
-      description: 'Финальное испытание прототипа объединяет все изученные механики.',
+      levelGroupId: 'garden-heart',
+      title: 'Открыты уровни 16–18',
+      description: 'Оживший фонтан пробуждает сердце розария и финал арки сада.',
     }],
   },
   {
@@ -178,6 +190,12 @@ export const restorationTasks: RestorationTaskDefinition[] = [
     starCost: 1,
     order: 1,
     rewards: [{ kind: 'hammer', amount: 1 }],
+    unlocks: [{
+      type: 'level-group',
+      levelGroupId: 'crypt-entry',
+      title: 'Открыты уровни 19–21',
+      description: 'Спуск в Крипту открывает каменные завалы, железные клятвы и могильный туман.',
+    }],
   },
   {
     id: 'crypt-restore-seals',
@@ -186,6 +204,12 @@ export const restorationTasks: RestorationTaskDefinition[] = [
     description: 'Собрать разбитые гербы семьи Блэквуд.',
     starCost: 2,
     order: 2,
+    unlocks: [{
+      type: 'level-group',
+      levelGroupId: 'crypt-contract',
+      title: 'Открыты уровни 22–24',
+      description: 'Восстановленные печати открывают зал древнего договора.',
+    }],
   },
   {
     id: 'crypt-light-braziers',
@@ -209,6 +233,12 @@ export const restorationTasks: RestorationTaskDefinition[] = [
     starCost: 1,
     order: 1,
     rewards: [{ kind: 'shuffle', amount: 1 }],
+    unlocks: [{
+      type: 'level-group',
+      levelGroupId: 'tower-entry',
+      title: 'Открыты уровни 25–27',
+      description: 'Починенные ступени открывают подъём к механизму ворона.',
+    }],
   },
   {
     id: 'tower-open-observatory',
@@ -217,6 +247,12 @@ export const restorationTasks: RestorationTaskDefinition[] = [
     description: 'Снять ржавые засовы с купольных окон.',
     starCost: 1,
     order: 2,
+    unlocks: [{
+      type: 'level-group',
+      levelGroupId: 'tower-awakening',
+      title: 'Открыты уровни 28–30',
+      description: 'Обсерватория ведёт к последней печати и финалу первой главы.',
+    }],
   },
   {
     id: 'tower-restore-raven-clock',

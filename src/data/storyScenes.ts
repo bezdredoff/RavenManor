@@ -60,7 +60,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
   },
   {
     id: 'the-man-in-the-hall',
-    afterLevelId: 2,
+    afterLevelId: 3,
     chapter: 'Глава I · Возвращение',
     title: 'Хозяин без приглашения',
     backgroundKey: 'hall',
@@ -93,7 +93,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
   },
   {
     id: 'the-erased-portrait',
-    afterLevelId: 3,
+    afterLevelId: 6,
     chapter: 'Глава I · Возвращение',
     title: 'Лицо под краской',
     backgroundKey: 'hall',
@@ -126,7 +126,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
   },
   {
     id: 'the-missing-pages',
-    afterLevelId: 4,
+    afterLevelId: 9,
     chapter: 'Глава II · Память дома',
     title: 'Дневник моей матери',
     backgroundKey: 'library',
@@ -159,7 +159,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
   },
   {
     id: 'moon-rose-memory',
-    afterLevelId: 5,
+    afterLevelId: 15,
     chapter: 'Глава II · Память дома',
     title: 'Имя среди шипов',
     backgroundKey: 'garden',
@@ -192,7 +192,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
   },
   {
     id: 'the-empty-sarcophagus',
-    afterLevelId: 6,
+    afterLevelId: 21,
     chapter: 'Глава II · Память дома',
     title: 'Могила без тела',
     backgroundKey: 'crypt',
@@ -225,7 +225,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
   },
   {
     id: 'the-guardian-confesses',
-    afterLevelId: 7,
+    afterLevelId: 24,
     chapter: 'Глава II · Память дома',
     title: 'Клятва Адриана',
     backgroundKey: 'raven-window',
@@ -258,7 +258,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
   },
   {
     id: 'the-letter-to-adrian',
-    afterLevelId: 8,
+    afterLevelId: 12,
     chapter: 'Глава III · Утраченное имя',
     title: 'Приказ, написанный мной',
     backgroundKey: 'library',
@@ -291,7 +291,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
   },
   {
     id: 'the-stolen-night',
-    afterLevelId: 9,
+    afterLevelId: 27,
     chapter: 'Глава III · Утраченное имя',
     title: 'Ночь, которую у меня отняли',
     backgroundKey: 'tower',
@@ -324,7 +324,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
   },
   {
     id: 'the-raven-tower-opens',
-    afterLevelId: 10,
+    afterLevelId: 30,
     chapter: 'Глава III · Утраченное имя',
     title: 'Пробуждение башни',
     backgroundKey: 'tower',

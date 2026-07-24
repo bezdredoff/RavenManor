@@ -75,7 +75,7 @@ export const rooms: readonly RoomDefinition[] = [
     unlock: {
       type: 'room-restoration',
       roomId: 'crypt',
-      completedTasks: 1,
+      completedTasks: 2,
     },
   },
 ];

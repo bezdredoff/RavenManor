@@ -70,3 +70,8 @@ Obstacle targets count cleared blocker cells, not removed layers.
 - Level 8: hourglass, double chains, three goals.
 - Level 9: corridor mask with rubble and fog.
 - Level 10: mixed prototype finale with all blockers.
+
+
+## FEATURE-051 campaign reuse
+
+Levels 11–30 do not add another blocker type. They recombine the three approved blockers, one/two layers, masks, multiple objectives, special tiles, and boosters across four additional room arcs. This isolates content-depth testing from mechanic-production risk.

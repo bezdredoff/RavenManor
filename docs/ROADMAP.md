@@ -197,9 +197,14 @@ _Status: implemented, pending project/device verification._
 
 ### FEATURE-051 — Expansion to 30 levels
 
+_Status: implemented, pending project/device verification._
+
 - twenty new levels across five room arcs;
-- progressive mechanic introduction and wave-shaped balance;
-- content validation and repeated-run telemetry.
+- ten restoration-gated three-level groups;
+- room finales at levels 6, 12, 18, 24, and 30;
+- progressive mechanic recombination and wave-shaped balance;
+- milestone story redistribution until FEATURE-052;
+- catalog validation and repeated generation/cascade smoke testing.
 
 ### FEATURE-052 — Story journal and chapter expansion
 
@@ -222,4 +227,4 @@ _Status: implemented, pending project/device verification._
 - Silver Hammer and Shuffle inventory, rewards, migration, UI, SVG, and sound;
 - optional full-room completion rewards.
 
-Next planned: FEATURE-051 expansion to 30 levels.
+Completed FEATURE-051: 30-level first chapter. Next planned: FEATURE-052 story journal and twenty additional narrative events.

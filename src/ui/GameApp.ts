@@ -1474,6 +1474,7 @@ export class GameApp {
       this.progress.state.completedRestorationTasks,
       this.progress.availableStars,
     );
+    const storyScene = getStorySceneForLevel(storyScenes, completedLevelId);
     this.audio.play('win');
     const rewardMessage = newlyEarned > 0
       ? `Получено новых звёзд: ${newlyEarned} ★`
@@ -1505,7 +1506,7 @@ export class GameApp {
           : `<button class="${canRepair ? 'secondary' : 'primary'}" data-action="next-level">Следующий уровень</button>`}
         <button class="${nextLevelId === null && !canRepair ? 'primary' : 'secondary'}" data-action="levels">К уровням</button>
         <button class="secondary" data-action="manor">В поместье</button>
-        <button class="ghost" data-action="story">${this.progress.isStoryViewed(completedLevelId) ? 'Повторить сюжетную сцену' : 'Сюжетная сцена'}${nextLevelId === null ? ' → к уровням' : ' → следующий уровень'}</button>
+        ${storyScene ? `<button class="ghost" data-action="story">${this.progress.isStoryViewed(completedLevelId) ? 'Повторить сюжетную сцену' : 'Сюжетная сцена'}${nextLevelId === null ? ' → к уровням' : ' → следующий уровень'}</button>` : ''}
       </div>
     `, 'modal-card--result modal-card--win');
 
@@ -1530,10 +1531,12 @@ export class GameApp {
       this.closeModal();
       this.showManor();
     });
-    this.bindModal('story', () => {
-      this.closeModal();
-      this.showStory(completedLevelId, nextLevelId);
-    });
+    if (storyScene) {
+      this.bindModal('story', () => {
+        this.closeModal();
+        this.showStory(completedLevelId, nextLevelId);
+      });
+    }
   }
 
   private loseLevel(): void {
