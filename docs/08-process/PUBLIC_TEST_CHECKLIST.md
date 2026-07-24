@@ -93,3 +93,15 @@ random-board attempt; collect repeated runs.
   available offline.
 - Return online, deploy a newer cache version, and verify update checking does
   not erase the V4 save.
+
+## PWA version update
+
+- Record the version shown in Settings before deployment.
+- Deploy a build with a different `APP_VERSION`.
+- In the installed app press **Проверить обновление** while online.
+- Confirm the UI reports the deployed version rather than `latest`.
+- Confirm the app reloads once and Settings shows the new version.
+- Confirm gameplay save, audio settings, and local analytics remain intact.
+- Repeat the button on the new version and confirm it reports the exact current
+  version.
+- Confirm offline update checks explain that an internet connection is needed.

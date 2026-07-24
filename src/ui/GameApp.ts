@@ -1326,11 +1326,25 @@ export class GameApp {
 
   private async checkPwaUpdate(): Promise<void> {
     try {
-      const available = await this.pwa.checkForUpdate();
-      this.showToast(available ? 'Доступно обновление. Перезапустите приложение.' : 'Установлена актуальная версия.');
+      const result = await this.pwa.checkForUpdate();
+      if (result.status === 'current') {
+        this.showToast(`Установлена актуальная версия ${result.currentVersion}.`);
+        return;
+      }
+      if (result.status === 'offline') {
+        this.showToast('Для проверки обновления нужен интернет.', 'warning');
+        return;
+      }
+      if (result.status === 'unavailable') {
+        this.showToast('Проверка обновлений доступна только в установленной production-сборке.', 'warning');
+        return;
+      }
+
+      this.showToast(`Найдена версия ${result.remoteVersion}. Перезапускаю приложение…`);
+      window.setTimeout(() => window.location.reload(), 650);
     } catch (error) {
       this.errors.record('application', error);
-      this.showToast('Не удалось проверить обновление.', 'warning');
+      this.showToast('Не удалось получить свежую версию с сервера.', 'warning');
     }
   }
 

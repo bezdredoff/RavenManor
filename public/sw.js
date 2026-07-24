@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'raven-manor-v047a';
+const CACHE_VERSION = '__RAVEN_MANOR_CACHE_VERSION__';
 const SCOPE = self.registration.scope;
 const PRECACHE_PATHS = '__RAVEN_MANOR_PRECACHE_MANIFEST__';
 const FALLBACK_PATHS = [
@@ -13,15 +13,13 @@ const paths = Array.isArray(PRECACHE_PATHS) ? PRECACHE_PATHS : FALLBACK_PATHS;
 const PRECACHE_URLS = [...new Set(paths.map((path) => new URL(path, SCOPE).href))];
 const INDEX_URL = new URL('./index.html', SCOPE).href;
 const ROOT_URL = new URL('./', SCOPE).href;
+const VERSION_URL = new URL('./version.json', SCOPE).href;
 
 const openCache = () => caches.open(CACHE_VERSION);
 
 const precacheProductionBuild = async () => {
   const cache = await openCache();
 
-  // Cache every generated production file during installation. Using explicit
-  // requests keeps the cache keys scope-safe on GitHub Pages subpaths and makes
-  // a failed asset prevent a false "offline ready" state.
   await Promise.all(PRECACHE_URLS.map(async (url) => {
     const request = new Request(url, { cache: 'reload', credentials: 'same-origin' });
     const response = await fetch(request);
@@ -88,6 +86,17 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Update checks must never be answered from the app cache. Otherwise an old
+  // installed bundle can compare itself with its own cached version manifest
+  // and falsely report that it is current.
+  if (url.href === VERSION_URL || url.pathname.endsWith('/version.json')) {
+    event.respondWith(fetch(new Request(request, {
+      cache: 'no-store',
+      credentials: 'same-origin',
+    })));
+    return;
+  }
 
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
