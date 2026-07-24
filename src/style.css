@@ -956,3 +956,294 @@ body {
   .board-feedback { animation: none; transition: none; }
   .tile.matched { opacity: .35; }
 }
+
+/* FEATURE-041 — authored manor scenes and visual-novel story presentation. */
+.room-card--visual {
+  position: relative;
+  min-height: 0;
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(214,181,109,.24);
+  border-radius: var(--radius-lg);
+  background: #100c14;
+  box-shadow: 0 .55rem 1.25rem rgba(0,0,0,.28);
+  color: inherit;
+  cursor: pointer;
+  transition: transform var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+.room-card--visual:not(.locked):active { transform: scale(.985); }
+.room-card--visual:not(.locked):focus-visible {
+  outline: 3px solid rgba(214,181,109,.55);
+  outline-offset: 2px;
+}
+.room-card--visual.restored {
+  border-color: rgba(214,181,109,.62);
+  box-shadow: 0 .65rem 1.5rem rgba(0,0,0,.36), inset 0 0 0 1px rgba(214,181,109,.12);
+}
+.room-card--visual.locked { cursor: default; opacity: .72; }
+.room-card-art {
+  position: relative;
+  aspect-ratio: 16 / 7.7;
+  overflow: hidden;
+  background: #09070d;
+}
+.room-card-art img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transform: scale(1.01);
+}
+.room-card-art-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 48%, rgba(8,6,11,.92) 100%);
+  pointer-events: none;
+}
+.room-card--visual.locked .room-card-art img {
+  filter: grayscale(.72) brightness(.48) contrast(.92);
+}
+.room-card--visual.locked .room-card-art-shade {
+  background: rgba(8,6,11,.48);
+  backdrop-filter: blur(1px);
+}
+.room-stage-badge {
+  position: absolute;
+  right: .55rem;
+  bottom: .48rem;
+  min-width: 42px;
+  padding: .28rem .5rem;
+  border: 1px solid rgba(214,181,109,.45);
+  border-radius: var(--radius-pill);
+  background: rgba(10,8,13,.78);
+  color: var(--color-gold);
+  font-family: var(--font-ui);
+  font-size: .65rem;
+  font-weight: 800;
+  text-align: center;
+  backdrop-filter: blur(7px);
+}
+.room-card-lock {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.room-card-lock::before {
+  content: '';
+  width: 27px;
+  height: 22px;
+  margin-top: 14px;
+  border: 2px solid rgba(233,223,200,.72);
+  border-radius: 5px;
+  background: rgba(14,10,17,.82);
+  box-shadow: 0 5px 16px rgba(0,0,0,.55);
+}
+.room-card-lock::after {
+  content: '';
+  position: absolute;
+  width: 17px;
+  height: 17px;
+  margin-top: -15px;
+  border: 3px solid rgba(233,223,200,.72);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+}
+.room-card-copy {
+  display: grid;
+  gap: .2rem;
+  padding: .72rem .8rem .78rem;
+  text-align: left;
+}
+.room-card-copy .room-title {
+  color: var(--color-parchment);
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+}
+.room-card-copy .room-meta {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.35;
+}
+.room-card-copy .room-restoration-meta {
+  margin-top: .1rem;
+  font-size: .66rem;
+}
+
+.room-visual {
+  background: #09070d;
+}
+.room-visual-scene {
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  background: #09070d;
+}
+.room-visual-scene::before,
+.room-visual-scene::after,
+.room-visual-mist,
+.room-visual-symbol { display: none; }
+.room-visual-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.room-visual-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(7,5,9,.02) 38%, rgba(7,5,9,.92) 100%),
+    radial-gradient(circle at 50% 42%, transparent 48%, rgba(5,4,7,.28) 100%);
+  pointer-events: none;
+}
+.room-visual-copy {
+  position: absolute;
+  inset: auto .85rem .75rem;
+  z-index: 2;
+  max-width: 92%;
+  text-shadow: 0 2px 8px rgba(0,0,0,.9);
+}
+.room-visual-stage-label {
+  display: inline-flex;
+  margin-bottom: .22rem;
+  padding: .18rem .42rem;
+  border: 1px solid rgba(214,181,109,.32);
+  border-radius: var(--radius-pill);
+  background: rgba(10,8,13,.7);
+  color: var(--color-gold);
+  font-family: var(--font-ui);
+  font-size: .56rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+}
+.room-visual-copy h2 {
+  margin: 0 0 .18rem;
+  font-size: clamp(1.08rem, 5vw, 1.42rem);
+}
+.room-visual-copy p {
+  max-width: 35rem;
+  color: #ddd1dd;
+  font-size: clamp(.65rem, 2.8vw, .78rem);
+  line-height: 1.35;
+}
+.room-visual-milestones {
+  position: relative;
+  z-index: 3;
+}
+
+.modal-card--story {
+  width: min(100%, 430px);
+  padding: 0;
+  overflow: hidden;
+  border-color: rgba(214,181,109,.58);
+  background: #0b0810;
+  text-align: left;
+}
+.story-scene {
+  display: grid;
+  grid-template-rows: minmax(250px, 52dvh) auto;
+  min-height: 0;
+}
+.story-scene-art {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: #0b0810;
+}
+.story-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.story-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(8,6,11,.08) 28%, rgba(8,6,11,.9) 100%),
+    radial-gradient(circle at 50% 32%, transparent 35%, rgba(7,5,9,.32) 100%);
+}
+.story-portrait {
+  position: absolute;
+  z-index: 2;
+  bottom: -5%;
+  width: 76%;
+  height: 92%;
+  object-fit: contain;
+  object-position: bottom;
+  filter: drop-shadow(0 12px 18px rgba(0,0,0,.72));
+}
+.story-scene--left .story-portrait { left: -7%; }
+.story-scene--right .story-portrait { right: -7%; }
+.story-scene-heading {
+  position: absolute;
+  z-index: 3;
+  right: .8rem;
+  bottom: .75rem;
+  left: .8rem;
+  display: grid;
+  gap: .12rem;
+  padding: .55rem .65rem;
+  border-left: 2px solid var(--color-gold);
+  background: linear-gradient(90deg, rgba(12,9,15,.9), rgba(12,9,15,.34));
+  backdrop-filter: blur(5px);
+  text-shadow: 0 2px 8px rgba(0,0,0,.9);
+}
+.story-scene--left .story-scene-heading { padding-left: 44%; }
+.story-scene--right .story-scene-heading { padding-right: 42%; }
+.story-scene-heading .chapter {
+  margin: 0;
+  color: #bdaec3;
+  font-size: .56rem;
+}
+.story-scene-heading strong {
+  color: var(--color-gold);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+.story-dialogue {
+  display: grid;
+  gap: .75rem;
+  padding: .9rem;
+  border-top: 1px solid rgba(214,181,109,.24);
+  background:
+    linear-gradient(135deg, rgba(110,35,62,.13), transparent 48%),
+    #120e17;
+}
+.story-dialogue p {
+  margin: 0;
+  color: #e6dce8;
+  font-family: var(--font-ui);
+  font-size: .86rem;
+  line-height: 1.52;
+}
+.story-dialogue button { width: 100%; }
+
+@media (max-width: 360px) {
+  .room-card-art { aspect-ratio: 16 / 7.2; }
+  .room-card-copy { padding: .58rem .65rem .64rem; }
+  .room-visual-copy { inset: auto .65rem .58rem; }
+  .story-scene { grid-template-rows: minmax(230px, 49dvh) auto; }
+  .story-portrait { width: 82%; height: 94%; }
+  .story-dialogue { padding: .72rem; gap: .58rem; }
+  .story-dialogue p { font-size: .8rem; }
+}
+
+@media (max-height: 650px) {
+  .story-scene { grid-template-rows: minmax(220px, 46dvh) auto; }
+  .story-dialogue { padding: .65rem .75rem; gap: .5rem; }
+  .story-dialogue button { min-height: 40px; }
+}

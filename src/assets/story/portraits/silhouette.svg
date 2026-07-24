@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420"><defs>
+<linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e5c8c8"/><stop offset="1" stop-color="#9f7480"/></linearGradient>
+<linearGradient id="cloth" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#6e233e"/><stop offset="1" stop-color="#1a111e"/></linearGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs><ellipse cx="150" cy="398" rx="120" ry="27" fill="#08070b" opacity=".7"/>
+<path d="M38 420Q48 278 109 242H191Q252 278 262 420Z" fill="#0c0a10" stroke="#5d5368" stroke-width="4"/>
+<ellipse cx="150" cy="164" rx="66" ry="82" fill="#17131c"/>
+<path d="M77 183Q68 70 150 50Q234 72 223 190Q207 126 150 111Q93 126 77 183Z" fill="#08070b"/>
+<path d="M106 161q18-12 38 0 M156 161q18-12 38 0" stroke="#6e233e" stroke-opacity=".55" stroke-width="4" fill="none"/>
+<circle cx="125" cy="166" r="5" fill="#b74f6b" opacity=".5"/><circle cx="175" cy="166" r="5" fill="#b74f6b" opacity=".5"/>
+<path d="M90 246Q150 295 210 246L194 420H106Z" fill="#12101a"/>
+<path d="M150 73v317" stroke="#d6b56d" stroke-opacity=".08" stroke-width="24" filter="url(#soft)"/></svg>

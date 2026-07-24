@@ -82,3 +82,14 @@ owns shadow presentation.
 Rationale: authored assets still require in-game review at mobile cell size.
 Recognisable silhouette, optical centring, and semantic clarity take precedence
 over preserving the first vector draft.
+
+## 2026-07-24 — Staged manor scenes and visual-novel slots integrated
+
+Decision: use twenty authored SVG room scenes and eight story assets as the
+vertical-slice visual benchmark. Existing room `assetKey` values remain the
+stable contract; final painted art may replace files without changing
+progression or UI code.
+
+Rationale: restoration must be visible now, but independent artists and AI
+agents need a safe replacement boundary. Story dialogue remains live text and
+is never baked into an illustration.

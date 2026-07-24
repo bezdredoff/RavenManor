@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420"><defs>
+<linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e5c8c8"/><stop offset="1" stop-color="#9f7480"/></linearGradient>
+<linearGradient id="cloth" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#6e233e"/><stop offset="1" stop-color="#1a111e"/></linearGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs><ellipse cx="150" cy="394" rx="112" ry="24" fill="#08070b" opacity=".65"/>
+<path d="M72 410Q84 292 125 234Q83 183 115 115Q144 54 205 73Q255 88 246 139Q238 183 196 205Q227 262 239 410Z" fill="#11131b" stroke="#65708f" stroke-width="4"/>
+<path d="M194 112l71 25-63 22" fill="#2d3241" stroke="#8891aa" stroke-width="3"/>
+<circle cx="183" cy="119" r="8" fill="#d6b56d" filter="url(#glow)"/>
+<path d="M117 167q50 20 90-5 M105 201q55 24 111-2 M105 244q55 25 122 5 M96 292q61 17 137 2" stroke="#343a4d" stroke-width="9" fill="none"/>
+<path d="M90 305l-45 80 82-40 M224 302l40 83-73-43" fill="#151823" stroke="#4d5670" stroke-width="3"/></svg>

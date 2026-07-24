@@ -135,3 +135,15 @@ At 320 × 568 the priority order is:
 
 Transient feedback appears inside the board frame so it does not increase screen
 height. A tutorial banner reduces board size rather than creating page scroll.
+
+## Manor and story implementation (FEATURE-041)
+
+Room overview cards use a wide authored crop with copy below it. Locked cards
+retain the room silhouette under a dark veil and CSS lock, while restored cards
+receive a warmer edge. Room detail uses a fixed 16:9 scene, overlaid stage copy,
+and the existing three-step milestone strip.
+
+Story uses a portrait backdrop plus a transparent character layer. The artwork
+occupies the upper portion of the modal and dialogue remains in a dedicated
+lower panel. At short viewport heights the story card scrolls internally; the
+browser document never scrolls.
