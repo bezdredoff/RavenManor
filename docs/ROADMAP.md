@@ -60,12 +60,30 @@ _Status: implemented, pending project verification._
 
 ### FEATURE-043 — Audio and final UX polish
 
-- music and SFX hooks;
-- music/SFX settings and persistence;
-- final responsive regression and device-specific safe-area pass;
-- accessibility and contrast pass;
-- loading/error/fallback states;
+_Status: implemented, pending device verification._
+
+- semantic Web Audio cues and quiet procedural ambience;
+- independently persisted music/effects volume and master mute;
+- compact runtime profile for narrow or short mobile viewports;
+- branded missing-image fallback and replacement of remaining hero/tutorial emoji;
+- final responsive, safe-area, touch, keyboard, and accessibility regression;
 - public-test readiness checklist.
+
+## Next phase — External playtest and evidence-driven iteration
+
+### FEATURE-044 — Playtest build and feedback capture
+
+- publish a tagged GitHub Pages candidate;
+- test on real Android and iOS hardware;
+- capture device, browser, viewport, task success, defects, and qualitative notes;
+- separate usability defects from art-preference feedback;
+- prioritise P0/P1 fixes before adding new mechanics.
+
+### FEATURE-045 — Playtest fixes and visual consistency pass
+
+- fix confirmed responsive, input, audio, contrast, and navigation issues;
+- replace any prototype art that fails recognition or style review;
+- verify the full vertical slice again before gameplay expansion.
 
 ## Recommended visual production order
 
