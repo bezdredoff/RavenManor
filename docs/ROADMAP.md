@@ -62,7 +62,7 @@ _Status: implemented, pending project verification._
 
 _Status: implemented, pending device verification._
 
-- semantic Web Audio cues and quiet procedural ambience;
+- semantic Web Audio cues and a simple scheduled Romantic Gothic theme;
 - independently persisted music/effects volume and master mute;
 - compact runtime profile for narrow or short mobile viewports;
 - branded missing-image fallback and replacement of remaining hero/tutorial emoji;
@@ -81,7 +81,17 @@ _Status: implemented, pending project verification._
 - continue directly to the next unlocked unfinished level after a win;
 - preserve saves, balance, touch layout, and reduced-motion accessibility.
 
-### FEATURE-045 — Visual consistency and confirmed device fixes
+### FEATURE-045 — Story continuation and audible background music
+
+_Status: implemented, pending project verification._
+
+- preserve next-level context when a victory opens a story scene;
+- continue from that scene directly to the next playable level or level map;
+- replace near-static ambience with a simple audible D-minor background theme;
+- add independent music preview and music-theme tests;
+- preserve existing saves, progression, effects, and mobile layout.
+
+### FEATURE-046 — Visual consistency and confirmed device fixes
 
 - collect another short round of real-device observations;
 - fix confirmed responsive, input, audio, contrast, and navigation issues;

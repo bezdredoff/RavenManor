@@ -1,5 +1,10 @@
 import { getCueDefinition, type AudioCue } from './AudioCues';
 import {
+  RAVEN_MANOR_THEME,
+  getBeatDurationSeconds,
+  getMusicLoopDurationSeconds,
+} from './MusicTheme';
+import {
   AudioSettingsStore,
   type AudioSettings,
 } from './AudioSettings';
@@ -12,7 +17,10 @@ export class AudioManager {
   private context: AudioContext | null = null;
   private effectsGain: GainNode | null = null;
   private musicGain: GainNode | null = null;
-  private musicNodes: OscillatorNode[] = [];
+  private musicInput: GainNode | null = null;
+  private musicScheduleId: number | null = null;
+  private nextMusicLoopAt = 0;
+  private readonly scheduledMusicNodes = new Set<OscillatorNode>();
   private armed = false;
   private activated = false;
 
@@ -42,9 +50,10 @@ export class AudioManager {
     this.hostWindow.document.addEventListener('visibilitychange', () => {
       if (!this.context) return;
       if (this.hostWindow.document.hidden) {
+        this.stopMusic();
         void this.context.suspend();
       } else if (this.activated) {
-        void this.context.resume();
+        void this.context.resume().then(() => this.startMusic());
       }
     });
   }
@@ -52,7 +61,11 @@ export class AudioManager {
   updateSettings(patch: Partial<AudioSettings>): AudioSettings {
     const next = this.settingsStore.update(patch);
     this.applyVolumes();
-    if (this.activated && !next.muted && next.musicVolume > 0) this.startMusic();
+    if (next.muted || next.musicVolume <= 0) {
+      this.stopMusic();
+    } else if (this.activated) {
+      this.startMusic();
+    }
     return next;
   }
 
@@ -97,6 +110,13 @@ export class AudioManager {
     void this.activate().then(() => this.play('match'));
   }
 
+  previewMusic(): void {
+    void this.activate().then(() => {
+      this.stopMusic();
+      this.startMusic();
+    });
+  }
+
   private ensureContext(): AudioContext | null {
     if (this.context) return this.context;
     const Context = this.hostWindow.AudioContext ?? this.hostWindow.webkitAudioContext;
@@ -105,7 +125,25 @@ export class AudioManager {
     this.context = new Context();
     this.effectsGain = this.context.createGain();
     this.musicGain = this.context.createGain();
+    this.musicInput = this.context.createGain();
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1800;
+    filter.Q.value = 0.8;
+
+    const delay = this.context.createDelay(0.8);
+    const feedback = this.context.createGain();
+    delay.delayTime.value = 0.32;
+    feedback.gain.value = 0.16;
+
     this.effectsGain.connect(this.context.destination);
+    this.musicInput.connect(filter);
+    filter.connect(this.musicGain);
+    filter.connect(delay);
+    delay.connect(this.musicGain);
+    delay.connect(feedback);
+    feedback.connect(delay);
     this.musicGain.connect(this.context.destination);
     this.applyVolumes();
     return this.context;
@@ -121,33 +159,113 @@ export class AudioManager {
       0.025,
     );
     this.musicGain.gain.setTargetAtTime(
-      muted ? 0 : this.settings.musicVolume * 0.18,
+      muted ? 0 : this.settings.musicVolume * 0.56,
       now,
       0.12,
     );
   }
 
   private startMusic(): void {
-    if (!this.context || !this.musicGain || this.musicNodes.length > 0) return;
+    if (!this.context || !this.musicInput) return;
+    if (this.settings.muted || this.settings.musicVolume <= 0) return;
+    if (this.musicScheduleId !== null) return;
 
-    const filter = this.context.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 520;
-    filter.Q.value = 0.7;
-    filter.connect(this.musicGain);
+    this.nextMusicLoopAt = this.context.currentTime + 0.06;
+    this.scheduleMusicAhead();
+    this.musicScheduleId = this.hostWindow.setInterval(
+      () => this.scheduleMusicAhead(),
+      750,
+    );
+  }
 
-    const frequencies = [55, 82.5, 110];
-    this.musicNodes = frequencies.map((frequency, index) => {
-      const oscillator = this.context!.createOscillator();
-      const voiceGain = this.context!.createGain();
-      oscillator.type = index === 1 ? 'triangle' : 'sine';
-      oscillator.frequency.value = frequency;
-      oscillator.detune.value = index === 2 ? -7 : index * 4;
-      voiceGain.gain.value = index === 0 ? 0.6 : 0.22;
-      oscillator.connect(voiceGain);
-      voiceGain.connect(filter);
-      oscillator.start();
-      return oscillator;
-    });
+  private stopMusic(): void {
+    if (this.musicScheduleId !== null) {
+      this.hostWindow.clearInterval(this.musicScheduleId);
+      this.musicScheduleId = null;
+    }
+    for (const oscillator of this.scheduledMusicNodes) {
+      try {
+        oscillator.stop();
+      } catch {
+        // The node may already have ended; stopping music must remain harmless.
+      }
+    }
+    this.scheduledMusicNodes.clear();
+    this.nextMusicLoopAt = 0;
+  }
+
+  private scheduleMusicAhead(): void {
+    if (!this.context || !this.musicInput || this.context.state !== 'running') return;
+    if (this.settings.muted || this.settings.musicVolume <= 0) return;
+
+    const scheduleHorizon = this.context.currentTime + 2.2;
+    const loopDuration = getMusicLoopDurationSeconds(RAVEN_MANOR_THEME);
+    while (this.nextMusicLoopAt < scheduleHorizon) {
+      this.scheduleThemeLoop(this.nextMusicLoopAt);
+      this.nextMusicLoopAt += loopDuration;
+    }
+  }
+
+  private scheduleThemeLoop(loopStart: number): void {
+    if (!this.context || !this.musicInput) return;
+    const beatDuration = getBeatDurationSeconds(RAVEN_MANOR_THEME.bpm);
+
+    for (const chord of RAVEN_MANOR_THEME.harmony) {
+      const voiceGain = chord.gain / Math.sqrt(chord.frequencies.length);
+      for (const frequency of chord.frequencies) {
+        this.scheduleMusicTone({
+          frequency,
+          start: loopStart + chord.beat * beatDuration,
+          duration: chord.durationBeats * beatDuration,
+          gain: voiceGain,
+          wave: 'sine',
+          attack: 0.42,
+          release: 0.7,
+        });
+      }
+    }
+
+    for (const note of RAVEN_MANOR_THEME.melody) {
+      this.scheduleMusicTone({
+        frequency: note.frequency,
+        start: loopStart + note.beat * beatDuration,
+        duration: note.durationBeats * beatDuration,
+        gain: note.gain,
+        wave: note.wave,
+        attack: 0.025,
+        release: 0.28,
+      });
+    }
+  }
+
+  private scheduleMusicTone(options: Readonly<{
+    frequency: number;
+    start: number;
+    duration: number;
+    gain: number;
+    wave: OscillatorType;
+    attack: number;
+    release: number;
+  }>): void {
+    if (!this.context || !this.musicInput) return;
+    const oscillator = this.context.createOscillator();
+    const envelope = this.context.createGain();
+    const end = options.start + options.duration;
+    const attackEnd = Math.min(end - 0.02, options.start + options.attack);
+    const releaseStart = Math.max(attackEnd, end - options.release);
+
+    oscillator.type = options.wave;
+    oscillator.frequency.setValueAtTime(options.frequency, options.start);
+    envelope.gain.setValueAtTime(0.0001, options.start);
+    envelope.gain.exponentialRampToValueAtTime(options.gain, attackEnd);
+    envelope.gain.setValueAtTime(options.gain, releaseStart);
+    envelope.gain.exponentialRampToValueAtTime(0.0001, end);
+
+    oscillator.connect(envelope);
+    envelope.connect(this.musicInput);
+    this.scheduledMusicNodes.add(oscillator);
+    oscillator.addEventListener('ended', () => this.scheduledMusicNodes.delete(oscillator), { once: true });
+    oscillator.start(options.start);
+    oscillator.stop(end + 0.03);
   }
 }
