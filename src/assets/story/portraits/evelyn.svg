@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420"><defs>
+<linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e5c8c8"/><stop offset="1" stop-color="#9f7480"/></linearGradient>
+<linearGradient id="cloth" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#6e233e"/><stop offset="1" stop-color="#1a111e"/></linearGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs><ellipse cx="150" cy="400" rx="118" ry="30" fill="#08070b" opacity=".6"/>
+<path d="M48 420Q58 292 118 260H182Q242 292 252 420Z" fill="url(#cloth)" stroke="#d6b56d" stroke-opacity=".35"/>
+<ellipse cx="150" cy="176" rx="68" ry="82" fill="url(#skin)"/>
+<path d="M78 190Q73 70 148 62Q234 65 221 209L203 178Q205 105 155 96Q101 95 94 169Z" fill="#30233a"/>
+<path d="M87 180Q70 254 105 307L128 256Q92 216 104 162 M214 170Q231 245 197 301L174 257Q210 217 198 156" fill="#30233a"/>
+<path d="M119 171q15-10 27 0 M158 171q15-10 27 0" stroke="#392432" stroke-width="4" fill="none"/>
+<ellipse cx="132" cy="174" rx="4" ry="6" fill="#6c7186"/><ellipse cx="172" cy="174" rx="4" ry="6" fill="#6c7186"/>
+<path d="M139 213q12 8 24 0" stroke="#7e3b52" stroke-width="4" fill="none"/>
+<path d="M120 261q30 25 60 0" fill="#e9dfc8" opacity=".18"/></svg>

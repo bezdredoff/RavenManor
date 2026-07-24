@@ -38,12 +38,14 @@ _Status: implemented, pending project verification._
 
 ### FEATURE-041 — Manor, rooms, and narrative presentation
 
-- integrate manor key art and room thumbnails;
-- replace room CSS/emoji placeholders with staged artwork via existing
-  `assetKey` values;
-- create restoration reveal presentation;
-- redesign story screens using backdrop and character portrait slots;
-- retain fallbacks for missing production assets.
+_Status: implemented, pending project verification._
+
+- twenty authored room-state scenes integrated through stable `assetKey` values;
+- room thumbnails and room-detail artwork reflect restoration progress;
+- locked-room and completed-room presentation added without emoji placeholders;
+- four visual-novel scenes use independent backdrop and portrait slots;
+- story data is separated from asset resolution;
+- restoration reveal motion remains scheduled for FEATURE-042.
 
 ### FEATURE-042 — Motion and VFX polish
 

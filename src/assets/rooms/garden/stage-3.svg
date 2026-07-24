@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img">
+<defs>
+  <linearGradient id="night" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#17101f"/>
+    <stop offset="1" stop-color="#09070d"/>
+  </linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#30223a"/>
+    <stop offset="1" stop-color="#130f18"/>
+  </linearGradient>
+  <linearGradient id="warm" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff1bd"/>
+    <stop offset=".45" stop-color="#d6b56d"/>
+    <stop offset="1" stop-color="#6e233e"/>
+  </linearGradient>
+  <radialGradient id="moon">
+    <stop offset="0" stop-color="#eef0ff" stop-opacity=".95"/>
+    <stop offset=".55" stop-color="#a7a7bc" stop-opacity=".32"/>
+    <stop offset="1" stop-color="#a7a7bc" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur stdDeviation="6" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="2"/>
+  </filter>
+  
+</defs>
+<rect width="480" height="270" fill="url(#night)"/>
+<rect width="480" height="270" fill="#275a46" opacity="0.42"/>
+<circle cx="390" cy="46" r="92" fill="url(#moon)" opacity="0.62"/>
+<g style="filter:saturate(1.0)">
+<rect x="34" y="35" width="412" height="204" rx="8" fill="#10191a" stroke="#50695f"/>
+<path d="M54 222V88 Q54 46 98 46H382Q426 46 426 88V222" fill="#112023" stroke="#769087" stroke-width="4"/>
+<path d="M54 92h372 M102 47v175 M180 47v175 M260 47v175 M338 47v175" stroke="#627b73" stroke-width="3" opacity=".65"/>
+<path d="M96 222 Q150 163 240 161 Q330 163 384 222" fill="#1a1820" stroke="#6d5b68" stroke-width="3"/>
+<path d="M113 222 Q164 178 240 176 Q316 178 367 222" fill="#2b2630"/>
+<path d="M123 222 Q171 188 240 188 Q309 188 357 222" fill="#52424e" opacity=".7"/>
+<path d="M125 218 Q171 186 240 184 Q309 186 355 218" fill="none" stroke="#d6b56d" stroke-opacity=".3" stroke-width="2"/><g>
+<ellipse cx="240" cy="194" rx="54" ry="18" fill="#14242a" stroke="#9d8b82" stroke-width="3"/>
+<path d="M221 194q19-50 38 0" fill="#4d5363" stroke="#a7a7bc" stroke-width="3"/>
+<path d="M240 180q-14-23 0-35q14 12 0 35" fill="#b7d7dc" opacity=".72" filter="url(#glow)"/>
+<ellipse cx="240" cy="194" rx="42" ry="10" fill="#7ca6aa" opacity=".55"/>
+</g><g><g transform="translate(82 189) scale(1)"><circle r="12" fill="#6e233e"/><path d="M0-11C10-7 11 4 2 9C-8 11-13 2-8-6C-4-12 5-13 10-7" fill="none" stroke="#d48196" stroke-width="3"/><circle r="4" fill="#b74f6b"/></g><g transform="translate(111 166) scale(0.8)"><circle r="12" fill="#6e233e"/><path d="M0-11C10-7 11 4 2 9C-8 11-13 2-8-6C-4-12 5-13 10-7" fill="none" stroke="#d48196" stroke-width="3"/><circle r="4" fill="#b74f6b"/></g><g transform="translate(145 204) scale(0.9)"><circle r="12" fill="#6e233e"/><path d="M0-11C10-7 11 4 2 9C-8 11-13 2-8-6C-4-12 5-13 10-7" fill="none" stroke="#d48196" stroke-width="3"/><circle r="4" fill="#b74f6b"/></g><g transform="translate(335 190) scale(0.9)"><circle r="12" fill="#6e233e"/><path d="M0-11C10-7 11 4 2 9C-8 11-13 2-8-6C-4-12 5-13 10-7" fill="none" stroke="#d48196" stroke-width="3"/><circle r="4" fill="#b74f6b"/></g><g transform="translate(379 173) scale(0.8)"><circle r="12" fill="#6e233e"/><path d="M0-11C10-7 11 4 2 9C-8 11-13 2-8-6C-4-12 5-13 10-7" fill="none" stroke="#d48196" stroke-width="3"/><circle r="4" fill="#b74f6b"/></g><g transform="translate(405 208) scale(0.9)"><circle r="12" fill="#6e233e"/><path d="M0-11C10-7 11 4 2 9C-8 11-13 2-8-6C-4-12 5-13 10-7" fill="none" stroke="#d48196" stroke-width="3"/><circle r="4" fill="#b74f6b"/></g></g><path d="M59 80Q240 12 421 80" fill="none" stroke="#d6b56d" stroke-opacity=".35"/></g>
+<path d="M15 22 Q15 10 28 10 H452 Q465 10 465 22 V248 Q465 260 452 260 H28 Q15 260 15 248Z" fill="none" stroke="#d6b56d" stroke-opacity=".38" stroke-width="2"/>
+<path d="M23 30 Q23 18 35 18 H445 Q457 18 457 30 V241 Q457 252 445 252 H35 Q23 252 23 241Z" fill="none" stroke="#6e233e" stroke-opacity=".5"/>
+<path d="M31 24 l8 8 -8 8 -8-8z M449 24 l8 8 -8 8 -8-8z M31 230 l8 8 -8 8 -8-8z M449 230 l8 8 -8 8 -8-8z" fill="#d6b56d" fill-opacity=".55"/>
+
+<path d="M0 244 C85 226 152 256 240 239 C330 221 391 249 480 232 V270 H0Z" fill="#07060a" opacity=".7"/>
+</svg>

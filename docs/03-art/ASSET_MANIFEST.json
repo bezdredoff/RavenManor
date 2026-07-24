@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "direction": "romantic-gothic-restoration",
   "statusValues": [
     "planned",
@@ -208,141 +208,141 @@
       "key": "rooms/hall/stage-0-ruined",
       "type": "room-stage",
       "priority": "P0",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/hall/stage-1-cleared",
       "type": "room-stage",
       "priority": "P0",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/hall/stage-2-lit",
       "type": "room-stage",
       "priority": "P0",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/hall/stage-3-restored",
       "type": "room-stage",
       "priority": "P0",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/library/stage-0-sealed",
       "type": "room-stage",
       "priority": "P1",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/library/stage-1-moonlit",
       "type": "room-stage",
       "priority": "P1",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/library/stage-2-shelves",
       "type": "room-stage",
       "priority": "P1",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/library/stage-3-desk",
       "type": "room-stage",
       "priority": "P1",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/garden/stage-0-overgrown",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/garden/stage-1-cleared",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/garden/stage-2-fountain",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/garden/stage-3-roses",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/crypt/stage-0-buried",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/crypt/stage-1-stairs",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/crypt/stage-2-seals",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/crypt/stage-3-braziers",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/tower/stage-0-broken",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/tower/stage-1-steps",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/tower/stage-2-observatory",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "rooms/tower/stage-3-clock",
       "type": "room-stage",
       "priority": "P2",
-      "status": "planned",
-      "master": "1536x1024"
+      "status": "integrated",
+      "master": "480x270 SVG prototype; replaceable production art"
     },
     {
       "key": "characters/evelyn/neutral",
@@ -378,6 +378,62 @@
       "priority": "P1",
       "status": "planned",
       "master": "1024x1536 transparent"
+    },
+    {
+      "key": "story/backgrounds/gates",
+      "type": "story-background",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "480x600 SVG prototype"
+    },
+    {
+      "key": "story/backgrounds/raven-window",
+      "type": "story-background",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "480x600 SVG prototype"
+    },
+    {
+      "key": "story/backgrounds/hall",
+      "type": "story-background",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "480x600 SVG prototype"
+    },
+    {
+      "key": "story/backgrounds/tower",
+      "type": "story-background",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "480x600 SVG prototype"
+    },
+    {
+      "key": "story/portraits/evelyn",
+      "type": "character-portrait",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "300x420 transparent SVG prototype"
+    },
+    {
+      "key": "story/portraits/raven",
+      "type": "character-portrait",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "300x420 transparent SVG prototype"
+    },
+    {
+      "key": "story/portraits/adrian",
+      "type": "character-portrait",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "300x420 transparent SVG prototype"
+    },
+    {
+      "key": "story/portraits/silhouette",
+      "type": "character-portrait",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "300x420 transparent SVG prototype"
     }
   ]
 }

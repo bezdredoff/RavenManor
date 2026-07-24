@@ -14,7 +14,6 @@ export type RoomUnlockRule =
 
 export type RoomDefinition = Readonly<{
   id: string;
-  icon: string;
   title: string;
   description: string;
   unlock: RoomUnlockRule;
@@ -43,14 +42,12 @@ export const levelGroups = validateLevelGroups(levelGroupsJson, levels);
 export const rooms: readonly RoomDefinition[] = [
   {
     id: 'hall',
-    icon: '🏚️',
     title: 'Вестибюль',
     description: 'Парадный вход, скрывающий первую семейную тайну.',
     unlock: { type: 'always' },
   },
   {
     id: 'library',
-    icon: '📚',
     title: 'Запретная библиотека',
     description: 'Книги здесь помнят больше, чем живые обитатели.',
     unlock: {
@@ -61,7 +58,6 @@ export const rooms: readonly RoomDefinition[] = [
   },
   {
     id: 'garden',
-    icon: '🥀',
     title: 'Зимний сад',
     description: 'Мёртвые розы расцветают при лунном свете.',
     unlock: {
@@ -72,7 +68,6 @@ export const rooms: readonly RoomDefinition[] = [
   },
   {
     id: 'crypt',
-    icon: '⚰️',
     title: 'Семейная крипта',
     description: 'Под особняком спит древний договор.',
     unlock: {
@@ -83,7 +78,6 @@ export const rooms: readonly RoomDefinition[] = [
   },
   {
     id: 'tower',
-    icon: '🌙',
     title: 'Воронья башня',
     description: 'Финальная мета-сцена вертикального среза.',
     unlock: {

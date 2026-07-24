@@ -12,6 +12,7 @@ import {
   type RestorationTaskDefinition,
 } from '../data/restorationTasks';
 import { roomVisuals } from '../data/roomVisuals';
+import { storyScenes } from '../data/storyScenes';
 import { Match3Engine, type Position } from '../engine/Match3Engine';
 import { ProgressStore } from '../engine/ProgressStore';
 import { getLevelGroupState } from '../meta/LevelProgression';
@@ -32,6 +33,8 @@ import { CollectObjective } from '../objectives/CollectObjective';
 import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 import { getScreenClassName, type ScreenMode } from './layoutPolicy';
 import { getTileClassName, getTileKey } from './tilePresentation';
+import { getRoomSceneAsset } from './roomPresentation';
+import { getStoryScenePresentation } from './storyPresentation';
 
 const DIFFICULTY_LABELS: Record<LevelDifficulty, string> = {
   easy: 'Легко',
@@ -169,15 +172,24 @@ export class GameApp {
         ? 'Комната восстановлена'
         : `Восстановление: ${visualState.completedTaskCount}/${visualState.totalTaskCount}`;
 
+      const sceneAsset = getRoomSceneAsset(visualState.stage.assetKey);
       return `
-        <article class="room-card ${locked ? 'locked' : ''} ${visualState.isComplete ? 'restored' : ''}" ${locked ? '' : `data-room="${room.id}"`}>
-          <div class="room-icon">${locked ? '🔒' : visualState.stage.placeholderIcon}</div>
-          <div>
+        <article
+          class="room-card room-card--visual ${locked ? 'locked' : ''} ${visualState.isComplete ? 'restored' : ''}"
+          ${locked ? '' : `data-room="${room.id}" role="button" tabindex="0"`}
+          aria-label="${locked ? `${room.title}. ${lockedLabel}` : `Открыть комнату ${room.title}`}"
+        >
+          <div class="room-card-art" aria-hidden="true">
+            <img src="${sceneAsset}" alt="" draggable="false" />
+            <div class="room-card-art-shade"></div>
+            ${locked ? '<div class="room-card-lock"><span></span></div>' : ''}
+            <div class="room-stage-badge">${visualState.completedTaskCount}/${visualState.totalTaskCount}</div>
+          </div>
+          <div class="room-card-copy">
             <div class="room-title">${room.title}</div>
-            <div class="room-meta">${locked ? lockedLabel : room.description}</div>
+            <div class="room-meta">${locked ? lockedLabel : visualState.stage.title}</div>
             ${locked ? '' : `<div class="room-restoration-meta">${restorationLabel}</div>`}
           </div>
-          <div class="room-stage">${visualState.completedTaskCount}/${visualState.totalTaskCount}</div>
         </article>
       `;
     }).join('');
@@ -202,7 +214,14 @@ export class GameApp {
       }
     });
     this.screen.querySelectorAll<HTMLElement>('[data-room]').forEach((card) => {
-      card.addEventListener('click', () => this.showRoom(card.dataset.room!));
+      const openRoom = () => this.showRoom(card.dataset.room!);
+      card.addEventListener('click', openRoom);
+      card.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openRoom();
+        }
+      });
     });
   }
 
@@ -349,6 +368,7 @@ export class GameApp {
       `;
     }).join('');
 
+    const sceneAsset = getRoomSceneAsset(state.stage.assetKey);
     return `
       <section
         class="room-visual room-visual--${roomId} stage-${state.completedTaskCount}"
@@ -356,10 +376,10 @@ export class GameApp {
         aria-label="${roomTitle}: ${state.stage.title}"
       >
         <div class="room-visual-scene">
-          <div class="room-visual-mist"></div>
-          <div class="room-visual-symbol" aria-hidden="true">${state.stage.placeholderIcon}</div>
+          <img class="room-visual-image" src="${sceneAsset}" alt="" draggable="false" />
+          <div class="room-visual-vignette" aria-hidden="true"></div>
           <div class="room-visual-copy">
-            <div class="chapter">Состояние комнаты · ${state.completedTaskCount}/${state.totalTaskCount}</div>
+            <div class="room-visual-stage-label">Состояние ${state.completedTaskCount}/${state.totalTaskCount}</div>
             <h2>${state.stage.title}</h2>
             <p>${state.stage.description}</p>
           </div>
@@ -847,19 +867,25 @@ export class GameApp {
   }
 
   private showStory(): void {
-    const scenes = [
-      ['👩‍🎨', 'Эвелин', 'После многих лет отсутствия я снова стою перед воротами Raven Manor. Письмо не было подписано.'],
-      ['🦅', 'Ворон', 'Кар-р... Дом узнаёт свою наследницу, даже если она сама ещё ничего не помнит.'],
-      ['🧛', 'Лорд Адриан', 'Восстановите комнаты, Эвелин. Каждая из них хранит часть древнего договора.'],
-      ['🌑', 'Неизвестный силуэт', 'Ты уже была здесь. В башне. В ту ночь, которую у тебя отняли.'],
-    ];
-    const scene = scenes[this.progress.advanceStory(scenes.length)];
+    const scene = storyScenes[this.progress.advanceStory(storyScenes.length)];
+    const presentation = getStoryScenePresentation(scene);
     this.openModal(`
-      <div class="portrait">${scene[0]}</div>
-      <div class="chapter">${scene[1]}</div>
-      <div class="dialogue">${scene[2]}</div>
-      <button class="primary" data-action="continue">Продолжить</button>
-    `);
+      <article class="story-scene story-scene--${scene.portraitSide}" aria-label="Сюжетная сцена: ${scene.speaker}">
+        <div class="story-scene-art">
+          <img class="story-background" src="${presentation.backgroundAsset}" alt="" draggable="false" />
+          <div class="story-atmosphere" aria-hidden="true"></div>
+          <img class="story-portrait" src="${presentation.portraitAsset}" alt="" draggable="false" />
+          <div class="story-scene-heading">
+            <div class="chapter">${scene.chapter}</div>
+            <strong>${scene.speaker}</strong>
+          </div>
+        </div>
+        <div class="story-dialogue">
+          <p>${scene.text}</p>
+          <button class="primary" data-action="continue">Продолжить</button>
+        </div>
+      </article>
+    `, 'modal-card--story');
     this.bindModal('continue', () => this.closeModal());
   }
 
@@ -888,8 +914,9 @@ export class GameApp {
     this.modal.querySelector<HTMLElement>(`[data-action="${action}"]`)?.addEventListener('click', handler);
   }
 
-  private openModal(content: string): void {
-    this.modal.innerHTML = `<div class="modal-card">${content}</div>`;
+  private openModal(content: string, cardClass = ''): void {
+    const className = ['modal-card', cardClass].filter(Boolean).join(' ');
+    this.modal.innerHTML = `<div class="${className}">${content}</div>`;
     this.modal.classList.add('show');
   }
 

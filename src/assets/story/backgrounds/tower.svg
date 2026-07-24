@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 600" role="img">
+<defs>
+  <linearGradient id="night" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#17101f"/>
+    <stop offset="1" stop-color="#09070d"/>
+  </linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#30223a"/>
+    <stop offset="1" stop-color="#130f18"/>
+  </linearGradient>
+  <linearGradient id="warm" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff1bd"/>
+    <stop offset=".45" stop-color="#d6b56d"/>
+    <stop offset="1" stop-color="#6e233e"/>
+  </linearGradient>
+  <radialGradient id="moon">
+    <stop offset="0" stop-color="#eef0ff" stop-opacity=".95"/>
+    <stop offset=".55" stop-color="#a7a7bc" stop-opacity=".32"/>
+    <stop offset="1" stop-color="#a7a7bc" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur stdDeviation="6" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="2"/>
+  </filter>
+  
+</defs><rect width="480" height="600" fill="#0a0a11"/>
+<path d="M65 600V95Q65 35 125 35H355Q415 35 415 95V600" fill="#121726" stroke="#536487" stroke-width="7"/>
+<circle cx="320" cy="135" r="88" fill="url(#moon)"/><circle cx="335" cy="120" r="44" fill="#eef0ff" opacity=".72"/>
+<path d="M105 530C160 470 155 385 113 340C75 300 105 235 170 210C235 185 290 220 300 275C310 330 270 365 220 375C175 385 165 450 200 520" fill="none" stroke="#5f5268" stroke-width="16"/>
+<path d="M80 540H400V600H80Z" fill="#0d0b12"/><path d="M240 85v515" stroke="#a7a7bc" stroke-opacity=".08" stroke-width="50"/>
+<path d="M15 22 Q15 10 28 10 H452 Q465 10 465 22 V578 Q465 590 452 590 H28 Q15 590 15 578Z" fill="none" stroke="#d6b56d" stroke-opacity=".38" stroke-width="2"/>
+<path d="M23 30 Q23 18 35 18 H445 Q457 18 457 30 V570 Q457 252 445 252 H35 Q23 252 23 570Z" fill="none" stroke="#6e233e" stroke-opacity=".5"/>
+<path d="M31 24 l8 8 -8 8 -8-8z M449 24 l8 8 -8 8 -8-8z M31 558 l8 8 -8 8 -8-8z M449 558 l8 8 -8 8 -8-8z" fill="#d6b56d" fill-opacity=".55"/>
+</svg>
