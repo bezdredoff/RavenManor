@@ -151,3 +151,13 @@ _Status: implemented, pending iPhone production verification._
 - content tooling for hundreds of levels;
 - analytics-assisted balancing;
 - additional chapters, rooms, story scenes, and live content.
+
+## FEATURE-047B — reliable PWA update detection
+
+Status: patch prepared.
+
+- generated network-only `version.json`;
+- version comparison independent of service-worker `waiting` state;
+- activation/controller-change handling followed by one reload;
+- content-derived service-worker cache version;
+- migration instructions for already installed pre-047B builds.

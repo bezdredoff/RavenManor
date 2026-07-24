@@ -1,3 +1,5 @@
+import { APP_VERSION } from '../appVersion';
+
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
@@ -7,6 +9,19 @@ type OfflineStatusMessage = Readonly<{
   ready: boolean;
   cachedAssets: number;
   totalAssets: number;
+}>;
+
+type RemoteBuildManifest = Readonly<{
+  appVersion: string;
+  buildLabel: string;
+  buildId: string;
+  generatedAt: string;
+}>;
+
+export type PwaUpdateResult = Readonly<{
+  status: 'current' | 'update-ready' | 'offline' | 'unavailable';
+  currentVersion: string;
+  remoteVersion?: string;
 }>;
 
 export type PwaStatus = Readonly<{
@@ -21,6 +36,7 @@ export type PwaStatus = Readonly<{
 }>;
 
 const OFFLINE_STATUS_TIMEOUT_MS = 4_000;
+const UPDATE_ACTIVATION_TIMEOUT_MS = 12_000;
 
 const isStandalone = (): boolean => (
   window.matchMedia?.('(display-mode: standalone)').matches
@@ -32,7 +48,7 @@ const waitForWorkerActivation = async (registration: ServiceWorkerRegistration):
   if (!worker || worker.state === 'activated') return;
 
   await new Promise<void>((resolve) => {
-    const timer = window.setTimeout(resolve, 15_000);
+    const timer = window.setTimeout(resolve, UPDATE_ACTIVATION_TIMEOUT_MS);
     const onStateChange = (): void => {
       if (worker.state !== 'activated' && worker.state !== 'redundant') return;
       window.clearTimeout(timer);
@@ -41,6 +57,47 @@ const waitForWorkerActivation = async (registration: ServiceWorkerRegistration):
     };
     worker.addEventListener('statechange', onStateChange);
   });
+};
+
+const waitForControllerChange = (): Promise<void> => new Promise((resolve) => {
+  let settled = false;
+  const finish = (): void => {
+    if (settled) return;
+    settled = true;
+    window.clearTimeout(timer);
+    navigator.serviceWorker.removeEventListener('controllerchange', finish);
+    resolve();
+  };
+  const timer = window.setTimeout(finish, UPDATE_ACTIVATION_TIMEOUT_MS);
+  navigator.serviceWorker.addEventListener('controllerchange', finish);
+});
+
+export const isRemoteBuildDifferent = (
+  currentVersion: string,
+  remoteManifest: Pick<RemoteBuildManifest, 'appVersion'>,
+): boolean => remoteManifest.appVersion !== currentVersion;
+
+const fetchRemoteBuildManifest = async (): Promise<RemoteBuildManifest> => {
+  const url = new URL('./version.json', document.baseURI);
+  url.searchParams.set('updateCheck', Date.now().toString());
+  const response = await fetch(url, {
+    cache: 'no-store',
+    credentials: 'same-origin',
+    headers: { 'Cache-Control': 'no-cache' },
+  });
+  if (!response.ok) {
+    throw new Error(`Version check failed with HTTP ${response.status}`);
+  }
+  const manifest = await response.json() as Partial<RemoteBuildManifest>;
+  if (
+    typeof manifest.appVersion !== 'string'
+    || typeof manifest.buildLabel !== 'string'
+    || typeof manifest.buildId !== 'string'
+    || typeof manifest.generatedAt !== 'string'
+  ) {
+    throw new Error('Invalid remote build manifest');
+  }
+  return manifest as RemoteBuildManifest;
 };
 
 export class PwaManager {
@@ -65,7 +122,10 @@ export class PwaManager {
   async register(): Promise<void> {
     if (!this.enabled || !('serviceWorker' in navigator)) return;
     try {
-      this.registration = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+      this.registration = await navigator.serviceWorker.register('./sw.js', {
+        scope: './',
+        updateViaCache: 'none',
+      });
       await waitForWorkerActivation(this.registration);
       this.registration = await navigator.serviceWorker.ready;
       this.ready = true;
@@ -123,10 +183,52 @@ export class PwaManager {
     return choice.outcome;
   }
 
-  async checkForUpdate(): Promise<boolean> {
-    if (!this.registration) return false;
+  async checkForUpdate(): Promise<PwaUpdateResult> {
+    if (!this.enabled || !this.registration) {
+      return { status: 'unavailable', currentVersion: APP_VERSION };
+    }
+    if (!navigator.onLine) {
+      return { status: 'offline', currentVersion: APP_VERSION };
+    }
+
+    const remote = await fetchRemoteBuildManifest();
+    if (!isRemoteBuildDifferent(APP_VERSION, remote)) {
+      return {
+        status: 'current',
+        currentVersion: APP_VERSION,
+        remoteVersion: remote.appVersion,
+      };
+    }
+
+    const previousController = navigator.serviceWorker.controller;
     await this.registration.update();
-    return Boolean(this.registration.waiting);
+
+    if (this.registration.waiting) {
+      this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+
+    const candidate = this.registration.installing ?? this.registration.waiting;
+    if (candidate && navigator.serviceWorker.controller === previousController) {
+      // FEATURE-047 workers call skipWaiting(), so the useful signals are either
+      // worker activation or controllerchange. waiting alone is not reliable.
+      await Promise.race([
+        waitForWorkerActivation(this.registration),
+        waitForControllerChange(),
+        new Promise<void>((resolve) => window.setTimeout(resolve, UPDATE_ACTIVATION_TIMEOUT_MS)),
+      ]);
+      if (
+        candidate.state !== 'activated'
+        && navigator.serviceWorker.controller === previousController
+      ) {
+        throw new Error('The new service worker did not activate in time');
+      }
+    }
+
+    return {
+      status: 'update-ready',
+      currentVersion: APP_VERSION,
+      remoteVersion: remote.appVersion,
+    };
   }
 }
 
