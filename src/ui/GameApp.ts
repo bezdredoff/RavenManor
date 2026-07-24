@@ -16,8 +16,12 @@ import {
 import { roomVisuals } from '../data/roomVisuals';
 import { storyScenes } from '../data/storyScenes';
 import { Match3Engine, type Position } from '../engine/Match3Engine';
+import { findBestMove } from '../engine/MoveAdvisor';
 import { ProgressStore } from '../engine/ProgressStore';
-import { getLevelGroupState } from '../meta/LevelProgression';
+import {
+  getLevelGroupState,
+  getNextPlayableLevelId,
+} from '../meta/LevelProgression';
 import { calculateLevelStars } from '../meta/LevelStarRating';
 import {
   completeRestorationTask,
@@ -816,6 +820,7 @@ export class GameApp {
       matches = this.engine.findMatches();
     }
 
+    await this.motionDelay('feedbackHold');
     this.boardMessage = '';
     this.cascadeLevel = 0;
     if (!this.engine.findPossibleMove()) {
@@ -858,8 +863,15 @@ export class GameApp {
 
   private winLevel(): void {
     if (!this.currentLevel) return;
+    const completedLevelId = this.currentLevel.id;
     const stars = calculateLevelStars(this.currentLevel, this.movesLeft);
-    const newlyEarned = this.progress.saveLevel(this.currentLevel.id, stars);
+    const newlyEarned = this.progress.saveLevel(completedLevelId, stars);
+    const nextLevelId = getNextPlayableLevelId(
+      completedLevelId,
+      levels.map((level) => level.id),
+      levelGroups,
+      this.progress.state.completed,
+    );
     this.audio.play('win');
     const rewardMessage = newlyEarned > 0
       ? `Получено новых звёзд: ${newlyEarned} ★`
@@ -874,12 +886,21 @@ export class GameApp {
       <p class="reward-message">${rewardMessage}</p>
       <div class="modal-balance">Доступно: ${this.progress.availableStars} ★</div>
       <div class="stack">
-        <button class="primary" data-action="levels">К уровням</button>
+        ${nextLevelId === null
+          ? ''
+          : '<button class="primary" data-action="next-level">Следующий уровень</button>'}
+        <button class="${nextLevelId === null ? 'primary' : 'secondary'}" data-action="levels">К уровням</button>
         <button class="secondary" data-action="manor">В поместье</button>
         <button class="ghost" data-action="story">Сюжетная сцена</button>
       </div>
     `, 'modal-card--result modal-card--win');
 
+    if (nextLevelId !== null) {
+      this.bindModal('next-level', () => {
+        this.closeModal();
+        this.startLevel(nextLevelId);
+      });
+    }
     this.bindModal('levels', () => {
       this.closeModal();
       this.showLevelMap();
@@ -928,7 +949,7 @@ export class GameApp {
           <div>
             <div class="chapter">Быстрая подсказка · 1/2</div>
             <strong>Меняйте соседние фишки</strong>
-            <p>Соберите три или больше одинаковых фишек в ряд. Поле уже активно — можно сразу играть.</p>
+            <p>Соберите три или больше одинаковых фишек в ряд либо квадрат 2×2. Поле уже активно — можно сразу играть.</p>
           </div>
           <div class="tutorial-actions">
             <button class="secondary compact" data-action="tutorial-next">Понятно</button>
@@ -944,7 +965,7 @@ export class GameApp {
         <div>
           <div class="chapter">Быстрая подсказка · 2/2</div>
           <strong>Следите за целью и ходами</strong>
-          <p>Комбинации из четырёх и каскады тоже засчитываются. Больше оставшихся ходов — больше звёзд.</p>
+          <p>Линии, квадраты 2×2 и каскады засчитываются. Больше оставшихся ходов — больше звёзд.</p>
         </div>
         <div class="tutorial-actions">
           <button class="secondary compact" data-action="tutorial-next">Готово</button>
@@ -1084,21 +1105,29 @@ export class GameApp {
   }
 
   private showHint(): void {
-    if (this.busy) return;
-    const move = this.engine.findPossibleMove();
-    if (!move) return;
+    if (this.busy || !this.collectObjective) return;
+    const objective = this.collectObjective.getSnapshot();
+    const bestMove = findBestMove(this.engine, {
+      tileType: objective.tileType,
+      remaining: objective.target - objective.current,
+    });
+    if (!bestMove) return;
     this.audio.play('hint');
     this.hintedTiles.clear();
-    for (const position of move) {
+    for (const position of bestMove.move) {
       this.hintedTiles.add(getTileKey(position.row, position.col));
     }
-    this.boardMessage = 'Возможный ход';
+    this.boardMessage = bestMove.completesObjective
+      ? 'Лучший ход · завершает цель'
+      : bestMove.objectiveProgress > 0
+        ? `Лучший ход · +${bestMove.objectiveProgress} к цели`
+        : 'Лучший доступный ход';
     this.renderGame();
     window.setTimeout(() => {
       this.hintedTiles.clear();
       this.boardMessage = '';
       if (this.screen.classList.contains('screen-game')) this.renderGame();
-    }, 1500);
+    }, 1900);
   }
 
   private bind(action: string, handler: () => void): void {
