@@ -6,6 +6,10 @@ export type LevelGroupUnlockRule =
       type: 'complete-in-group';
       groupId: string;
       count: number;
+    }>
+  | Readonly<{
+      type: 'restoration-task';
+      taskId: string;
     }>;
 
 export type LevelGroupDefinition = Readonly<{

@@ -1,6 +1,8 @@
 import ravenMark from '../assets/ui/raven-mark.svg?url';
 import { APP_VERSION, BUILD_LABEL } from '../appVersion';
 import { PlaytestAnalytics } from '../analytics/PlaytestAnalytics';
+import { formatBoosterReward, type BoosterKind } from '../boosters/BoosterTypes';
+import { getBoosterUnlockTask, isBoosterUnlocked } from '../boosters/BoosterProgression';
 import { AudioManager } from '../audio/AudioManager';
 import {
   levelGroups,
@@ -40,6 +42,7 @@ import {
 import { getRoomUnlockState } from '../meta/RoomProgression';
 import { getNextUnviewedStoryScene, getStorySceneForLevel } from '../meta/StoryProgression';
 import { getRoomVisualState } from '../meta/RoomVisualState';
+import { getActiveRestoration } from '../meta/ActiveRestoration';
 import {
   shouldOfferTutorial,
   shouldShowTutorial,
@@ -60,6 +63,7 @@ import {
 import { getTileClassName, getTileKey } from './tilePresentation';
 import { getSpecialPresentation, specialAssets } from './specialPresentation';
 import { getObstaclePresentation, obstacleAssets } from './obstaclePresentation';
+import { getBoosterPresentation, boosterAssets } from './boosterPresentation';
 import { getRoomSceneAsset } from './roomPresentation';
 import { getStoryScenePresentation } from './storyPresentation';
 import { getRestorationBlockedMessage } from './restorationFeedback';
@@ -76,6 +80,8 @@ type RoomReveal = Readonly<{
   previousAsset: string;
   taskTitle: string;
   unlockedRoomTitle?: string;
+  rewardMessage?: string;
+  unlockMessage?: string;
 }>;
 
 const DIFFICULTY_LABELS: Record<LevelDifficulty, string> = {
@@ -115,13 +121,14 @@ export class GameApp {
   private modalCloseTimer: number | null = null;
   private toastTimer: number | null = null;
   private starWalletExpanded = false;
+  private activeBooster: BoosterKind | null = null;
 
   constructor(root: HTMLElement, errors: ErrorLog = new ErrorLog()) {
     this.root = root;
     this.errors = errors;
     this.audio.arm();
     void this.pwa.register();
-    preloadImageAssets([ravenMark, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets]);
+    preloadImageAssets([ravenMark, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets, ...boosterAssets]);
     this.renderShell();
     this.syncViewportProfile();
     window.addEventListener('resize', () => this.syncViewportProfile());
@@ -226,6 +233,70 @@ export class GameApp {
     `;
   }
 
+  private renderActiveRestorationCard(compact = false): string {
+    const active = getActiveRestoration(
+      rooms,
+      restorationTasks,
+      this.progress.state.completedRestorationTasks,
+      this.progress.availableStars,
+    );
+    if (!active) {
+      return `
+        <section class="meta-link-card meta-link-card--complete ${compact ? 'compact' : ''}">
+          <div class="meta-link-icon" aria-hidden="true">✓</div>
+          <div>
+            <div class="chapter">Текущий ремонт</div>
+            <strong>Все доступные задачи выполнены</strong>
+            <p>Продолжайте кампанию или пересмотрите восстановленные комнаты.</p>
+          </div>
+        </section>
+      `;
+    }
+
+    const affordable = active.status === 'available';
+    const statusText = affordable
+      ? `Можно выполнить сейчас за ${active.task.starCost} ★`
+      : `Нужно ещё ${active.starsMissing} ★`;
+    const outcome = this.renderTaskOutcome(active.task, true);
+    return `
+      <section class="meta-link-card ${affordable ? 'ready' : ''} ${compact ? 'compact' : ''}">
+        <div class="meta-link-icon" aria-hidden="true">⌂</div>
+        <div class="meta-link-copy">
+          <div class="chapter">Текущий ремонт · ${active.room.title}</div>
+          <strong>${active.task.title}</strong>
+          <p>${active.task.description}</p>
+          ${outcome}
+          <small>${statusText} · Доступно ${this.progress.availableStars} ★</small>
+        </div>
+        <button class="${affordable ? 'primary' : 'secondary'} compact" data-action="active-restoration" data-room-id="${active.room.id}">
+          ${affordable ? 'Выполнить ремонт' : 'Открыть комнату'}
+        </button>
+      </section>
+    `;
+  }
+
+  private renderTaskOutcome(task: RestorationTaskDefinition, compact = false): string {
+    const parts: string[] = [];
+    if (task.rewards?.length) {
+      parts.push(`${task.roomCompletionReward ? 'Награда за комнату' : 'Награда'}: ${task.rewards.map(formatBoosterReward).join(' · ')}`);
+    }
+    if (task.unlocks?.length) {
+      parts.push(task.unlocks.map((unlock) => unlock.title).join(' · '));
+    }
+    if (parts.length === 0) return '';
+    return `<div class="restoration-outcome ${compact ? 'compact' : ''}">${parts.join('<br>')}</div>`;
+  }
+
+  private getTaskUnlockMessage(task: RestorationTaskDefinition): string | undefined {
+    return task.unlocks?.map((unlock) => unlock.title).join(' · ');
+  }
+
+  private getTaskRewardMessage(task: RestorationTaskDefinition): string | undefined {
+    return task.rewards?.length
+      ? task.rewards.map(formatBoosterReward).join(' · ')
+      : undefined;
+  }
+
   showHome(): void {
     const nextStoryScene = getNextUnviewedStoryScene(
       storyScenes,
@@ -302,7 +373,7 @@ export class GameApp {
       ${this.topbar('Поместье', () => this.showHome())}
       <div class="chapter">Глава I · Возвращение</div>
       <h2>Комнаты Raven Manor</h2>
-      <p class="subtitle">Комнаты открываются через восстановление. Match-3 уровни имеют отдельную прогрессию.</p>
+      <p class="subtitle">Ремонт комнат открывает новые группы уровней, механики и полезные бустеры.</p>
       <button class="primary wide-action" data-action="levels">Перейти к уровням</button>
       <div class="room-list">${cards}</div>
       <button class="ghost reset" data-action="reset">Сбросить прогресс</button>
@@ -343,11 +414,15 @@ export class GameApp {
         group,
         levelGroups,
         this.progress.state.completed,
+        this.progress.state.completedRestorationTasks,
       );
       const sourceGroup = levelGroups.find((candidate) => candidate.id === state.sourceGroupId);
+      const requiredTask = restorationTasks.find((task) => task.id === state.requiredTaskId);
       const unlockMessage = state.unlocked
         ? `Пройдено ${state.completedCount}/${state.totalCount}`
-        : `Пройдите ${state.requiredCount} уровня в группе «${sourceGroup?.title ?? ''}»`;
+        : requiredTask
+          ? `Нужен ремонт: «${requiredTask.title}»`
+          : `Пройдите ${state.requiredCount} уровня в группе «${sourceGroup?.title ?? ''}»`;
       const levelCards = group.levelIds.map((levelId) => {
         const level = levels.find((candidate) => candidate.id === levelId);
         if (!level) throw new Error(`Unknown level in group ${group.id}: ${levelId}`);
@@ -358,7 +433,7 @@ export class GameApp {
         <section class="level-group ${state.unlocked ? '' : 'locked'}">
           <div class="level-group-heading">
             <div>
-              <div class="chapter">${state.unlocked ? 'Доступно' : 'Закрыто'}</div>
+              <div class="chapter">${state.unlocked ? 'Доступно' : 'Закрыто ремонтом'}</div>
               <h2>${group.title}</h2>
               <p class="subtitle">${group.description}</p>
             </div>
@@ -372,14 +447,16 @@ export class GameApp {
     this.renderScreen('levels', `
       ${this.topbar('Уровни', () => this.showHome())}
       <div class="chapter">Match-3 кампания</div>
-      <h2>Выберите уровень</h2>
-      <p class="subtitle">Первые три уровня доступны сразу. Внутри каждой группы можно выбирать порядок прохождения.</p>
-      <button class="secondary wide-action" data-action="manor">Вернуться в поместье</button>
+      <h2>Зарабатывайте звёзды для ремонта</h2>
+      <p class="subtitle">Первые уровни доступны сразу. Ключевые ремонты открывают следующие группы и новые механики.</p>
+      ${this.renderActiveRestorationCard()}
+      <button class="secondary wide-action" data-action="manor">Открыть поместье</button>
       <div class="level-group-list">${groupCards}</div>
     `);
 
     this.bind('back', () => this.showHome());
     this.bind('manor', () => this.showManor());
+    this.bind('active-restoration', (button) => this.showRoom(button.dataset.roomId ?? 'hall'));
     this.screen.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((button) => {
       button.addEventListener('click', () => {
         if (button.dataset.actionPending === 'true') return;
@@ -451,7 +528,7 @@ export class GameApp {
         <div>
           <div class="chapter">Match-3</div>
           <h2>Нужны ещё звёзды?</h2>
-          <p class="subtitle">Уровни открываются отдельными группами и не привязаны к одной комнате.</p>
+          <p class="subtitle">Проходите открытые уровни, зарабатывайте звёзды и возвращайтесь к текущей задаче ремонта.</p>
         </div>
         <button class="primary" data-action="levels">К уровням</button>
       </section>
@@ -513,6 +590,8 @@ export class GameApp {
               <div class="room-restoration-message">
                 <span>Восстановлено</span>
                 <strong>${reveal.taskTitle}</strong>
+                ${reveal.rewardMessage ? `<small>Получено: ${reveal.rewardMessage}</small>` : ''}
+                ${reveal.unlockMessage ? `<small>${reveal.unlockMessage}</small>` : ''}
                 ${reveal.unlockedRoomTitle ? `<small>Открыта комната «${reveal.unlockedRoomTitle}»</small>` : ''}
               </div>
             </div>
@@ -548,8 +627,9 @@ export class GameApp {
       <article class="restoration-card ${completed ? 'completed' : ''} ${status === 'locked' ? 'locked' : ''} ${status === 'insufficient-stars' ? 'insufficient-stars' : ''}">
         <div class="restoration-status">${completed ? '✓' : task.order}</div>
         <div>
-          <h3>${task.title}</h3>
+          <h3>${task.title}${task.optional ? ' <small class="optional-task-label">Необязательно</small>' : ''}</h3>
           <div class="room-meta">${task.description}</div>
+          ${this.renderTaskOutcome(task)}
         </div>
         <button
           class="${completed ? 'ghost' : 'secondary'} compact"
@@ -630,9 +710,11 @@ export class GameApp {
       previousAsset: getRoomSceneAsset(beforeVisual.stage.assetKey),
       taskTitle: task.title,
       unlockedRoomTitle: newlyUnlockedRoom?.title,
+      rewardMessage: this.getTaskRewardMessage(task),
+      unlockMessage: this.getTaskUnlockMessage(task),
     };
     this.recentlyUnlockedRoomId = newlyUnlockedRoom?.id ?? this.recentlyUnlockedRoomId;
-    this.audio.play(newlyUnlockedRoom ? 'unlock' : 'restore');
+    this.audio.play(task.rewards?.length ? 'boosterReward' : newlyUnlockedRoom ? 'unlock' : 'restore');
     this.showRoom(this.currentRoomId);
     this.playRestorationReveal();
   }
@@ -642,12 +724,18 @@ export class GameApp {
     if (!this.currentLevel) throw new Error(`Unknown level: ${levelId}`);
 
     const group = levelGroups.find((candidate) => candidate.levelIds.includes(levelId));
-    if (!group || !getLevelGroupState(group, levelGroups, this.progress.state.completed).unlocked) {
+    if (!group || !getLevelGroupState(
+      group,
+      levelGroups,
+      this.progress.state.completed,
+      this.progress.state.completedRestorationTasks,
+    ).unlocked) {
       throw new Error(`Level ${levelId} is locked.`);
     }
 
     this.engine = Match3Engine.fromSetup(this.currentLevel.board, tileTypes.length);
     this.selected = null;
+    this.activeBooster = null;
     this.objectiveTracker = new ObjectiveTracker(
       createLevelObjectives(this.currentLevel.id, this.currentLevel.objectives),
     );
@@ -734,6 +822,105 @@ export class GameApp {
     return `<img class="${className}" src="${tile.assetPath}" alt="" draggable="false" />`;
   }
 
+  private renderBoosterBar(): string {
+    const kinds: readonly BoosterKind[] = ['hammer', 'shuffle'];
+    return `
+      <section class="booster-bar" aria-label="Бустеры уровня">
+        ${kinds.map((kind) => {
+          const presentation = getBoosterPresentation(kind);
+          const unlocked = isBoosterUnlocked(
+            kind,
+            restorationTasks,
+            this.progress.state.completedRestorationTasks,
+          );
+          const count = this.progress.getBoosterCount(kind);
+          const unlockTask = getBoosterUnlockTask(kind, restorationTasks);
+          const disabled = !unlocked || count <= 0 || this.busy;
+          const active = this.activeBooster === kind;
+          const label = !unlocked
+            ? `Закрыто · ${unlockTask?.title ?? 'выполните ремонт'}`
+            : count > 0 ? `${presentation.shortName} · ${count}` : 'Нет зарядов';
+          return `
+            <button
+              class="booster-button ${presentation.cssClass} ${active ? 'active' : ''} ${unlocked ? '' : 'locked'}"
+              data-action="booster-${kind}"
+              ${disabled && !active ? 'disabled' : ''}
+              aria-pressed="${active}"
+              aria-label="${presentation.name}. ${label}"
+            >
+              <img src="${presentation.assetPath}" alt="" draggable="false" />
+              <span>${label}</span>
+            </button>
+          `;
+        }).join('')}
+      </section>
+    `;
+  }
+
+  private toggleHammerBooster(): void {
+    if (this.busy) return;
+    if (!isBoosterUnlocked('hammer', restorationTasks, this.progress.state.completedRestorationTasks)) {
+      const task = getBoosterUnlockTask('hammer', restorationTasks);
+      this.showToast(`Сначала выполните ремонт «${task?.title ?? 'Убрать обломки'}».`, 'warning');
+      return;
+    }
+    if (this.progress.getBoosterCount('hammer') <= 0) {
+      this.showToast('Серебряные молоты закончились. Новые выдаются за восстановление комнат.', 'warning');
+      return;
+    }
+    this.selected = null;
+    this.activeBooster = this.activeBooster === 'hammer' ? null : 'hammer';
+    this.boardMessage = this.activeBooster ? 'Выберите клетку для молота' : '';
+    this.audio.play('select');
+    this.renderGame();
+  }
+
+  private async useShuffleBooster(): Promise<void> {
+    if (this.busy || !this.currentLevel) return;
+    if (!isBoosterUnlocked('shuffle', restorationTasks, this.progress.state.completedRestorationTasks)) {
+      const task = getBoosterUnlockTask('shuffle', restorationTasks);
+      this.showToast(`Сначала выполните ремонт «${task?.title ?? 'Открыть ставни'}».`, 'warning');
+      return;
+    }
+    if (this.progress.getBoosterCount('shuffle') <= 0) {
+      this.showToast('Перемешивания закончились. Новые выдаются за восстановление комнат.', 'warning');
+      return;
+    }
+
+    this.busy = true;
+    this.activeBooster = null;
+    this.selected = null;
+    this.boardReshuffling = true;
+    this.boardMessage = 'Ворон перестраивает поле…';
+    this.audio.play('boosterShuffle');
+    this.renderGame();
+    await this.motionDelay('reshuffle');
+    const reshuffled = this.engine.reshuffle();
+    if (!reshuffled) {
+      this.boardReshuffling = false;
+      this.boardMessage = '';
+      this.busy = false;
+      this.audio.play('invalid');
+      this.showToast('Сейчас это поле нельзя безопасно перемешать.', 'warning');
+      this.renderGame();
+      return;
+    }
+    this.progress.useBooster('shuffle');
+    this.analytics.recordAction('booster_used', {
+      kind: 'shuffle',
+      levelId: this.currentLevel.id,
+      remaining: this.progress.getBoosterCount('shuffle'),
+    });
+    this.boardSettling = true;
+    this.renderGame();
+    await this.motionDelay('settle');
+    this.boardSettling = false;
+    this.boardReshuffling = false;
+    this.boardMessage = '';
+    this.busy = false;
+    this.renderGame();
+  }
+
   private renderGame(): void {
     if (!this.currentLevel || !this.objectiveTracker) return;
     const objectiveSnapshots = this.objectiveTracker.snapshots;
@@ -756,6 +943,7 @@ export class GameApp {
           </div>
         </section>
         <div class="star-targets"><span>★★★ ${this.currentLevel.starThresholds.threeStarsMovesLeft}+</span><span>★★ ${this.currentLevel.starThresholds.twoStarsMovesLeft}+</span><small>ходов останется</small></div>
+        ${this.renderBoosterBar()}
         <div class="board-stage">
           <div class="board-wrap ${boardStateClasses}">
             <div class="board-sigil" aria-hidden="true"></div>
@@ -774,6 +962,8 @@ export class GameApp {
     this.bind('back', () => this.showLevelMap());
     this.bind('hint', () => this.showHint());
     this.bind('restart', () => this.startLevel(this.currentLevel!.id));
+    this.bind('booster-hammer', () => this.toggleHammerBooster());
+    this.bind('booster-shuffle', () => { void this.useShuffleBooster(); });
     this.bind('tutorial-next', () => {
       this.progress.advanceTutorial();
       this.renderGame();
@@ -800,6 +990,7 @@ export class GameApp {
         const special = definition ? this.engine.getSpecial(position) : null;
         const specialPresentation = special ? getSpecialPresentation(special) : null;
         const interactive = this.engine.canSwap(position);
+        const hammerTarget = this.activeBooster === 'hammer' && this.engine.canHammer(position);
         const swapOffset = this.swapOffsets.get(key);
         const baseClass = definition
           ? getTileClassName(tile, {
@@ -814,6 +1005,7 @@ export class GameApp {
           baseClass,
           specialPresentation ? `special-tile ${specialPresentation.cssClass}` : '',
           obstaclePresentation ? `has-obstacle ${obstaclePresentation.cssClass} obstacle-layers-${obstacle!.layers}` : '',
+          hammerTarget ? 'booster-target' : '',
           this.createdSpecialTiles.has(key) ? 'special-created' : '',
           swapOffset ? 'swapping' : '',
         ].filter(Boolean).join(' ');
@@ -827,18 +1019,19 @@ export class GameApp {
           specialPresentation ? `${specialPresentation.name}, создана из фишки ${definition?.name ?? ''}` : definition?.name,
           obstaclePresentation ? `${obstaclePresentation.name}, ${obstaclePresentation.layerLabel}` : null,
         ].filter(Boolean).join(', ');
-        const tag = interactive ? 'button' : 'span';
+        const tag = interactive || hammerTarget ? 'button' : 'span';
 
         return `
           <${tag}
             class="${className}"
             ${swapStyle}
+            ${interactive || hammerTarget ? `data-cell="${key}"` : ''}
             ${interactive ? `data-tile="${key}" data-tile-type="${definition!.id}"` : ''}
             ${special ? `data-special="${special.kind}"` : ''}
             ${obstacle ? `data-obstacle="${obstacle.kind}"` : ''}
             role="gridcell"
             aria-label="${names || 'Заблокированная клетка'}, ряд ${rowIndex + 1}, колонка ${colIndex + 1}"
-            ${interactive ? `aria-pressed="${this.selected?.row === rowIndex && this.selected?.col === colIndex}"` : ''}
+            ${interactive || hammerTarget ? `aria-pressed="${this.selected?.row === rowIndex && this.selected?.col === colIndex}"` : ''}
           >
             <span class="tile-surface" aria-hidden="true"></span>
             ${specialPresentation ? '<span class="special-aura" aria-hidden="true"></span>' : ''}
@@ -868,7 +1061,9 @@ export class GameApp {
       const second = this.getTilePosition(elementAtPoint ?? event.target);
       if (!second) return;
 
-      if (this.engine.areAdjacent(first, second)) {
+      if (this.activeBooster === 'hammer') {
+        void this.onTileClick(second);
+      } else if (this.engine.areAdjacent(first, second)) {
         void this.attemptSwap(first, second);
       } else {
         void this.onTileClick(second);
@@ -889,14 +1084,19 @@ export class GameApp {
 
   private getTilePosition(target: EventTarget | null): Position | null {
     if (!(target instanceof Element)) return null;
-    const tile = target.closest<HTMLElement>('[data-tile]');
-    if (!tile?.dataset.tile) return null;
-    const [row, col] = tile.dataset.tile.split(',').map(Number);
+    const tile = target.closest<HTMLElement>('[data-cell], [data-tile]');
+    const key = tile?.dataset.cell ?? tile?.dataset.tile;
+    if (!key) return null;
+    const [row, col] = key.split(',').map(Number);
     return Number.isInteger(row) && Number.isInteger(col) ? { row, col } : null;
   }
 
   private async onTileClick(position: Position): Promise<void> {
     if (this.busy || !this.currentLevel) return;
+    if (this.activeBooster === 'hammer') {
+      await this.useHammerBooster(position);
+      return;
+    }
     if (!this.selected) {
       this.audio.play('select');
       this.selected = position;
@@ -919,6 +1119,131 @@ export class GameApp {
     const first = this.selected;
     this.selected = null;
     await this.attemptSwap(first, position);
+  }
+
+  private async useHammerBooster(position: Position): Promise<void> {
+    if (this.busy || !this.currentLevel || !this.objectiveTracker) return;
+    if (!this.engine.canHammer(position)) {
+      this.audio.play('invalid');
+      this.showToast('Молот нельзя применить к этой клетке.', 'warning');
+      return;
+    }
+    if (this.progress.getBoosterCount('hammer') <= 0) {
+      this.activeBooster = null;
+      this.renderGame();
+      return;
+    }
+
+    this.busy = true;
+    this.activeBooster = null;
+    this.selected = null;
+    this.matchedTiles.clear();
+    this.matchedTiles.add(getTileKey(position.row, position.col));
+    this.boardMessage = 'Серебряный молот';
+    this.audio.play('hammer');
+    this.renderGame();
+    await this.motionDelay('clear');
+
+    const clearResult = this.engine.hitCell(position);
+    const changed = clearResult.removedTileTypes.length > 0 || clearResult.obstacleDamage.length > 0;
+    if (!changed || !this.progress.useBooster('hammer')) {
+      this.matchedTiles.clear();
+      this.boardMessage = '';
+      this.busy = false;
+      this.renderGame();
+      return;
+    }
+
+    this.analytics.recordAction('booster_used', {
+      kind: 'hammer',
+      levelId: this.currentLevel.id,
+      remaining: this.progress.getBoosterCount('hammer'),
+      target: clearResult.obstacleDamage[0]?.kind ?? 'tile',
+    });
+    this.objectiveTracker.handle({ type: 'tiles-removed', tileTypes: clearResult.removedTileTypes });
+    this.objectiveTracker.handle({ type: 'obstacles-cleared', obstacleKinds: clearResult.clearedObstacleKinds });
+    this.recordObstacleAnalytics(clearResult.obstacleDamage);
+    this.engine.collapse();
+    this.matchedTiles.clear();
+    this.boardSettling = true;
+    this.renderGame();
+    await this.motionDelay('settle');
+    this.boardSettling = false;
+
+    await this.resolveBoosterCascades();
+    await this.ensurePlayableBoard();
+    this.boardMessage = '';
+    this.cascadeLevel = 0;
+    this.busy = false;
+
+    if (this.objectiveTracker.isComplete) {
+      this.winLevel();
+    } else {
+      this.renderGame();
+    }
+  }
+
+  private async resolveBoosterCascades(): Promise<void> {
+    if (!this.objectiveTracker) return;
+    const objectivePriority = this.getObjectivePriority();
+    let cascade = 0;
+
+    while (this.engine.findMatches().length > 0) {
+      cascade++;
+      this.cascadeLevel = cascade;
+      const plan = planMatchedResolution(
+        this.engine,
+        null,
+        objectivePriority,
+        false,
+      );
+      if (plan.clearPositions.length === 0) break;
+
+      this.matchedTiles.clear();
+      plan.clearPositions.forEach((item) => this.matchedTiles.add(getTileKey(item.row, item.col)));
+      this.boardMessage = cascade > 1
+        ? `Каскад ×${cascade}${plan.message ? ` · ${plan.message}` : ''}`
+        : plan.message || `Комбинация ×${plan.clearPositions.length}`;
+      this.playResolutionAudio(plan, cascade + 1);
+      this.recordSpecialAnalytics(plan);
+      this.renderGame();
+      await this.motionDelay('clear');
+
+      const clearResult = this.engine.resolveClear(plan.clearPositions);
+      this.objectiveTracker.handle({ type: 'tiles-removed', tileTypes: clearResult.removedTileTypes });
+      this.objectiveTracker.handle({ type: 'obstacles-cleared', obstacleKinds: clearResult.clearedObstacleKinds });
+      this.playObstacleAudio(clearResult.obstacleDamage.map((damage) => damage.kind));
+      this.recordObstacleAnalytics(clearResult.obstacleDamage);
+      applySpecialCreations(this.engine, plan.creations);
+      this.engine.collapse();
+      this.matchedTiles.clear();
+      this.createdSpecialTiles.clear();
+      for (const created of findCreatedSpecialPositions(this.engine, plan.creations)) {
+        this.createdSpecialTiles.add(getTileKey(created.row, created.col));
+      }
+      this.boardSettling = true;
+      this.renderGame();
+      await this.motionDelay('settle');
+      this.boardSettling = false;
+      this.createdSpecialTiles.clear();
+    }
+  }
+
+  private async ensurePlayableBoard(): Promise<void> {
+    if (this.engine.findPossibleMove()) return;
+    this.boardReshuffling = true;
+    this.audio.play('reshuffle');
+    this.boardMessage = 'Ворон перемешивает поле…';
+    this.renderGame();
+    await this.motionDelay('reshuffle');
+    const reshuffled = this.engine.reshuffle();
+    if (!reshuffled) this.engine.generateBoard();
+    this.boardSettling = true;
+    this.renderGame();
+    await this.motionDelay('settle');
+    this.boardSettling = false;
+    this.boardReshuffling = false;
+    this.boardMessage = '';
   }
 
   private async attemptSwap(first: Position, second: Position): Promise<void> {
@@ -1141,30 +1466,56 @@ export class GameApp {
       levels.map((level) => level.id),
       levelGroups,
       this.progress.state.completed,
+      this.progress.state.completedRestorationTasks,
+    );
+    const activeRestoration = getActiveRestoration(
+      rooms,
+      restorationTasks,
+      this.progress.state.completedRestorationTasks,
+      this.progress.availableStars,
     );
     this.audio.play('win');
     const rewardMessage = newlyEarned > 0
       ? `Получено новых звёзд: ${newlyEarned} ★`
       : 'Лучший результат уровня не улучшен.';
+    const canRepair = activeRestoration?.status === 'available';
+    const metaMessage = activeRestoration
+      ? canRepair
+        ? `Теперь можно выполнить ремонт «${activeRestoration.task.title}» в комнате «${activeRestoration.room.title}».`
+        : `Следующая задача: «${activeRestoration.task.title}». Нужно ещё ${activeRestoration.starsMissing} ★.`
+      : 'Все доступные задачи ремонта выполнены.';
 
     this.openModal(`
       <div class="result-vfx result-vfx--win" aria-hidden="true">${this.renderVfxParticles('win', 'result-particle')}</div>
       <div class="result-emblem result-emblem--win" aria-hidden="true">✦</div>
       <div class="big-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
       <h2>Уровень пройден</h2>
-      <p>Победы открывают новые группы уровней. Звёзды можно тратить на восстановление поместья.</p>
+      <p>Звёзды восстанавливают поместье, а ключевые ремонты открывают следующие уровни и механики.</p>
       <p class="reward-message">${rewardMessage}</p>
-      <div class="modal-balance">Доступно: ${this.progress.availableStars} ★</div>
+      <div class="result-next-step ${canRepair ? 'ready' : ''}">
+        <span>Следующий шаг</span>
+        <strong>${metaMessage}</strong>
+        ${activeRestoration ? this.renderTaskOutcome(activeRestoration.task, true) : ''}
+      </div>
+      <div class="modal-balance">Доступно: ${this.progress.availableStars} ★ · Молоты: ${this.progress.getBoosterCount('hammer')} · Перемешивания: ${this.progress.getBoosterCount('shuffle')}</div>
       <div class="stack">
+        ${canRepair ? '<button class="primary" data-action="repair-now">Выполнить ремонт</button>' : ''}
         ${nextLevelId === null
           ? ''
-          : '<button class="primary" data-action="next-level">Следующий уровень</button>'}
-        <button class="${nextLevelId === null ? 'primary' : 'secondary'}" data-action="levels">К уровням</button>
+          : `<button class="${canRepair ? 'secondary' : 'primary'}" data-action="next-level">Следующий уровень</button>`}
+        <button class="${nextLevelId === null && !canRepair ? 'primary' : 'secondary'}" data-action="levels">К уровням</button>
         <button class="secondary" data-action="manor">В поместье</button>
         <button class="ghost" data-action="story">${this.progress.isStoryViewed(completedLevelId) ? 'Повторить сюжетную сцену' : 'Сюжетная сцена'}${nextLevelId === null ? ' → к уровням' : ' → следующий уровень'}</button>
       </div>
     `, 'modal-card--result modal-card--win');
 
+    if (canRepair && activeRestoration) {
+      this.bindModal('repair-now', () => {
+        this.currentRoomId = activeRestoration.room.id;
+        this.closeModal();
+        this.restoreTask(activeRestoration.task.id);
+      });
+    }
     if (nextLevelId !== null) {
       this.bindModal('next-level', () => {
         this.closeModal();
@@ -1363,6 +1714,35 @@ export class GameApp {
     this.bindModal('close-obstacle-guide', () => this.closeModal());
   }
 
+  private showBoosterGuide(): void {
+    const kinds: readonly BoosterKind[] = ['hammer', 'shuffle'];
+    const cards = kinds.map((kind) => {
+      const presentation = getBoosterPresentation(kind);
+      const unlocked = isBoosterUnlocked(kind, restorationTasks, this.progress.state.completedRestorationTasks);
+      const unlockTask = getBoosterUnlockTask(kind, restorationTasks);
+      const count = this.progress.getBoosterCount(kind);
+      return `
+        <article class="special-guide-card ${presentation.cssClass}">
+          <div class="special-guide-icon"><img src="${presentation.assetPath}" alt="" draggable="false" /></div>
+          <div>
+            <strong>${presentation.name}</strong>
+            <small>${unlocked ? `Доступно: ${count}` : `Открывается: ${unlockTask?.title ?? 'ремонт комнаты'}`}</small>
+            <p>${presentation.description}</p>
+          </div>
+        </article>
+      `;
+    }).join('');
+
+    this.openModal(`
+      <div class="chapter">Награды ремонта</div>
+      <h2>Активные бустеры</h2>
+      <p class="subtitle">Бустеры не тратят ход. Их запасы сохраняются между уровнями и пополняются за задачи восстановления.</p>
+      <div class="special-guide-grid">${cards}</div>
+      <button class="primary" data-action="close-booster-guide">Понятно</button>
+    `, 'modal-card--special-guide');
+    this.bindModal('close-booster-guide', () => this.closeModal());
+  }
+
   private showSettings(): void {
     const preference: TutorialPreference = this.progress.state.tutorial.preference;
     const status = preference === 'undecided'
@@ -1404,7 +1784,8 @@ export class GameApp {
           <strong>Сильные комбинации</strong>
           <p class="subtitle">Линии из 4–5, формы T/L и квадраты 2×2 создают специальные фишки.</p>
         </div>
-        <div class="stack"><button class="secondary" data-action="special-guide">Справочник усилений</button><button class="ghost" data-action="obstacle-guide">Справочник препятствий</button></div>
+        <div class="setting-status">Молоты: ${this.progress.getBoosterCount('hammer')} · Перемешивания: ${this.progress.getBoosterCount('shuffle')}</div>
+        <div class="stack"><button class="secondary" data-action="booster-guide">Активные бустеры</button><button class="ghost" data-action="special-guide">Комбинации</button><button class="ghost" data-action="obstacle-guide">Препятствия</button></div>
       </section>
       <div class="chapter settings-section-label">Аудио</div>
       <h2>Музыка и звуки</h2>
@@ -1494,6 +1875,7 @@ export class GameApp {
       this.progress.skipTutorial();
       this.showSettings();
     });
+    this.bind('booster-guide', () => this.showBoosterGuide());
     this.bind('special-guide', () => this.showSpecialGuide());
     this.bind('obstacle-guide', () => this.showObstacleGuide());
     this.bind('audio-toggle', () => {
@@ -1761,13 +2143,13 @@ export class GameApp {
     }, 2600);
   }
 
-  private bind(action: string, handler: () => void): void {
+  private bind(action: string, handler: (element: HTMLElement) => void): void {
     const element = this.screen.querySelector<HTMLElement>(`[data-action="${action}"]`);
     element?.addEventListener('click', () => {
       if (element.dataset.actionPending === 'true') return;
       element.dataset.actionPending = 'true';
       this.audio.play('ui');
-      handler();
+      handler(element);
       window.setTimeout(() => {
         if (element.isConnected) delete element.dataset.actionPending;
       }, 300);

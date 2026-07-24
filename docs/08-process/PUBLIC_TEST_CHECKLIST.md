@@ -135,3 +135,26 @@ random-board attempt; collect repeated runs.
 - Confirm all objective cards must complete before the win screen appears.
 - Confirm the level map shows every objective compactly on iPhone widths.
 - Confirm reduced-motion mode disables fog drift.
+
+## FEATURE-050 connected meta and boosters
+
+- On a clean save, confirm levels 1–3 are open and levels 4–10 are repair-gated.
+- Complete a level and confirm the result explains the next restoration task.
+- Earn enough stars and use **Выполнить ремонт** directly from the win modal.
+- Confirm `Зажечь люстру` opens levels 4–6.
+- Confirm `Починить стеллажи` opens levels 7–9.
+- Confirm `Починить фонтан` opens level 10.
+- Import an older save with a completed gated level and confirm that group
+  remains replayable.
+- Complete `Убрать обломки` and confirm two Silver Hammers are awarded.
+- Select Hammer, tap an ordinary tile, and confirm no move is spent.
+- Use Hammer on one- and two-layer chains, rubble, and fog.
+- Confirm exactly one layer is removed and objective progress updates.
+- Confirm a hammer-created cascade resolves normally.
+- Complete `Открыть ставни` and confirm two Shuffle charges are awarded.
+- Use Shuffle and confirm moves, obstacles, mask, and special-tile count remain
+  valid while the charge decreases by one.
+- Fully restore a room and confirm the optional task awards its larger bundle.
+- Export/import the save and confirm booster counts remain unchanged.
+- Test the gameplay layout at 320×568, 360×800, 390×844, and 430×932.
+- Confirm the new booster row never causes document scroll or hides the board.

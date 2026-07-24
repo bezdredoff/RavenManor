@@ -3,7 +3,7 @@
     "schemaVersion": 1,
     "id": "arrival",
     "title": "Первые следы",
-    "description": "Выберите любые уровни. Двух побед достаточно, чтобы открыть следующую группу.",
+    "description": "Первые уровни дают звёзды для восстановления вестибюля.",
     "levelIds": [1, 2, 3],
     "unlock": { "type": "always" }
   },
@@ -11,36 +11,33 @@
     "schemaVersion": 1,
     "id": "whispers",
     "title": "Шёпот особняка",
-    "description": "Новые цели сложнее, но порядок прохождения остаётся свободным.",
+    "description": "Зажгите люстру в Вестибюле, чтобы открыть составные цели, цепи и завалы.",
     "levelIds": [4, 5, 6],
     "unlock": {
-      "type": "complete-in-group",
-      "groupId": "arrival",
-      "count": 2
+      "type": "restoration-task",
+      "taskId": "hall-light-chandelier"
     }
   },
   {
     "schemaVersion": 1,
     "id": "deepening-mystery",
     "title": "Тайна сгущается",
-    "description": "Ещё три варианта сложности перед финалом вертикального среза.",
+    "description": "Почините стеллажи Библиотеки, чтобы открыть туман и сложные формы поля.",
     "levelIds": [7, 8, 9],
     "unlock": {
-      "type": "complete-in-group",
-      "groupId": "whispers",
-      "count": 2
+      "type": "restoration-task",
+      "taskId": "library-repair-shelves"
     }
   },
   {
     "schemaVersion": 1,
     "id": "prototype-finale",
     "title": "Финал прототипа",
-    "description": "Последний уровень открывается после двух побед в предыдущей группе.",
+    "description": "Почините фонтан Зимнего сада, чтобы открыть итоговое испытание.",
     "levelIds": [10],
     "unlock": {
-      "type": "complete-in-group",
-      "groupId": "deepening-mystery",
-      "count": 2
+      "type": "restoration-task",
+      "taskId": "garden-repair-fountain"
     }
   }
 ]
