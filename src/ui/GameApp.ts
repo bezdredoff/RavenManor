@@ -1,4 +1,6 @@
 import ravenMark from '../assets/ui/raven-mark.svg?url';
+import { APP_VERSION, BUILD_LABEL } from '../appVersion';
+import { PlaytestAnalytics } from '../analytics/PlaytestAnalytics';
 import { AudioManager } from '../audio/AudioManager';
 import {
   levelGroups,
@@ -51,6 +53,10 @@ import { getRoomSceneAsset } from './roomPresentation';
 import { getStoryScenePresentation } from './storyPresentation';
 import { getRestorationBlockedMessage } from './restorationFeedback';
 import { getStoryContinueLabel, resolveStoryContinuation } from './storyFlow';
+import { downloadJson } from '../platform/Download';
+import { preloadImageAssets } from '../platform/AssetPreloader';
+import { ErrorLog } from '../platform/ErrorLog';
+import { PwaManager, getPwaStatusLabel } from '../pwa/PwaManager';
 
 type SwapOffset = Readonly<{ x: number; y: number }>;
 
@@ -72,6 +78,9 @@ export class GameApp {
   private readonly root: HTMLElement;
   private readonly progress = new ProgressStore(restorationTasks);
   private readonly audio = new AudioManager();
+  private readonly analytics = new PlaytestAnalytics();
+  private readonly pwa = new PwaManager();
+  private readonly errors: ErrorLog;
   private engine = new Match3Engine();
 
   private currentRoomId = 'hall';
@@ -96,14 +105,20 @@ export class GameApp {
   private toastTimer: number | null = null;
   private starWalletExpanded = false;
 
-  constructor(root: HTMLElement) {
+  constructor(root: HTMLElement, errors: ErrorLog = new ErrorLog()) {
     this.root = root;
+    this.errors = errors;
     this.audio.arm();
+    void this.pwa.register();
+    preloadImageAssets([ravenMark, ...tileTypes.map((tile) => tile.assetPath)]);
     this.renderShell();
     this.syncViewportProfile();
     window.addEventListener('resize', () => this.syncViewportProfile());
     window.visualViewport?.addEventListener('resize', () => this.syncViewportProfile());
     this.showHome();
+    if (this.progress.recoveryNotice) {
+      window.setTimeout(() => this.showToast(this.progress.recoveryNotice!, 'warning'), 0);
+    }
   }
 
   private renderShell(): void {
@@ -140,6 +155,7 @@ export class GameApp {
     const isNavigation = this.currentScreenMode !== mode;
     if (isNavigation) this.starWalletExpanded = false;
     this.currentScreenMode = mode;
+    if (isNavigation) this.analytics.recordScreen(mode);
     this.screen.className = `${getScreenClassName(mode)}${isNavigation ? ' screen-enter' : ''}`;
     this.screen.innerHTML = content;
     this.bindImageStates(this.screen);
@@ -218,7 +234,7 @@ export class GameApp {
         <button class="ghost" data-action="story" ${nextStoryScene ? '' : 'disabled'}>${nextStoryScene ? 'Продолжить историю' : 'Новых сюжетных сцен нет'}</button>
         <button class="ghost" data-action="settings">Настройки</button>
       </div>
-      <p class="footer-note">Глава I · Возвращение в Raven Manor</p>
+      <p class="footer-note">Глава I · Возвращение в Raven Manor · ${APP_VERSION}</p>
     `);
 
     this.bind('play', () => this.showLevelMap());
@@ -286,6 +302,7 @@ export class GameApp {
     this.bind('reset', () => {
       if (confirm('Сбросить весь прогресс?')) {
         this.progress.reset();
+        this.analytics.recordAction('progress_reset');
         this.pendingRoomReveal = null;
         this.recentlyUnlockedRoomId = null;
         this.showManor();
@@ -294,6 +311,8 @@ export class GameApp {
     this.playRecentRoomUnlock();
     this.screen.querySelectorAll<HTMLElement>('[data-room]').forEach((card) => {
       const openRoom = () => {
+        if (card.dataset.actionPending === 'true') return;
+        card.dataset.actionPending = 'true';
         this.audio.play('ui');
         this.showRoom(card.dataset.room!);
       };
@@ -352,6 +371,9 @@ export class GameApp {
     this.bind('manor', () => this.showManor());
     this.screen.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((button) => {
       button.addEventListener('click', () => {
+        if (button.dataset.actionPending === 'true') return;
+        button.dataset.actionPending = 'true';
+        button.disabled = true;
         this.audio.play('ui');
         this.startLevel(Number(button.dataset.level));
       });
@@ -428,7 +450,14 @@ export class GameApp {
     this.bind('back', () => this.showManor());
     this.bind('levels', () => this.showLevelMap());
     this.screen.querySelectorAll<HTMLButtonElement>('[data-restoration-task]').forEach((button) => {
-      button.addEventListener('click', () => this.restoreTask(button.dataset.restorationTask!));
+      button.addEventListener('click', () => {
+        if (button.dataset.actionPending === 'true') return;
+        button.dataset.actionPending = 'true';
+        this.restoreTask(button.dataset.restorationTask!);
+        window.setTimeout(() => {
+          if (button.isConnected) delete button.dataset.actionPending;
+        }, 300);
+      });
     });
   }
 
@@ -535,6 +564,7 @@ export class GameApp {
     );
     const blockedMessage = getRestorationBlockedMessage(status, task, this.availableStars);
     if (blockedMessage) {
+      this.analytics.recordAction('restoration_blocked', { taskId: task.id, roomId: task.roomId, status });
       this.audio.play('invalid');
       this.showToast(blockedMessage, 'warning');
       return;
@@ -569,6 +599,7 @@ export class GameApp {
     }
 
     this.progress.completeRestorationTask(taskId);
+    this.analytics.recordRestoration(task.id, task.roomId);
     const afterVisual = getRoomVisualState(
       this.currentRoomId,
       roomVisuals,
@@ -624,6 +655,7 @@ export class GameApp {
     this.boardMessage = '';
     this.cascadeLevel = 0;
     this.swapOffsets.clear();
+    this.analytics.startLevel(this.currentLevel.id);
     this.audio.play('story');
     this.renderGame();
 
@@ -823,6 +855,7 @@ export class GameApp {
     let matches = this.engine.findMatches();
 
     if (matches.length === 0) {
+      this.analytics.recordMove(false);
       this.audio.play('invalid');
       this.invalidTiles.add(getTileKey(first.row, first.col));
       this.invalidTiles.add(getTileKey(second.row, second.col));
@@ -837,6 +870,7 @@ export class GameApp {
       return;
     }
 
+    this.analytics.recordMove(true);
     this.movesLeft--;
     if (this.progress.state.tutorial.preference === 'enabled'
       && this.progress.state.tutorial.step === 0) {
@@ -910,6 +944,7 @@ export class GameApp {
     if (!this.currentLevel) return;
     const completedLevelId = this.currentLevel.id;
     const stars = calculateLevelStars(this.currentLevel, this.movesLeft);
+    this.analytics.finishLevel('win', stars, this.movesLeft);
     const newlyEarned = this.progress.saveLevel(completedLevelId, stars);
     const nextLevelId = getNextPlayableLevelId(
       completedLevelId,
@@ -961,6 +996,7 @@ export class GameApp {
   }
 
   private loseLevel(): void {
+    this.analytics.finishLevel('loss', 0, this.movesLeft);
     this.audio.play('loss');
     this.openModal(`
       <div class="result-vfx result-vfx--loss" aria-hidden="true">${this.renderVfxParticles('loss', 'result-particle')}</div>
@@ -1057,6 +1093,11 @@ export class GameApp {
     const audioSupported = this.audio.supported;
     const musicPercent = Math.round(audio.musicVolume * 100);
     const effectsPercent = Math.round(audio.effectsVolume * 100);
+    const pwaStatus = this.pwa.status;
+    const analyticsSummary = this.analytics.getSummary();
+    const recoveryStatus = this.progress.recoveryNotice
+      ? `<div class="setting-status setting-status--warning">${this.progress.recoveryNotice}</div>`
+      : `<div class="setting-status">${this.progress.storageAvailable ? 'Сохранение работает' : 'Хранилище недоступно'}</div>`;
 
     this.renderScreen('settings', `
       ${this.topbar('Настройки', () => this.showHome())}
@@ -1107,6 +1148,47 @@ export class GameApp {
         </div>
         <div class="setting-status">${this.prefersReducedMotion() ? 'Сокращённые эффекты активны' : 'Полные эффекты активны'}</div>
       </section>
+      <div class="chapter settings-section-label">Установка</div>
+      <h2>Приложение на телефоне</h2>
+      <section class="settings-card">
+        <div class="setting-row setting-row--status">
+          <div>
+            <strong>Устанавливаемая PWA-сборка</strong>
+            <p class="subtitle">После первого онлайн-запуска опубликованная версия может открываться без сети и запускаться с главного экрана телефона.</p>
+          </div>
+          <div class="setting-status">${getPwaStatusLabel(pwaStatus)}</div>
+        </div>
+        <div class="stack">
+          ${pwaStatus.installAvailable ? '<button class="primary" data-action="pwa-install">Установить приложение</button>' : ''}
+          ${pwaStatus.serviceWorkerReady ? '<button class="ghost" data-action="pwa-update">Проверить обновление</button>' : ''}
+        </div>
+      </section>
+      <div class="chapter settings-section-label">Playtest</div>
+      <h2>Сохранение и диагностика</h2>
+      <section class="settings-card diagnostics-card">
+        <div class="setting-row setting-row--status">
+          <div>
+            <strong>${BUILD_LABEL}</strong>
+            <p class="subtitle">Версия ${APP_VERSION} · ${navigator.onLine ? 'онлайн' : 'офлайн'}</p>
+          </div>
+          ${recoveryStatus}
+        </div>
+        <div class="playtest-summary" aria-label="Сводка локального тестирования">
+          <span>Сессии <strong>${analyticsSummary.sessions}</strong></span>
+          <span>Попытки <strong>${analyticsSummary.attempts}</strong></span>
+          <span>Победы <strong>${analyticsSummary.wins}</strong></span>
+          <span>Подсказки <strong>${analyticsSummary.hints}</strong></span>
+        </div>
+        <div class="settings-action-grid">
+          <button class="secondary" data-action="save-export">Экспорт сохранения</button>
+          <button class="ghost" data-action="save-import">Импорт сохранения</button>
+          <button class="secondary" data-action="analytics-export">Экспорт аналитики</button>
+          <button class="ghost" data-action="diagnostics-export">Экспорт диагностики</button>
+        </div>
+        <button class="ghost compact" data-action="analytics-reset">Очистить локальную аналитику</button>
+        <input class="visually-hidden" type="file" accept="application/json,.json" data-save-import-file aria-label="Выбрать файл сохранения" />
+        <p class="subtitle settings-privacy-note">Данные остаются только на устройстве, пока игрок сам не экспортирует JSON. Сторонняя аналитика не подключается.</p>
+      </section>
       <p class="footer-note">Новые механики позднее будут объясняться такими же короткими контекстными карточками.</p>
     `);
 
@@ -1125,8 +1207,118 @@ export class GameApp {
     });
     this.bind('audio-music-preview', () => this.audio.previewMusic());
     this.bind('audio-preview', () => this.audio.previewEffects());
+    this.bind('pwa-install', () => { void this.installPwa(); });
+    this.bind('pwa-update', () => { void this.checkPwaUpdate(); });
+    this.bind('save-export', () => this.exportSave());
+    this.bind('save-import', () => this.screen.querySelector<HTMLInputElement>('[data-save-import-file]')?.click());
+    this.bind('analytics-export', () => this.exportAnalytics());
+    this.bind('diagnostics-export', () => this.exportDiagnostics());
+    this.bind('analytics-reset', () => {
+      if (confirm('Очистить только локальные данные плейтеста? Игровой прогресс сохранится.')) {
+        this.analytics.reset();
+        this.showSettings();
+      }
+    });
+    this.screen.querySelector<HTMLInputElement>('[data-save-import-file]')?.addEventListener('change', (event) => {
+      const file = (event.currentTarget as HTMLInputElement).files?.[0];
+      if (file) void this.importSave(file);
+    });
     this.bindAudioVolume('music');
     this.bindAudioVolume('effects');
+  }
+
+  private exportFileStamp(): string {
+    return new Date().toISOString().replace(/[:.]/g, '-');
+  }
+
+  private exportSave(): void {
+    downloadJson(
+      `raven-manor-save-${this.exportFileStamp()}.json`,
+      this.progress.exportData(APP_VERSION),
+    );
+    this.analytics.recordAction('save_exported');
+    this.showToast('Сохранение экспортировано.');
+  }
+
+  private async importSave(file: File): Promise<void> {
+    if (!confirm('Заменить текущий игровой прогресс данными из выбранного файла?')) return;
+    try {
+      this.progress.importData(await file.text());
+      this.analytics.recordAction('save_imported');
+      this.pendingRoomReveal = null;
+      this.recentlyUnlockedRoomId = null;
+      this.showSettings();
+      this.showToast('Сохранение импортировано.');
+    } catch (error) {
+      this.errors.record('application', error);
+      this.showToast(error instanceof Error ? error.message : 'Не удалось импортировать сохранение.', 'warning');
+    }
+  }
+
+  private exportAnalytics(): void {
+    downloadJson(
+      `raven-manor-playtest-${this.exportFileStamp()}.json`,
+      {
+        appVersion: APP_VERSION,
+        exportedAt: new Date().toISOString(),
+        analytics: this.analytics.exportData(),
+      },
+    );
+    this.analytics.recordAction('analytics_exported');
+    this.showToast('Данные плейтеста экспортированы.');
+  }
+
+  private exportDiagnostics(): void {
+    downloadJson(
+      `raven-manor-diagnostics-${this.exportFileStamp()}.json`,
+      {
+        appVersion: APP_VERSION,
+        build: BUILD_LABEL,
+        exportedAt: new Date().toISOString(),
+        environment: {
+          userAgent: navigator.userAgent,
+          language: navigator.language,
+          online: navigator.onLine,
+          viewport: {
+            width: window.visualViewport?.width ?? window.innerWidth,
+            height: window.visualViewport?.height ?? window.innerHeight,
+            devicePixelRatio: window.devicePixelRatio,
+          },
+          reducedMotion: this.prefersReducedMotion(),
+          pwa: this.pwa.status,
+          currentScreen: this.currentScreenMode,
+        },
+        progress: this.progress.exportData(APP_VERSION),
+        analytics: this.analytics.exportData(),
+        errors: this.errors.getEntries(),
+      },
+    );
+    this.analytics.recordAction('diagnostics_exported');
+    this.showToast('Диагностика экспортирована.');
+  }
+
+  private async installPwa(): Promise<void> {
+    const outcome = await this.pwa.install();
+    this.analytics.recordAction('pwa_install_prompt', { outcome });
+    this.showSettings();
+    this.showToast(
+      outcome === 'accepted'
+        ? 'Установка Raven Manor подтверждена.'
+        : outcome === 'dismissed'
+          ? 'Установка отменена.'
+          : 'Установка доступна через меню браузера.',
+      outcome === 'accepted' ? 'info' : 'warning',
+    );
+  }
+
+  private async checkPwaUpdate(): Promise<void> {
+    try {
+      const available = await this.pwa.checkForUpdate();
+      this.showToast(available ? 'Доступно обновление. Перезапустите приложение.' : 'Установлена актуальная версия.');
+    } catch (error) {
+      this.errors.record('application', error);
+      this.showToast('Не удалось проверить обновление.', 'warning');
+    }
   }
 
   private showStory(levelId: number, nextLevelId?: number | null): void {
@@ -1182,6 +1374,7 @@ export class GameApp {
       }
 
       this.progress.markStoryViewed(scene.afterLevelId);
+      this.analytics.recordStory(scene.afterLevelId);
       const continuation = resolveStoryContinuation(nextLevelId);
       this.closeModal();
       if (continuation.kind === 'level') {
@@ -1202,6 +1395,7 @@ export class GameApp {
       remaining: objective.target - objective.current,
     });
     if (!bestMove) return;
+    this.analytics.recordHint();
     this.audio.play('hint');
     this.hintedTiles.clear();
     for (const position of bestMove.move) {
@@ -1249,14 +1443,24 @@ export class GameApp {
   }
 
   private bind(action: string, handler: () => void): void {
-    this.screen.querySelector<HTMLElement>(`[data-action="${action}"]`)?.addEventListener('click', () => {
+    const element = this.screen.querySelector<HTMLElement>(`[data-action="${action}"]`);
+    element?.addEventListener('click', () => {
+      if (element.dataset.actionPending === 'true') return;
+      element.dataset.actionPending = 'true';
       this.audio.play('ui');
       handler();
+      window.setTimeout(() => {
+        if (element.isConnected) delete element.dataset.actionPending;
+      }, 300);
     });
   }
 
   private bindModal(action: string, handler: () => void): void {
-    this.modal.querySelector<HTMLElement>(`[data-action="${action}"]`)?.addEventListener('click', () => {
+    const element = this.modal.querySelector<HTMLElement>(`[data-action="${action}"]`);
+    element?.addEventListener('click', () => {
+      if (element.dataset.actionPending === 'true') return;
+      element.dataset.actionPending = 'true';
+      if (element instanceof HTMLButtonElement) element.disabled = true;
       this.audio.play('ui');
       handler();
     });

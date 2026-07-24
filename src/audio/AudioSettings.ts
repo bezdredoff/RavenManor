@@ -1,3 +1,4 @@
+import { getSafeStorage } from '../platform/SafeStorage';
 export type AudioSettings = Readonly<{
   muted: boolean;
   musicVolume: number;
@@ -38,7 +39,7 @@ export function restoreAudioSettings(value: unknown): AudioSettings {
 export class AudioSettingsStore {
   settings: AudioSettings;
 
-  constructor(private readonly storage: AudioSettingsStorage = localStorage) {
+  constructor(private readonly storage: AudioSettingsStorage = getSafeStorage()) {
     this.settings = this.load();
   }
 
@@ -49,9 +50,9 @@ export class AudioSettingsStore {
   }
 
   private load(): AudioSettings {
-    const raw = this.storage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_AUDIO_SETTINGS;
     try {
+      const raw = this.storage.getItem(STORAGE_KEY);
+      if (!raw) return DEFAULT_AUDIO_SETTINGS;
       return restoreAudioSettings(JSON.parse(raw));
     } catch {
       return DEFAULT_AUDIO_SETTINGS;
@@ -59,6 +60,10 @@ export class AudioSettingsStore {
   }
 
   private persist(): void {
-    this.storage.setItem(STORAGE_KEY, JSON.stringify(this.settings));
+    try {
+      this.storage.setItem(STORAGE_KEY, JSON.stringify(this.settings));
+    } catch {
+      // Audio preferences are non-critical.
+    }
   }
 }
