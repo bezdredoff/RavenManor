@@ -20,9 +20,12 @@ export type RoomDefinition = Readonly<{
 }>;
 
 export type {
+  ClearObstacleObjectiveDefinition,
   CollectObjectiveDefinition,
   LevelDefinition,
+  LevelBoardDefinition,
   LevelDifficulty,
+  LevelObstacleDefinition,
   LevelObjectiveDefinition,
   StarThresholds,
 } from './levelTypes';

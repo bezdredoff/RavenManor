@@ -3,7 +3,12 @@ export type TilesRemovedEvent = Readonly<{
   tileTypes: readonly number[];
 }>;
 
-export type ObjectiveEvent = TilesRemovedEvent;
+export type ObstaclesClearedEvent = Readonly<{
+  type: 'obstacles-cleared';
+  obstacleKinds: readonly import('../engine/ObstacleTypes').ObstacleKind[];
+}>;
+
+export type ObjectiveEvent = TilesRemovedEvent | ObstaclesClearedEvent;
 
 export type ObjectiveSnapshot = Readonly<{
   id: string;

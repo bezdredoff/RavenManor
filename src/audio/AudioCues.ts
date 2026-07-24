@@ -17,7 +17,10 @@ export type AudioCue =
   | 'bomb'
   | 'raven'
   | 'prism'
-  | 'specialCombo';
+  | 'specialCombo'
+  | 'chainBreak'
+  | 'rubbleBreak'
+  | 'fogClear';
 
 export type CueDefinition = Readonly<{
   frequencies: readonly number[];
@@ -46,6 +49,9 @@ const CUES: Readonly<Record<AudioCue, CueDefinition>> = {
   raven: { frequencies: [740, 620, 470], durationMs: 420, gain: 0.09, wave: 'triangle' },
   prism: { frequencies: [392, 587, 880, 1175], durationMs: 560, gain: 0.1, wave: 'sine' },
   specialCombo: { frequencies: [196, 392, 659, 988], durationMs: 680, gain: 0.12, wave: 'triangle' },
+  chainBreak: { frequencies: [310, 245, 190], durationMs: 230, gain: 0.11, wave: 'square' },
+  rubbleBreak: { frequencies: [135, 92, 64], durationMs: 330, gain: 0.12, wave: 'triangle' },
+  fogClear: { frequencies: [420, 560, 740], durationMs: 390, gain: 0.07, wave: 'sine' },
 };
 
 export function getCueDefinition(cue: AudioCue): CueDefinition {

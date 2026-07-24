@@ -1,4 +1,7 @@
-export const LEVEL_SCHEMA_VERSION = 2 as const;
+import type { ObstacleKind, ObstacleLayerCount } from '../engine/ObstacleTypes';
+
+export const LEVEL_SCHEMA_VERSION = 3 as const;
+export const BOARD_SIZE = 8 as const;
 
 export type LevelDifficulty = 'easy' | 'normal' | 'hard' | 'finale';
 
@@ -14,11 +17,28 @@ export type CollectObjectiveDefinition = Readonly<{
   target: number;
 }>;
 
-/**
- * JSON-compatible objective definitions supported by the current prototype.
- * New objective types extend this union instead of adding fields to GameApp.
- */
-export type LevelObjectiveDefinition = CollectObjectiveDefinition;
+export type ClearObstacleObjectiveDefinition = Readonly<{
+  id: string;
+  type: 'clear-obstacle';
+  obstacleKind: ObstacleKind;
+  target: number;
+}>;
+
+export type LevelObjectiveDefinition =
+  | CollectObjectiveDefinition
+  | ClearObstacleObjectiveDefinition;
+
+export type LevelObstacleDefinition = Readonly<{
+  row: number;
+  col: number;
+  kind: ObstacleKind;
+  layers: ObstacleLayerCount;
+}>;
+
+export type LevelBoardDefinition = Readonly<{
+  mask: readonly string[];
+  obstacles: readonly LevelObstacleDefinition[];
+}>;
 
 export type LevelDefinition = Readonly<{
   schemaVersion: typeof LEVEL_SCHEMA_VERSION;
@@ -27,5 +47,6 @@ export type LevelDefinition = Readonly<{
   difficulty: LevelDifficulty;
   moves: number;
   starThresholds: StarThresholds;
+  board: LevelBoardDefinition;
   objectives: readonly LevelObjectiveDefinition[];
 }>;

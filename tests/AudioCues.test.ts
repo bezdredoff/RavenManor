@@ -5,6 +5,7 @@ const cues: AudioCue[] = [
   'ui', 'select', 'hint', 'swap', 'invalid', 'match', 'cascade',
   'reshuffle', 'win', 'loss', 'restore', 'unlock', 'story',
   'specialCreate', 'rocket', 'bomb', 'raven', 'prism', 'specialCombo',
+  'chainBreak', 'rubbleBreak', 'fogClear',
 ];
 
 describe('audio cue definitions', () => {

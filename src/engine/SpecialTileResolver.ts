@@ -1,4 +1,5 @@
 import { Match3Engine, type MatchShape, type Move, type Position } from './Match3Engine';
+import { normalizeObjectivePriority, type ObjectivePriority, type ObjectivePriorityInput } from './ObjectivePriority';
 import {
   getSpecialLabel,
   getSpecialPower,
@@ -29,7 +30,7 @@ export type SpecialResolutionPlan = Readonly<{
 export function planMatchedResolution(
   engine: Match3Engine,
   move: Move | null,
-  objectiveTileType: number,
+  objectivePriority: ObjectivePriorityInput,
   allowCreation: boolean,
 ): SpecialResolutionPlan {
   const groups = engine.findMatchGroups();
@@ -48,7 +49,7 @@ export function planMatchedResolution(
   const activations = expandTriggeredSpecials(
     engine,
     clear,
-    objectiveTileType,
+    normalizeObjectivePriority(objectivePriority),
     new Set(),
   );
   for (const protectedKey of protectedKeys) clear.delete(protectedKey);
@@ -69,7 +70,7 @@ export function planDirectSpecialResolution(
   first: Position,
   second: Position,
   combo: DirectSpecialCombo,
-  objectiveTileType: number,
+  objectivePriority: ObjectivePriorityInput,
 ): SpecialResolutionPlan {
   const clear = new Map<string, Position>();
   const activations: SpecialActivation[] = [];
@@ -109,7 +110,7 @@ export function planDirectSpecialResolution(
     addArea(clear, engine, center, 2);
   }
 
-  const chained = expandTriggeredSpecials(engine, clear, objectiveTileType, preActivated);
+  const chained = expandTriggeredSpecials(engine, clear, normalizeObjectivePriority(objectivePriority), preActivated);
   activations.push(...chained);
 
   return {
@@ -166,20 +167,26 @@ function planSpecialCreations(
 
     if (longLine) {
       preferredShape = longLine;
-      const position = chooseCreationPosition(longLine.positions, move);
+      const position = chooseCreationPosition(engine, longLine.positions, move);
+      if (!position) continue;
       special = { kind: 'prism', baseTile: engine.board[position.row][position.col] };
     } else if (horizontal.length > 0 && vertical.length > 0) {
       const intersection = findIntersection(horizontal, vertical);
       forcedPosition = intersection;
-      const position = intersection ?? chooseCreationPosition(group, move);
+      const position = intersection && engine.canHostSpecial(intersection)
+        ? intersection
+        : chooseCreationPosition(engine, group, move);
+      if (!position) continue;
       special = { kind: 'bomb', baseTile: engine.board[position.row][position.col] };
     } else if (square) {
       preferredShape = square;
-      const position = chooseCreationPosition(square.positions, move);
+      const position = chooseCreationPosition(engine, square.positions, move);
+      if (!position) continue;
       special = { kind: 'raven', baseTile: engine.board[position.row][position.col] };
     } else if (fourLine) {
       preferredShape = fourLine;
-      const position = chooseCreationPosition(fourLine.positions, move);
+      const position = chooseCreationPosition(engine, fourLine.positions, move);
+      if (!position) continue;
       special = {
         kind: 'rocket',
         direction: fourLine.orientation === 'column' ? 'column' : 'row',
@@ -188,9 +195,10 @@ function planSpecialCreations(
     }
 
     if (!special) continue;
-    const position = forcedPosition
-      ?? chooseCreationPosition(preferredShape?.positions ?? group, move);
-    creations.push({ position, special });
+    const position = forcedPosition && engine.canHostSpecial(forcedPosition)
+      ? forcedPosition
+      : chooseCreationPosition(engine, preferredShape?.positions ?? group, move);
+    if (position) creations.push({ position, special });
   }
 
   return creations;
@@ -199,7 +207,7 @@ function planSpecialCreations(
 function expandTriggeredSpecials(
   engine: Match3Engine,
   clear: Map<string, Position>,
-  objectiveTileType: number,
+  objectivePriority: ObjectivePriority,
   preActivated: Set<string>,
 ): SpecialActivation[] {
   const activations: SpecialActivation[] = [];
@@ -229,7 +237,7 @@ function expandTriggeredSpecials(
       add(clear, engine, { row: position.row + 1, col: position.col });
       add(clear, engine, { row: position.row, col: position.col - 1 });
       add(clear, engine, { row: position.row, col: position.col + 1 });
-      const target = chooseRavenTarget(engine, clear, objectiveTileType);
+      const target = chooseRavenTarget(engine, clear, objectivePriority);
       if (target) add(clear, engine, target);
     } else if (special.kind === 'prism') {
       forEachPosition(engine, (candidate) => {
@@ -251,30 +259,43 @@ function expandTriggeredSpecials(
 function chooseRavenTarget(
   engine: Match3Engine,
   clear: ReadonlyMap<string, Position>,
-  objectiveTileType: number,
+  objectivePriority: ObjectivePriority,
 ): Position | null {
   const candidates: Position[] = [];
   forEachPosition(engine, (position) => {
     if (clear.has(key(position))) return;
-    if (engine.board[position.row][position.col] < 0) return;
+    if (engine.board[position.row][position.col] < 0 && !engine.getObstacle(position)) return;
     candidates.push(position);
   });
   candidates.sort((first, second) => {
-    const firstObjective = Number(engine.board[first.row][first.col] === objectiveTileType);
-    const secondObjective = Number(engine.board[second.row][second.col] === objectiveTileType);
-    return secondObjective - firstObjective
-      || Number(Boolean(engine.getSpecial(second))) - Number(Boolean(engine.getSpecial(first)))
+    const score = (position: Position): number => {
+      const obstacle = engine.getObstacle(position);
+      const obstacleScore = obstacle && objectivePriority.obstacles.some((target) => (
+        target.remaining > 0 && target.kind === obstacle.kind
+      )) ? 100 : obstacle ? 30 : 0;
+      const tile = engine.board[position.row][position.col];
+      const collectScore = objectivePriority.collects.some((target) => (
+        target.remaining > 0 && target.tileType === tile
+      )) ? 60 : 0;
+      return obstacleScore + collectScore + Number(Boolean(engine.getSpecial(position))) * 12;
+    };
+    return score(second) - score(first)
       || first.row - second.row
       || first.col - second.col;
   });
   return candidates[0] ?? null;
 }
 
-function chooseCreationPosition(positions: readonly Position[], move: Move): Position {
-  const keys = new Set(positions.map(key));
+function chooseCreationPosition(
+  engine: Match3Engine,
+  positions: readonly Position[],
+  move: Move,
+): Position | null {
+  const eligible = positions.filter((position) => engine.canHostSpecial(position));
+  const keys = new Set(eligible.map(key));
   if (keys.has(key(move[1]))) return move[1];
   if (keys.has(key(move[0]))) return move[0];
-  return positions[Math.floor((positions.length - 1) / 2)];
+  return eligible[Math.floor((eligible.length - 1) / 2)] ?? null;
 }
 
 function findIntersection(
@@ -295,7 +316,7 @@ function add(
     || position.col < 0
     || position.row >= engine.size
     || position.col >= engine.size
-    || engine.board[position.row][position.col] < 0
+    || !engine.isActive(position)
   ) return;
   positions.set(key(position), position);
 }

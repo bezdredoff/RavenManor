@@ -2101,3 +2101,124 @@ body {
   .special-guide-card { grid-template-columns: 52px minmax(0,1fr); padding: .5rem; }
   .special-guide-icon { width: 48px; height: 48px; }
 }
+
+/* FEATURE-049: shaped boards and obstacle layers */
+.objective-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.objective-list .objective-card {
+  min-width: 0;
+  padding: 7px 8px;
+}
+
+.objective-list .objective-copy strong {
+  font-size: clamp(.66rem, 2.5vw, .82rem);
+  line-height: 1.15;
+}
+
+.objective-card.complete {
+  opacity: .68;
+  filter: saturate(.7);
+}
+
+.objective-obstacle-icon {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.board .tile-void {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.board .tile-obstacle-only {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(173, 148, 121, .23);
+  border-radius: 20%;
+  background: rgba(23, 18, 27, .78);
+  overflow: hidden;
+}
+
+.tile.has-obstacle {
+  cursor: default;
+}
+
+.tile.has-obstacle .tile-surface {
+  filter: brightness(.72) saturate(.65);
+}
+
+.obstacle-overlay {
+  position: absolute;
+  inset: -4%;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.obstacle-overlay > img {
+  width: 104%;
+  height: 104%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .52));
+}
+
+.obstacle-chain .obstacle-overlay > img {
+  transform: rotate(-4deg) scale(1.04);
+}
+
+.obstacle-rubble .obstacle-overlay > img {
+  width: 115%;
+  height: 115%;
+}
+
+.obstacle-fog .obstacle-overlay > img {
+  width: 125%;
+  height: 125%;
+  animation: obstacle-fog-breathe 3.4s ease-in-out infinite alternate;
+}
+
+.tile-glyph--fogged {
+  opacity: .28;
+  filter: blur(1.2px) grayscale(.35);
+}
+
+.obstacle-layer-mark {
+  position: absolute;
+  right: 4%;
+  bottom: 4%;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(247, 224, 168, .8);
+  border-radius: 999px;
+  background: rgba(35, 24, 38, .9);
+  color: #f4dda0;
+  font: 700 10px/1 system-ui, sans-serif;
+  box-shadow: 0 2px 5px rgba(0,0,0,.45);
+}
+
+@keyframes obstacle-fog-breathe {
+  from { transform: translate3d(-2%, 1%, 0) scale(.98); opacity: .78; }
+  to { transform: translate3d(2%, -1%, 0) scale(1.05); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obstacle-fog .obstacle-overlay > img { animation: none; }
+}
+
+@media (max-height: 700px) {
+  .objective-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .objective-list .objective-card { padding: 5px 6px; }
+  .objective-obstacle-icon { width: 28px; height: 28px; }
+}

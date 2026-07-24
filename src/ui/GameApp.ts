@@ -7,7 +7,7 @@ import {
   levels,
   rooms,
   tileTypes,
-  type CollectObjectiveDefinition,
+  type LevelObjectiveDefinition,
   type LevelDefinition,
   type LevelDifficulty,
 } from '../data/gameData';
@@ -17,7 +17,7 @@ import {
 } from '../data/restorationTasks';
 import { roomVisuals } from '../data/roomVisuals';
 import { storyScenes } from '../data/storyScenes';
-import { Match3Engine, type Position } from '../engine/Match3Engine';
+import { Match3Engine, type ObstacleDamage, type Position } from '../engine/Match3Engine';
 import {
   applySpecialCreations,
   findCreatedSpecialPositions,
@@ -45,8 +45,10 @@ import {
   shouldShowTutorial,
   type TutorialPreference,
 } from '../meta/TutorialState';
-import { CollectObjective } from '../objectives/CollectObjective';
+import { createLevelObjectives } from '../objectives/ObjectiveFactory';
+import type { ObjectiveSnapshot } from '../objectives/LevelObjective';
 import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
+import { getObstacleLabel, type ObstacleKind } from '../engine/ObstacleTypes';
 import { getScreenClassName, type ScreenMode } from './layoutPolicy';
 import { getViewportProfile } from './responsivePolicy';
 import {
@@ -57,6 +59,7 @@ import {
 } from './motionPolicy';
 import { getTileClassName, getTileKey } from './tilePresentation';
 import { getSpecialPresentation, specialAssets } from './specialPresentation';
+import { getObstaclePresentation, obstacleAssets } from './obstaclePresentation';
 import { getRoomSceneAsset } from './roomPresentation';
 import { getStoryScenePresentation } from './storyPresentation';
 import { getRestorationBlockedMessage } from './restorationFeedback';
@@ -94,7 +97,6 @@ export class GameApp {
   private currentRoomId = 'hall';
   private currentLevel: LevelDefinition | null = null;
   private selected: Position | null = null;
-  private collectObjective: CollectObjective | null = null;
   private objectiveTracker: ObjectiveTracker | null = null;
   private movesLeft = 0;
   private busy = false;
@@ -119,7 +121,7 @@ export class GameApp {
     this.errors = errors;
     this.audio.arm();
     void this.pwa.register();
-    preloadImageAssets([ravenMark, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets]);
+    preloadImageAssets([ravenMark, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets]);
     this.renderShell();
     this.syncViewportProfile();
     window.addEventListener('resize', () => this.syncViewportProfile());
@@ -390,7 +392,6 @@ export class GameApp {
   }
 
   private renderLevelCard(level: LevelDefinition, groupUnlocked: boolean): string {
-    const objective = this.getCollectObjectiveDefinition(level);
     const stars = this.progress.state.stars[level.id] ?? 0;
     return `
       <article class="level-card ${groupUnlocked ? '' : 'locked'}">
@@ -400,7 +401,7 @@ export class GameApp {
             <span class="difficulty difficulty-${level.difficulty}">${DIFFICULTY_LABELS[level.difficulty]}</span>
           </div>
           <h3>${level.title}</h3>
-          <div class="room-meta level-objective">Цель: ${objective.target} × ${this.renderTileIcon(objective.tileType, 'inline-tile-icon')}</div>
+          <div class="room-meta level-objective">${this.renderLevelObjectiveSummary(level)}</div>
           <div class="balance-meta">${level.moves} ходов · 3★ при ${level.starThresholds.threeStarsMovesLeft}+ оставшихся</div>
         </div>
         <div>
@@ -645,15 +646,11 @@ export class GameApp {
       throw new Error(`Level ${levelId} is locked.`);
     }
 
-    const objectiveDefinition = this.getCollectObjectiveDefinition(this.currentLevel);
-    this.engine = new Match3Engine();
+    this.engine = Match3Engine.fromSetup(this.currentLevel.board, tileTypes.length);
     this.selected = null;
-    this.collectObjective = new CollectObjective({
-      id: `level-${this.currentLevel.id}-${objectiveDefinition.id}`,
-      tileType: objectiveDefinition.tileType,
-      target: objectiveDefinition.target,
-    });
-    this.objectiveTracker = new ObjectiveTracker([this.collectObjective]);
+    this.objectiveTracker = new ObjectiveTracker(
+      createLevelObjectives(this.currentLevel.id, this.currentLevel.objectives),
+    );
     this.movesLeft = this.currentLevel.moves;
     this.busy = false;
     this.matchedTiles.clear();
@@ -674,12 +671,61 @@ export class GameApp {
     }
   }
 
-  private getCollectObjectiveDefinition(level: LevelDefinition): CollectObjectiveDefinition {
-    const objective = level.objectives.find(
-      (definition): definition is CollectObjectiveDefinition => definition.type === 'collect',
-    );
-    if (!objective) throw new Error(`Level ${level.id} does not define a collect objective.`);
-    return objective;
+  private renderLevelObjectiveSummary(level: LevelDefinition): string {
+    return `Цели: ${level.objectives.map((objective) => {
+      if (objective.type === 'collect') {
+        return `${objective.target} × ${this.renderTileIcon(objective.tileType, 'inline-tile-icon')}`;
+      }
+      return `${objective.target} × ${getObstacleLabel(objective.obstacleKind)}`;
+    }).join(' · ')}`;
+  }
+
+  private renderObjectiveCard(snapshot: ObjectiveSnapshot): string {
+    const progress = Math.min(100, (snapshot.current / snapshot.target) * 100);
+    if ('tileType' in snapshot && typeof snapshot.tileType === 'number') {
+      const tile = tileTypes[snapshot.tileType];
+      return `
+        <article class="objective-card ${snapshot.complete ? 'complete' : ''}">
+          <div class="objective-copy">
+            <span class="hud-label">Собрать</span>
+            <strong>${snapshot.current} / ${snapshot.target} · ${tile?.name ?? 'фишки'}</strong>
+            <div class="progress" aria-label="Прогресс цели"><i style="width:${progress}%"></i></div>
+          </div>
+          <div class="objective-icon">${this.renderTileIcon(snapshot.tileType, 'objective-tile-icon')}</div>
+        </article>
+      `;
+    }
+
+    const obstacleKind = 'obstacleKind' in snapshot
+      ? snapshot.obstacleKind as ObstacleKind
+      : 'rubble';
+    const presentation = getObstaclePresentation({ kind: obstacleKind, layers: 1 });
+    return `
+      <article class="objective-card objective-card--obstacle ${snapshot.complete ? 'complete' : ''}">
+        <div class="objective-copy">
+          <span class="hud-label">Очистить</span>
+          <strong>${snapshot.current} / ${snapshot.target} · ${getObstacleLabel(obstacleKind)}</strong>
+          <div class="progress" aria-label="Прогресс цели"><i style="width:${progress}%"></i></div>
+        </div>
+        <div class="objective-icon"><img class="objective-obstacle-icon" src="${presentation.assetPath}" alt="" draggable="false" /></div>
+      </article>
+    `;
+  }
+
+  private getObjectivePriority() {
+    const snapshots = this.objectiveTracker?.snapshots ?? [];
+    return {
+      collects: snapshots.flatMap((snapshot) => (
+        'tileType' in snapshot && typeof snapshot.tileType === 'number'
+          ? [{ tileType: snapshot.tileType, remaining: snapshot.target - snapshot.current }]
+          : []
+      )),
+      obstacles: snapshots.flatMap((snapshot) => (
+        'obstacleKind' in snapshot
+          ? [{ obstacleKind: undefined, kind: snapshot.obstacleKind as ObstacleKind, remaining: snapshot.target - snapshot.current }]
+          : []
+      )).map(({ kind, remaining }) => ({ kind, remaining })),
+    };
   }
 
   private renderTileIcon(tileType: number, className = 'tile-icon'): string {
@@ -689,9 +735,8 @@ export class GameApp {
   }
 
   private renderGame(): void {
-    if (!this.currentLevel || !this.collectObjective) return;
-    const objective = this.collectObjective.getSnapshot();
-    const target = tileTypes[objective.tileType];
+    if (!this.currentLevel || !this.objectiveTracker) return;
+    const objectiveSnapshots = this.objectiveTracker.snapshots;
     const tutorialVisible = shouldShowTutorial(this.progress.state.tutorial);
     const boardStateClasses = [
       this.boardSettling ? 'is-settling' : '',
@@ -704,14 +749,7 @@ export class GameApp {
         ${this.topbar(this.currentLevel.title, () => this.showLevelMap())}
         ${this.renderTutorialBanner()}
         <section class="game-hud" aria-label="Цель уровня и оставшиеся ходы">
-          <div class="objective-card">
-            <div class="objective-copy">
-              <span class="hud-label">Цель</span>
-              <strong>${objective.current} / ${objective.target} · ${target.name}</strong>
-              <div class="progress" aria-label="Прогресс цели"><i style="width:${Math.min(100, (objective.current / objective.target) * 100)}%"></i></div>
-            </div>
-            <div class="objective-icon">${this.renderTileIcon(objective.tileType, 'objective-tile-icon')}</div>
-          </div>
+          <div class="objective-list">${objectiveSnapshots.map((snapshot) => this.renderObjectiveCard(snapshot)).join('')}</div>
           <div class="move-counter">
             <span>Ходы</span>
             <strong>${this.movesLeft}</strong>
@@ -721,7 +759,7 @@ export class GameApp {
         <div class="board-stage">
           <div class="board-wrap ${boardStateClasses}">
             <div class="board-sigil" aria-hidden="true"></div>
-            <div class="board" role="grid" aria-label="Игровое поле 8 на 8" aria-busy="${this.busy}">${this.renderBoard()}</div>
+            <div class="board" role="grid" aria-label="Игровое поле с препятствиями" aria-busy="${this.busy}">${this.renderBoard()}</div>
             <div class="board-match-vfx" aria-hidden="true">${this.renderMatchVfx()}</div>
             <div class="board-feedback ${this.boardMessage ? 'show' : ''} ${this.cascadeLevel > 1 ? 'cascade' : ''}" role="status" aria-live="polite">${this.boardMessage}</div>
           </div>
@@ -750,55 +788,63 @@ export class GameApp {
   private renderBoard(): string {
     return this.engine.board.flatMap((row, rowIndex) =>
       row.map((tile, colIndex) => {
-        const definition = tileTypes[tile];
+        const position = { row: rowIndex, col: colIndex };
         const key = getTileKey(rowIndex, colIndex);
-        if (!definition) {
-          return `<span class="tile tile-empty" role="gridcell" aria-hidden="true"></span>`;
+        if (!this.engine.isActive(position)) {
+          return `<span class="tile tile-void" role="gridcell" aria-hidden="true"></span>`;
         }
 
-        const position = { row: rowIndex, col: colIndex };
-        const special = this.engine.getSpecial(position);
+        const definition = tileTypes[tile];
+        const obstacle = this.engine.getObstacle(position);
+        const obstaclePresentation = obstacle ? getObstaclePresentation(obstacle) : null;
+        const special = definition ? this.engine.getSpecial(position) : null;
         const specialPresentation = special ? getSpecialPresentation(special) : null;
+        const interactive = this.engine.canSwap(position);
         const swapOffset = this.swapOffsets.get(key);
+        const baseClass = definition
+          ? getTileClassName(tile, {
+              selected: this.selected?.row === rowIndex && this.selected?.col === colIndex,
+              hinted: this.hintedTiles.has(key),
+              invalid: this.invalidTiles.has(key),
+              matched: this.matchedTiles.has(key),
+              settling: this.boardSettling,
+            })
+          : 'tile tile-obstacle-only';
         const className = [
-          getTileClassName(tile, {
-            selected: this.selected?.row === rowIndex && this.selected?.col === colIndex,
-            hinted: this.hintedTiles.has(key),
-            invalid: this.invalidTiles.has(key),
-            matched: this.matchedTiles.has(key),
-            settling: this.boardSettling,
-          }),
+          baseClass,
           specialPresentation ? `special-tile ${specialPresentation.cssClass}` : '',
+          obstaclePresentation ? `has-obstacle ${obstaclePresentation.cssClass} obstacle-layers-${obstacle!.layers}` : '',
           this.createdSpecialTiles.has(key) ? 'special-created' : '',
           swapOffset ? 'swapping' : '',
         ].filter(Boolean).join(' ');
-        const swapStyle = swapOffset
-          ? `style="--swap-x:${swapOffset.x};--swap-y:${swapOffset.y}"`
-          : '';
-        const glyph = specialPresentation ?? {
+        const swapStyle = swapOffset ? `style="--swap-x:${swapOffset.x};--swap-y:${swapOffset.y}"` : '';
+        const glyph = specialPresentation ?? (definition ? {
           name: definition.name,
           assetPath: definition.assetPath,
           cssClass: '',
-        };
-        const accessibleName = specialPresentation
-          ? `${specialPresentation.name}, создана из фишки ${definition.name}`
-          : definition.name;
+        } : null);
+        const names = [
+          specialPresentation ? `${specialPresentation.name}, создана из фишки ${definition?.name ?? ''}` : definition?.name,
+          obstaclePresentation ? `${obstaclePresentation.name}, ${obstaclePresentation.layerLabel}` : null,
+        ].filter(Boolean).join(', ');
+        const tag = interactive ? 'button' : 'span';
 
         return `
-          <button
+          <${tag}
             class="${className}"
             ${swapStyle}
-            data-tile="${key}"
-            data-tile-type="${definition.id}"
+            ${interactive ? `data-tile="${key}" data-tile-type="${definition!.id}"` : ''}
             ${special ? `data-special="${special.kind}"` : ''}
+            ${obstacle ? `data-obstacle="${obstacle.kind}"` : ''}
             role="gridcell"
-            aria-label="${accessibleName}, ряд ${rowIndex + 1}, колонка ${colIndex + 1}"
-            aria-pressed="${this.selected?.row === rowIndex && this.selected?.col === colIndex}"
+            aria-label="${names || 'Заблокированная клетка'}, ряд ${rowIndex + 1}, колонка ${colIndex + 1}"
+            ${interactive ? `aria-pressed="${this.selected?.row === rowIndex && this.selected?.col === colIndex}"` : ''}
           >
             <span class="tile-surface" aria-hidden="true"></span>
             ${specialPresentation ? '<span class="special-aura" aria-hidden="true"></span>' : ''}
-            <img class="tile-glyph ${specialPresentation ? 'tile-glyph--special' : ''}" src="${glyph.assetPath}" alt="" draggable="false" />
-          </button>
+            ${glyph ? `<img class="tile-glyph ${specialPresentation ? 'tile-glyph--special' : ''} ${obstacle?.kind === 'fog' ? 'tile-glyph--fogged' : ''}" src="${glyph.assetPath}" alt="" draggable="false" />` : ''}
+            ${obstaclePresentation ? `<span class="obstacle-overlay" aria-hidden="true"><img src="${obstaclePresentation.assetPath}" alt="" draggable="false" />${obstacle!.layers === 2 ? '<i class="obstacle-layer-mark">2</i>' : ''}</span>` : ''}
+          </${tag}>
         `;
       }),
     ).join('');
@@ -876,7 +922,7 @@ export class GameApp {
   }
 
   private async attemptSwap(first: Position, second: Position): Promise<void> {
-    if (this.busy || !this.currentLevel || !this.collectObjective) return;
+    if (this.busy || !this.currentLevel || !this.objectiveTracker) return;
     this.busy = true;
     this.selected = null;
     const directCombo = this.engine.getDirectSpecialCombo(first, second);
@@ -906,7 +952,7 @@ export class GameApp {
       this.progress.advanceTutorial();
     }
 
-    const objectiveTileType = this.collectObjective.getSnapshot().tileType;
+    const objectivePriority = this.getObjectivePriority();
     let cascade = 0;
     let firstResolution = true;
     let pendingDirectCombo = directCombo;
@@ -920,12 +966,12 @@ export class GameApp {
           first,
           second,
           pendingDirectCombo,
-          objectiveTileType,
+          objectivePriority,
         )
         : planMatchedResolution(
           this.engine,
           firstResolution ? [first, second] : null,
-          objectiveTileType,
+          objectivePriority,
           firstResolution,
         );
 
@@ -945,8 +991,11 @@ export class GameApp {
       this.renderGame();
       await this.motionDelay('clear');
 
-      const removed = this.engine.clearMatches(plan.clearPositions);
-      this.objectiveTracker?.handle({ type: 'tiles-removed', tileTypes: removed });
+      const clearResult = this.engine.resolveClear(plan.clearPositions);
+      this.objectiveTracker?.handle({ type: 'tiles-removed', tileTypes: clearResult.removedTileTypes });
+      this.objectiveTracker?.handle({ type: 'obstacles-cleared', obstacleKinds: clearResult.clearedObstacleKinds });
+      this.playObstacleAudio(clearResult.obstacleDamage.map((damage) => damage.kind));
+      this.recordObstacleAnalytics(clearResult.obstacleDamage);
       applySpecialCreations(this.engine, plan.creations);
       this.engine.collapse();
       this.matchedTiles.clear();
@@ -1044,6 +1093,26 @@ export class GameApp {
     if (plan.directCombo) {
       this.analytics.recordAction('special_combo', {
         combo: plan.directCombo,
+        levelId: this.currentLevel?.id ?? null,
+      });
+    }
+  }
+
+  private playObstacleAudio(kinds: readonly ObstacleKind[]): void {
+    if (kinds.includes('rubble')) {
+      this.audio.play('rubbleBreak');
+    } else if (kinds.includes('chain')) {
+      this.audio.play('chainBreak');
+    } else if (kinds.includes('fog')) {
+      this.audio.play('fogClear');
+    }
+  }
+
+  private recordObstacleAnalytics(damage: readonly ObstacleDamage[]): void {
+    for (const item of damage) {
+      this.analytics.recordAction(item.cleared ? 'obstacle_cleared' : 'obstacle_damaged', {
+        kind: item.kind,
+        remainingLayers: item.remainingLayers,
         levelId: this.currentLevel?.id ?? null,
       });
     }
@@ -1252,6 +1321,48 @@ export class GameApp {
     this.bindModal('close-special-guide', () => this.closeModal());
   }
 
+  private showObstacleGuide(): void {
+    const entries = [
+      {
+        obstacle: { kind: 'chain', layers: 1 } as const,
+        title: 'Цепи',
+        rule: 'Фишку нельзя двигать. Соберите комбинацию с ней или зацепите усилением, чтобы снять один слой.',
+      },
+      {
+        obstacle: { kind: 'rubble', layers: 1 } as const,
+        title: 'Завалы',
+        rule: 'Занимают клетку и останавливают падение. Комбинации и усиления рядом снимают один слой.',
+      },
+      {
+        obstacle: { kind: 'fog', layers: 1 } as const,
+        title: 'Туман',
+        rule: 'Скрывает и блокирует фишку. Комбинации и усиления рядом рассеивают один слой.',
+      },
+    ];
+    const cards = entries.map((entry) => {
+      const presentation = getObstaclePresentation(entry.obstacle);
+      return `
+        <article class="special-guide-card ${presentation.cssClass}">
+          <div class="special-guide-icon"><img src="${presentation.assetPath}" alt="" draggable="false" /></div>
+          <div>
+            <strong>${entry.title}</strong>
+            <small>${entry.obstacle.layers === 1 ? 'Один слой' : 'Два слоя'}</small>
+            <p>${entry.rule}</p>
+          </div>
+        </article>
+      `;
+    }).join('');
+
+    this.openModal(`
+      <div class="chapter">Справочник поля</div>
+      <h2>Препятствия поместья</h2>
+      <p class="subtitle">Цифра 2 на препятствии означает, что его нужно задеть в двух разных разрешениях комбинаций.</p>
+      <div class="special-guide-grid">${cards}</div>
+      <button class="primary" data-action="close-obstacle-guide">Понятно</button>
+    `, 'modal-card--special-guide');
+    this.bindModal('close-obstacle-guide', () => this.closeModal());
+  }
+
   private showSettings(): void {
     const preference: TutorialPreference = this.progress.state.tutorial.preference;
     const status = preference === 'undecided'
@@ -1293,7 +1404,7 @@ export class GameApp {
           <strong>Сильные комбинации</strong>
           <p class="subtitle">Линии из 4–5, формы T/L и квадраты 2×2 создают специальные фишки.</p>
         </div>
-        <button class="secondary" data-action="special-guide">Открыть справочник усилений</button>
+        <div class="stack"><button class="secondary" data-action="special-guide">Справочник усилений</button><button class="ghost" data-action="obstacle-guide">Справочник препятствий</button></div>
       </section>
       <div class="chapter settings-section-label">Аудио</div>
       <h2>Музыка и звуки</h2>
@@ -1384,6 +1495,7 @@ export class GameApp {
       this.showSettings();
     });
     this.bind('special-guide', () => this.showSpecialGuide());
+    this.bind('obstacle-guide', () => this.showObstacleGuide());
     this.bind('audio-toggle', () => {
       this.audio.updateSettings({ muted: !this.audio.settings.muted });
       this.showSettings();
@@ -1597,12 +1709,8 @@ export class GameApp {
   }
 
   private showHint(): void {
-    if (this.busy || !this.collectObjective) return;
-    const objective = this.collectObjective.getSnapshot();
-    const bestMove = findBestMove(this.engine, {
-      tileType: objective.tileType,
-      remaining: objective.target - objective.current,
-    });
+    if (this.busy || !this.objectiveTracker) return;
+    const bestMove = findBestMove(this.engine, this.getObjectivePriority());
     if (!bestMove) return;
     this.analytics.recordHint();
     this.audio.play('hint');

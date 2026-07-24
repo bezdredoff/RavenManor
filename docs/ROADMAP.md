@@ -204,3 +204,13 @@ _Status: next._
 - replayable archive of viewed scenes;
 - locked/new/read states grouped by room;
 - twenty additional narrative events for the 30-level chapter.
+
+## Completed — FEATURE-049
+
+- data-driven 8×8 board masks;
+- chains, rubble, and fog with one/two layers;
+- multiple collection and blocker-clear objectives;
+- special-tile, hint, gravity, and reshuffle integration;
+- obstacle art, procedural audio, guide text, and revised levels 4–10.
+
+Next planned: FEATURE-050 meta integration and active boosters.

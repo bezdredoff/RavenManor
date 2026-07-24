@@ -120,3 +120,18 @@ random-board attempt; collect repeated runs.
   immediate objective progress;
 - confirm reshuffle preserves specials and touch input never scrolls the page;
 - repeat at `320×568` and with reduced motion enabled.
+
+## FEATURE-049 shaped board and obstacle pass
+
+- Play level 4 and confirm clipped corners are empty and never selectable.
+- Confirm tiles fall through mask gaps into the next active slot.
+- Play level 5 and confirm chained tiles cannot move but chains break in matches.
+- Confirm a two-layer chain loses only one layer per resolution.
+- Play level 6 and confirm rubble blocks falling tiles until destroyed.
+- Confirm matches beside rubble damage it only once per cascade resolution.
+- Play level 7 and confirm fogged tiles are hidden, locked, and preserved after clearing.
+- Activate a rocket through rubble/fog and confirm the blocker is damaged.
+- Confirm the raven prefers an unfinished blocker objective when useful.
+- Confirm all objective cards must complete before the win screen appears.
+- Confirm the level map shows every objective compactly on iPhone widths.
+- Confirm reduced-motion mode disables fog drift.

@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "direction": "romantic-gothic-restoration",
   "statusValues": [
     "planned",
@@ -105,6 +105,27 @@
       "priority": "P0",
       "status": "integrated",
       "master": "128x128 transparent SVG"
+    },
+    {
+      "key": "match3/obstacles/chain",
+      "type": "obstacle",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 transparent SVG; one/two layer badge"
+    },
+    {
+      "key": "match3/obstacles/rubble",
+      "type": "obstacle",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 transparent SVG; one/two layer badge"
+    },
+    {
+      "key": "match3/obstacles/fog",
+      "type": "obstacle",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 transparent SVG; subtle CSS motion"
     },
     {
       "key": "match3/board/frame",
