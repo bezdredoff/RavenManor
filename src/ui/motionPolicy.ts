@@ -3,9 +3,10 @@ export const MOTION_DURATIONS_MS = {
   modalEnter: 220,
   modalExit: 150,
   swap: 150,
-  invalidHold: 190,
-  clear: 230,
+  invalidHold: 650,
+  clear: 260,
   settle: 170,
+  feedbackHold: 420,
   reshuffle: 460,
   restorationReveal: 1180,
   roomUnlock: 900,
@@ -13,6 +14,11 @@ export const MOTION_DURATIONS_MS = {
 
 export type MotionDurationName = keyof typeof MOTION_DURATIONS_MS;
 export type VfxKind = 'match' | 'cascade' | 'win' | 'loss' | 'restoration' | 'unlock';
+
+const READABILITY_HOLDS = new Set<MotionDurationName>([
+  'invalidHold',
+  'feedbackHold',
+]);
 
 const VFX_PARTICLE_BUDGETS: Readonly<Record<VfxKind, number>> = {
   match: 2,
@@ -27,7 +33,9 @@ export function getMotionDuration(
   name: MotionDurationName,
   reducedMotion = false,
 ): number {
-  return reducedMotion ? 0 : MOTION_DURATIONS_MS[name];
+  return reducedMotion && !READABILITY_HOLDS.has(name)
+    ? 0
+    : MOTION_DURATIONS_MS[name];
 }
 
 export function getVfxParticleBudget(

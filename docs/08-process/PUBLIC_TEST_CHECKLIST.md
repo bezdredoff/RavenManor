@@ -23,9 +23,13 @@
 ## Gameplay
 
 - [ ] tap and swipe swaps work;
-- [ ] invalid swap returns correctly;
+- [ ] invalid swap returns correctly and its message remains readable;
+- [ ] horizontal lines, vertical lines, and `2×2` squares clear correctly;
+- [ ] overlapping square/line shapes count each tile once;
+- [ ] Hint prioritises the current objective over a larger unrelated clear;
 - [ ] match, cascade, hint, reshuffle, win, and loss complete without stuck input;
 - [ ] levels unlock by group victories;
+- [ ] victory can continue directly to the next unlocked unfinished level;
 - [ ] room restoration spends stars once;
 - [ ] restored art and newly unlocked rooms persist.
 

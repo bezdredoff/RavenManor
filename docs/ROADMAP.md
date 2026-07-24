@@ -69,20 +69,23 @@ _Status: implemented, pending device verification._
 - final responsive, safe-area, touch, keyboard, and accessibility regression;
 - public-test readiness checklist.
 
-## Next phase — External playtest and evidence-driven iteration
+## Current phase — Evidence-driven playtest iteration
 
-### FEATURE-044 — Playtest build and feedback capture
+### FEATURE-044 — Playtest gameplay and navigation patch
 
-- publish a tagged GitHub Pages candidate;
-- test on real Android and iOS hardware;
-- capture device, browser, viewport, task success, defects, and qualitative notes;
-- separate usability defects from art-preference feedback;
-- prioritise P0/P1 fixes before adding new mechanics.
+_Status: implemented, pending project verification._
 
-### FEATURE-045 — Playtest fixes and visual consistency pass
+- add `2×2` square matches without special-tile creation;
+- rank every Hint move using objective-first deterministic evaluation;
+- extend combo and invalid-move message readability;
+- continue directly to the next unlocked unfinished level after a win;
+- preserve saves, balance, touch layout, and reduced-motion accessibility.
 
+### FEATURE-045 — Visual consistency and confirmed device fixes
+
+- collect another short round of real-device observations;
 - fix confirmed responsive, input, audio, contrast, and navigation issues;
-- replace any prototype art that fails recognition or style review;
+- replace prototype art that fails recognition or style review;
 - verify the full vertical slice again before gameplay expansion.
 
 ## Recommended visual production order

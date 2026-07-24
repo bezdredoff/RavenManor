@@ -42,3 +42,18 @@ input behaves as a tap. Keyboard clicks use the existing button semantics.
 SVG imports use Vite `?url`, so the build produces base-path-safe URLs for
 GitHub Pages. Final approved artwork can replace each SVG without changing
 level JSON, engine state, objective logic, or save data.
+
+
+## Playtest rule additions
+
+The match engine now recognises both line matches and `2×2` squares. UI match
+feedback receives the merged set of unique positions, so overlapping shapes do
+not render duplicate removal or objective events.
+
+The Hint button delegates to `MoveAdvisor` rather than `findPossibleMove`. The
+first legal move remains useful for dead-board detection, while player-facing
+advice evaluates all legal moves using the current objective.
+
+Victory presentation resolves the next unlocked unfinished level after saving
+the current win. This means a win that satisfies a group threshold can continue
+directly into the newly unlocked group.

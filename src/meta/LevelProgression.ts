@@ -57,3 +57,25 @@ export function isLevelUnlocked(
   if (!group) throw new Error(`Level ${levelId} is not assigned to a progression group.`);
   return getLevelGroupState(group, groups, completedLevels).unlocked;
 }
+
+/**
+ * Returns the next unlocked, not-yet-completed level in catalog order.
+ * Search starts after the current level and wraps once, so grouped progression
+ * still offers choice without forcing a return to the level map.
+ */
+export function getNextPlayableLevelId(
+  currentLevelId: number,
+  levelIds: readonly number[],
+  groups: readonly LevelGroupDefinition[],
+  completedLevels: LevelCompletionMap,
+): number | null {
+  const currentIndex = levelIds.indexOf(currentLevelId);
+  const orderedCandidates = currentIndex >= 0
+    ? [...levelIds.slice(currentIndex + 1), ...levelIds.slice(0, currentIndex)]
+    : [...levelIds];
+
+  return orderedCandidates.find((levelId) => (
+    !completedLevels[levelId]
+    && isLevelUnlocked(levelId, groups, completedLevels)
+  )) ?? null;
+}

@@ -161,4 +161,65 @@ describe('Match3Engine', () => {
     expect(engine.reshuffle()).toBe(false);
     expect(engine.board).toEqual(before);
   });
+
+  it('finds a 2x2 square as a four-tile match', () => {
+    const engine = new Match3Engine(4, 3);
+    engine.board = [
+      [0, 0, 1, 2],
+      [0, 0, 2, 1],
+      [1, 2, 1, 2],
+      [2, 1, 2, 1],
+    ];
+
+    expect(sortPositions(engine.findMatches())).toEqual([
+      '0,0',
+      '0,1',
+      '1,0',
+      '1,1',
+    ]);
+  });
+
+  it('merges overlapping line and square matches without double-counting tiles', () => {
+    const engine = new Match3Engine(3, 3);
+    engine.board = [
+      [0, 0, 0],
+      [0, 0, 1],
+      [1, 2, 1],
+    ];
+
+    expect(sortPositions(engine.findMatches())).toEqual([
+      '0,0',
+      '0,1',
+      '0,2',
+      '1,0',
+      '1,1',
+    ]);
+    expect(engine.findMatchGroups()).toHaveLength(1);
+    expect(engine.findMatchGroups()[0]).toHaveLength(5);
+  });
+
+  it('recognizes a move that creates only a 2x2 square', () => {
+    const engine = new Match3Engine(3, 3);
+    engine.board = [
+      [0, 1, 0],
+      [0, 0, 2],
+      [1, 2, 1],
+    ];
+
+    const squareMove = engine.findPossibleMoves().find(([first, second]) => (
+      first.row === 0
+      && first.col === 1
+      && second.row === 0
+      && second.col === 2
+    ));
+
+    expect(squareMove).toBeDefined();
+  });
+
+  it('generates boards without immediate line or square matches', () => {
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const engine = new Match3Engine(8, 6);
+      expect(engine.findMatches()).toEqual([]);
+    }
+  });
 });

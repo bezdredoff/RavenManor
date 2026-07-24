@@ -20,7 +20,8 @@ The runtime asks the operating system for:
 
 When active:
 
-- named delays resolve immediately;
+- decorative movement delays resolve immediately;
+- short text readability holds remain active for combo and invalid-move messages;
 - generated decorative particle lists are empty;
 - CSS removes travel, zoom, pulse, and cinematic camera movement;
 - final selected, matched, restored, unlocked, win, and loss states remain

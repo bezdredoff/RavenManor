@@ -25,8 +25,10 @@ campaign.
 | 9 | Hard | 20 | 32 keys | 6+ | 3+ |
 | 10 | Finale | 22 | 34 crystals | 6+ | 2+ |
 
-These numbers are hypotheses, not final production balance. Four-tile matches
-and cascades are valid player skill/luck moments and should improve star results.
+These numbers are hypotheses, not final production balance. Lines of four,
+`2×2` squares, and cascades are valid player skill/luck moments and should
+improve star results. A square clears four unique tiles but does not create a
+special tile in the current prototype.
 
 ## Playtest Method
 
