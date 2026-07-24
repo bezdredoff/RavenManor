@@ -33,8 +33,9 @@ scroll at 320×568 or larger.
 - `room`;
 - `settings`.
 
-These screens scroll inside the `screen` element. Their top bar is sticky and
-the browser document remains fixed.
+These screens scroll inside the `screen` element. The top bar is normal content
+and scrolls away with the page rather than covering cards below it. The browser
+document remains fixed.
 
 ## Dynamic viewport and safe areas
 
