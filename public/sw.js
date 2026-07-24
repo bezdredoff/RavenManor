@@ -1,127 +1,65 @@
-const CACHE_VERSION = 'raven-manor-v047a';
+const CACHE_VERSION = 'raven-manor-v047';
 const SCOPE = self.registration.scope;
-const PRECACHE_PATHS = '__RAVEN_MANOR_PRECACHE_MANIFEST__';
-const FALLBACK_PATHS = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
+const APP_SHELL = [
+  new URL('./', SCOPE).href,
+  new URL('./index.html', SCOPE).href,
+  new URL('./manifest.webmanifest', SCOPE).href,
+  new URL('./icons/icon-192.png', SCOPE).href,
+  new URL('./icons/icon-512.png', SCOPE).href,
 ];
-
-const paths = Array.isArray(PRECACHE_PATHS) ? PRECACHE_PATHS : FALLBACK_PATHS;
-const PRECACHE_URLS = [...new Set(paths.map((path) => new URL(path, SCOPE).href))];
-const INDEX_URL = new URL('./index.html', SCOPE).href;
-const ROOT_URL = new URL('./', SCOPE).href;
-
-const openCache = () => caches.open(CACHE_VERSION);
-
-const precacheProductionBuild = async () => {
-  const cache = await openCache();
-
-  // Cache every generated production file during installation. Using explicit
-  // requests keeps the cache keys scope-safe on GitHub Pages subpaths and makes
-  // a failed asset prevent a false "offline ready" state.
-  await Promise.all(PRECACHE_URLS.map(async (url) => {
-    const request = new Request(url, { cache: 'reload', credentials: 'same-origin' });
-    const response = await fetch(request);
-    if (!response.ok) {
-      throw new Error(`Failed to precache ${url}: ${response.status}`);
-    }
-    await cache.put(url, response);
-  }));
-};
-
-const getOfflineStatus = async () => {
-  const cache = await openCache();
-  const matches = await Promise.all(PRECACHE_URLS.map((url) => cache.match(url)));
-  const cachedAssets = matches.filter(Boolean).length;
-  return {
-    ready: cachedAssets === PRECACHE_URLS.length && PRECACHE_URLS.length > 0,
-    cachedAssets,
-    totalAssets: PRECACHE_URLS.length,
-    cacheVersion: CACHE_VERSION,
-  };
-};
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    precacheProductionBuild().then(() => self.skipWaiting()),
+    caches.open(CACHE_VERSION)
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting()),
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(
-        keys
-          .filter((key) => key.startsWith('raven-manor-') && key !== CACHE_VERSION)
-          .map((key) => caches.delete(key)),
-      ))
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_VERSION).map((key) => caches.delete(key))))
       .then(() => self.clients.claim()),
   );
-});
-
-self.addEventListener('message', (event) => {
-  if (event.data?.type === 'GET_OFFLINE_STATUS') {
-    event.waitUntil(
-      getOfflineStatus()
-        .then((status) => event.ports[0]?.postMessage(status))
-        .catch(() => event.ports[0]?.postMessage({
-          ready: false,
-          cachedAssets: 0,
-          totalAssets: PRECACHE_URLS.length,
-          cacheVersion: CACHE_VERSION,
-        })),
-    );
-    return;
-  }
-
-  if (event.data?.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
 });
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
-    event.respondWith((async () => {
-      try {
-        const response = await fetch(request);
-        if (response.ok) {
-          const cache = await openCache();
-          await cache.put(request, response.clone());
-        }
-        return response;
-      } catch {
-        const cache = await openCache();
-        return (
-          await cache.match(request, { ignoreSearch: true })
-          || await cache.match(ROOT_URL)
-          || await cache.match(INDEX_URL)
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(async () => (
+          await caches.match(request)
+          || await caches.match(new URL('./', SCOPE).href)
+          || await caches.match(new URL('./index.html', SCOPE).href)
           || Response.error()
-        );
-      }
-    })());
+        )),
+    );
     return;
   }
 
-  event.respondWith((async () => {
-    const cache = await openCache();
-    const cached = await cache.match(request, { ignoreSearch: true });
-    if (cached) return cached;
-
-    try {
-      const response = await fetch(request);
-      if (response.ok) await cache.put(request, response.clone());
-      return response;
-    } catch {
-      return Response.error();
-    }
-  })());
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      const network = fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => cached || Response.error());
+      return cached || network;
+    }),
+  );
 });

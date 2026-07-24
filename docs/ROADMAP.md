@@ -114,17 +114,6 @@ _Status: implemented, pending production/device verification._
 - publish a portrait standalone PWA with install prompt, icons, and offline cache;
 - preserve V4 gameplay progress, audio preferences, balance, and game rules.
 
-### FEATURE-047A — iOS offline cache and scrolling header hotfix
-
-_Status: implemented, pending iPhone production verification._
-
-- inject the exact final Vite bundle into the service-worker precache list;
-- cache all hashed JS, CSS, emitted SVG, manifest, and icons during install;
-- verify every cached production file before claiming offline readiness;
-- remove the second-online-launch requirement observed on iPhone;
-- make the page header scroll with contained content instead of overlaying it;
-- preserve saves, analytics, gameplay, and PWA installation behaviour.
-
 ### Next — evidence-driven fixes only
 
 - distribute the installable build to a wider device set;

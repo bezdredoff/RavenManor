@@ -15,7 +15,6 @@
 - [ ] Match-3 fits at 320 × 568 without document scroll;
 - [ ] board swipes never move the page;
 - [ ] contained-scroll screens scroll inside the app;
-- [ ] their top header scrolls away normally and never overlays content;
 - [ ] safe areas do not cover controls;
 - [ ] modal content remains reachable;
 - [ ] landscape is usable enough to return or rotate, but portrait remains the
@@ -86,10 +85,8 @@ random-board attempt; collect repeated runs.
   and analytics are present.
 - Confirm analytics can be cleared without resetting game progress.
 - In a production preview, install the app where supported.
-- After the first complete online launch, press `Проверить офлайн-готовность`.
-- Confirm every production file is reported cached.
-- Enable airplane mode and reopen/reload the PWA without a second online launch.
-- Confirm Home, Levels, Manor, Settings, story, and gameplay assets remain
-  available offline.
+- After one complete online load, enable airplane mode and reopen/reload the PWA.
+- Confirm Home, Levels, Manor, Settings, story, and previously loaded gameplay
+  assets remain available offline.
 - Return online, deploy a newer cache version, and verify update checking does
   not erase the V4 save.
