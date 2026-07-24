@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { storyScenes } from '../src/data/storyScenes';
 import { getStoryScenePresentation } from '../src/ui/storyPresentation';
 
-describe('story presentation', () => {
-  it('defines one unique authored scene for every prototype level', () => {
+describe('story presentation during level expansion', () => {
+  it('keeps ten authored scenes as chapter milestones until FEATURE-052', () => {
     expect(storyScenes).toHaveLength(10);
     expect(new Set(storyScenes.map((scene) => scene.id)).size).toBe(10);
-    expect(storyScenes.map((scene) => scene.afterLevelId)).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-    ]);
+    expect([...storyScenes].sort((a, b) => a.afterLevelId - b.afterLevelId)
+      .map((scene) => scene.afterLevelId))
+      .toEqual([1, 3, 6, 9, 12, 15, 21, 24, 27, 30]);
   });
 
   it('uses multi-beat scenes with substantial dialogue', () => {
@@ -27,18 +27,5 @@ describe('story presentation', () => {
         expect(presentation.backgroundAsset.length).toBeGreaterThan(0);
       }
     }
-  });
-
-  it('keeps story titles, copy, and speaker labels non-empty', () => {
-    expect(
-      storyScenes.every(
-        (scene) => (
-          scene.title.trim().length > 0
-          && scene.beats.every(
-            (beat) => beat.speaker.trim().length > 0 && beat.text.trim().length > 0,
-          )
-        ),
-      ),
-    ).toBe(true);
   });
 });

@@ -1,49 +1,53 @@
 # Match-3 ↔ Restoration connection
 
-FEATURE-050 turns the two prototype loops into one progression chain:
+FEATURE-050 connected the loops; FEATURE-051 extends that connection through a
+complete 30-level chapter:
 
 ```text
-play an unlocked level
+play a three-level room beat
 → earn stars
 → complete the highlighted restoration task
-→ receive boosters and/or unlock the next level group
-→ return to match-3 with a visible new capability
+→ receive boosters and/or open the next beat
+→ see the repaired room stage
+→ return to match-3
 ```
 
 ## Active restoration
 
-The level map always shows one active non-optional restoration task from the
-first unlocked room that still advances the chapter. The card includes:
+The level map shows one active non-optional task from the first unlocked room
+that still advances the chapter. The card includes room, cost, missing stars,
+rewards, and the exact level group it opens.
 
-- room and task title;
-- star cost and missing stars;
-- booster reward;
-- mechanics or level group unlocked by the task;
-- direct navigation to the room.
+Third tasks are optional completion rewards. They remain available inside the
+room but never replace the next progression-critical task.
 
-Third tasks in each room are optional completion rewards. They remain visible
-inside the room but do not replace the next progression-critical task on the
-level map.
+## Chapter gates
 
-## Progression gates in the 10-level slice
-
-| Level group | Restoration gate | New content communicated |
-| --- | --- | --- |
-| 1–3 | Always open | Earn the first restoration stars |
-| 4–6 | Light the Hall chandelier | Mixed objectives, chains and rubble |
-| 7–9 | Repair the Library shelves | Fog, layered obstacles and board masks |
-| 10 | Repair the Garden fountain | Combined finale |
+| Levels | Room beat | Restoration gate |
+| ---: | --- | --- |
+| 1–3 | Hall arrival | Always open |
+| 4–6 | Hall restoration | Light the Hall chandelier |
+| 7–9 | Library entry | Open the Library shutters |
+| 10–12 | Forbidden archive | Repair the Library shelves |
+| 13–15 | Garden entry | Clear the Garden vines |
+| 16–18 | Heart of the garden | Repair the Garden fountain |
+| 19–21 | Crypt entry | Clear the Crypt stairs |
+| 22–24 | Ancient contract | Restore the Crypt seals |
+| 25–27 | Tower ascent | Repair the Tower steps |
+| 28–30 | Tower awakening | Open the Observatory |
 
 A legacy save that already completed a level inside a gated group keeps that
-group replayable. New saves follow the restoration gates normally.
+group replayable. This prevents content from being taken away during migration.
+
+## Star economy
+
+Required tasks through the chapter cost twelve stars in total. Since every
+level grants at least one star on first completion, the campaign cannot require
+perfect play. Better star ratings fund optional room completion and leave more
+freedom to choose when to spend stars.
 
 ## Win screen
 
-After each victory the result modal explains what the stars enable. When the
-active task is affordable, **Complete restoration** is the first action. The
-player can still continue to another currently unlocked unfinished level.
-
-## Optional room completion
-
-The third task in each room is not needed for chapter progression. It provides
-a larger booster bundle and a clear reason to fully restore a favourite room.
+After victory, the result modal explains the next repair. When the active task
+is affordable, **Выполнить ремонт** is the primary action. The player may still
+continue to another currently unlocked unfinished level.

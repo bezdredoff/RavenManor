@@ -32,7 +32,7 @@ number of rooms or restoration tasks.
 
 ## Prototype Rules
 
-- 10 match-3 levels are a vertical slice, not a product-size cap;
+- 30 match-3 levels form the first expanded chapter, not a product-size cap;
 - levels 1-3 are available at the start;
 - any two victories unlock the next group;
 - each level has independent 2-star and 3-star thresholds;

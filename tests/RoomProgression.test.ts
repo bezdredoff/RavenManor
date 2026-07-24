@@ -32,8 +32,13 @@ describe('room progression', () => {
     expect(getRoomUnlockState(room('library'), restorationTasks, completed).current).toBe(1);
   });
 
-  it('opens the final tower after the first crypt restoration task', () => {
-    const completed = { 'crypt-clear-stairs': true };
-    expect(getRoomUnlockState(room('tower'), restorationTasks, completed).unlocked).toBe(true);
+  it('opens the final tower after two crypt restoration tasks', () => {
+    const oneTask = { 'crypt-clear-stairs': true };
+    const twoTasks = {
+      'crypt-clear-stairs': true,
+      'crypt-restore-seals': true,
+    };
+    expect(getRoomUnlockState(room('tower'), restorationTasks, oneTask).unlocked).toBe(false);
+    expect(getRoomUnlockState(room('tower'), restorationTasks, twoTasks).unlocked).toBe(true);
   });
 });

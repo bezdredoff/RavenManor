@@ -5,19 +5,20 @@ import {
   getStorySceneForLevel,
 } from '../src/meta/StoryProgression';
 
-describe('story progression', () => {
-  it('associates every prototype level with its own scene', () => {
+describe('story milestone progression', () => {
+  it('associates scenes only with authored milestone levels', () => {
     expect(getStorySceneForLevel(storyScenes, 1)?.id).toBe('return-to-the-gates');
-    expect(getStorySceneForLevel(storyScenes, 10)?.id).toBe('the-raven-tower-opens');
-    expect(getStorySceneForLevel(storyScenes, 11)).toBeNull();
+    expect(getStorySceneForLevel(storyScenes, 2)).toBeNull();
+    expect(getStorySceneForLevel(storyScenes, 12)?.id).toBe('the-letter-to-adrian');
+    expect(getStorySceneForLevel(storyScenes, 30)?.id).toBe('the-raven-tower-opens');
   });
 
-  it('offers only completed and unviewed scenes from Home', () => {
-    const completed = { 1: true, 2: true, 3: false };
+  it('offers the earliest completed and unviewed milestone from Home', () => {
+    const completed = { 1: true, 3: true, 6: false };
 
     expect(getNextUnviewedStoryScene(storyScenes, completed, {})?.afterLevelId).toBe(1);
-    expect(getNextUnviewedStoryScene(storyScenes, completed, { 1: true })?.afterLevelId).toBe(2);
-    expect(getNextUnviewedStoryScene(storyScenes, completed, { 1: true, 2: true }))
+    expect(getNextUnviewedStoryScene(storyScenes, completed, { 1: true })?.afterLevelId).toBe(3);
+    expect(getNextUnviewedStoryScene(storyScenes, completed, { 1: true, 3: true }))
       .toBeNull();
   });
 

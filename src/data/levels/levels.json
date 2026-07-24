@@ -211,8 +211,8 @@
   {
     "schemaVersion": 3,
     "id": 6,
-    "title": "Заваленный архив",
-    "difficulty": "hard",
+    "title": "Архив под завалами",
+    "difficulty": "finale",
     "moves": 23,
     "starThresholds": {
       "twoStarsMovesLeft": 3,
@@ -299,7 +299,7 @@
     "schemaVersion": 3,
     "id": 7,
     "title": "Туман в розарии",
-    "difficulty": "normal",
+    "difficulty": "easy",
     "moves": 23,
     "starThresholds": {
       "twoStarsMovesLeft": 4,
@@ -386,7 +386,7 @@
     "schemaVersion": 3,
     "id": 8,
     "title": "Песочные часы",
-    "difficulty": "hard",
+    "difficulty": "normal",
     "moves": 24,
     "starThresholds": {
       "twoStarsMovesLeft": 3,
@@ -547,23 +547,1292 @@
   {
     "schemaVersion": 3,
     "id": 10,
-    "title": "Сердце поместья",
-    "difficulty": "finale",
-    "moves": 28,
+    "title": "Чернильные цепи",
+    "difficulty": "normal",
+    "moves": 24,
     "starThresholds": {
-      "twoStarsMovesLeft": 2,
-      "threeStarsMovesLeft": 6
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 9
+    },
+    "board": {
+      "mask": [
+        "11111111",
+        "11100111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11100111",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 1,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 6,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 2,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 5,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 1,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 6,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "chains",
+        "type": "clear-obstacle",
+        "obstacleKind": "chain",
+        "target": 6
+      },
+      {
+        "id": "scrolls",
+        "type": "collect",
+        "tileType": 5,
+        "target": 16
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 11,
+    "title": "Заваленный каталог",
+    "difficulty": "hard",
+    "moves": 27,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 3,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 4,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 3,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 4,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 8
+      },
+      {
+        "id": "keys",
+        "type": "collect",
+        "tileType": 2,
+        "target": 16
+      },
+      {
+        "id": "scrolls",
+        "type": "collect",
+        "tileType": 5,
+        "target": 14
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 12,
+    "title": "Тайник библиотекаря",
+    "difficulty": "finale",
+    "moves": 30,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "00111100",
+        "00111100",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "00111100",
+        "00111100"
+      ],
+      "obstacles": [
+        {
+          "row": 2,
+          "col": 2,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "kind": "fog",
+          "layers": 2
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "chains",
+        "type": "clear-obstacle",
+        "obstacleKind": "chain",
+        "target": 4
+      },
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 4
+      },
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 6
+      },
+      {
+        "id": "crystals",
+        "type": "collect",
+        "tileType": 3,
+        "target": 18
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 13,
+    "title": "Лунная роса",
+    "difficulty": "easy",
+    "moves": 21,
+    "starThresholds": {
+      "twoStarsMovesLeft": 5,
+      "threeStarsMovesLeft": 10
     },
     "board": {
       "mask": [
         "01111110",
         "11111111",
-        "11100111",
         "11111111",
         "11111111",
-        "11100111",
+        "11111111",
+        "11111111",
         "11111111",
         "01111110"
+      ],
+      "obstacles": [
+        {
+          "row": 2,
+          "col": 2,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 6
+      },
+      {
+        "id": "crystals",
+        "type": "collect",
+        "tileType": 3,
+        "target": 16
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 14,
+    "title": "Колючая арка",
+    "difficulty": "normal",
+    "moves": 23,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 9
+    },
+    "board": {
+      "mask": [
+        "00111100",
+        "01111110",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 2,
+          "col": 1,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 4,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 6,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 2,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 5,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 2,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 5,
+          "kind": "chain",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "chains",
+        "type": "clear-obstacle",
+        "obstacleKind": "chain",
+        "target": 8
+      },
+      {
+        "id": "roses",
+        "type": "collect",
+        "tileType": 0,
+        "target": 18
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 15,
+    "title": "Корни под мрамором",
+    "difficulty": "hard",
+    "moves": 27,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 8
+      },
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 4
+      },
+      {
+        "id": "keys",
+        "type": "collect",
+        "tileType": 2,
+        "target": 16
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 16,
+    "title": "Стеклянный лабиринт",
+    "difficulty": "normal",
+    "moves": 25,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 9
+    },
+    "board": {
+      "mask": [
+        "00111100",
+        "00111100",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "00111100",
+        "00111100"
+      ],
+      "obstacles": [
+        {
+          "row": 2,
+          "col": 2,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "kind": "fog",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 8
+      },
+      {
+        "id": "candles",
+        "type": "collect",
+        "tileType": 1,
+        "target": 18
+      },
+      {
+        "id": "crystals",
+        "type": "collect",
+        "tileType": 3,
+        "target": 12
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 17,
+    "title": "Сердце розария",
+    "difficulty": "hard",
+    "moves": 28,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "00011000",
+        "00111100",
+        "01111110",
+        "11111111",
+        "11111111",
+        "01111110",
+        "00111100",
+        "00011000"
+      ],
+      "obstacles": [
+        {
+          "row": 2,
+          "col": 3,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 4,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 2,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 5,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 2,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 5,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 3,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 4,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "kind": "rubble",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "chains",
+        "type": "clear-obstacle",
+        "obstacleKind": "chain",
+        "target": 8
+      },
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 4
+      },
+      {
+        "id": "roses",
+        "type": "collect",
+        "tileType": 0,
+        "target": 20
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 18,
+    "title": "Цветение в полночь",
+    "difficulty": "finale",
+    "moves": 31,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "01111110",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "01111110"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 1,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 6,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 1,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 6,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 4,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 3,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 4,
+          "kind": "fog",
+          "layers": 2
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "chains",
+        "type": "clear-obstacle",
+        "obstacleKind": "chain",
+        "target": 4
+      },
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 4
+      },
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 4
+      },
+      {
+        "id": "roses",
+        "type": "collect",
+        "tileType": 0,
+        "target": 20
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 19,
+    "title": "Спуск под часовней",
+    "difficulty": "easy",
+    "moves": 22,
+    "starThresholds": {
+      "twoStarsMovesLeft": 5,
+      "threeStarsMovesLeft": 10
+    },
+    "board": {
+      "mask": [
+        "11111100",
+        "11111110",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "01111111",
+        "00111111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 4,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 6
+      },
+      {
+        "id": "keys",
+        "type": "collect",
+        "tileType": 2,
+        "target": 16
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 20,
+    "title": "Клятвы в железе",
+    "difficulty": "normal",
+    "moves": 25,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 9
+    },
+    "board": {
+      "mask": [
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 1,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 3,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 4,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 6,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 1,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 3,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 4,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 6,
+          "kind": "chain",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "chains",
+        "type": "clear-obstacle",
+        "obstacleKind": "chain",
+        "target": 8
+      },
+      {
+        "id": "bats",
+        "type": "collect",
+        "tileType": 4,
+        "target": 18
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 21,
+    "title": "Могильный туман",
+    "difficulty": "hard",
+    "moves": 28,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "11111111",
+        "01111110",
+        "00111100",
+        "00111100",
+        "00111100",
+        "00111100",
+        "01111110",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 2,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 5,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 2,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 2,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 5,
+          "kind": "fog",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 8
+      },
+      {
+        "id": "candles",
+        "type": "collect",
+        "tileType": 1,
+        "target": 18
+      },
+      {
+        "id": "scrolls",
+        "type": "collect",
+        "tileType": 5,
+        "target": 12
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 22,
+    "title": "Разбитые печати",
+    "difficulty": "normal",
+    "moves": 25,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 9
+    },
+    "board": {
+      "mask": [
+        "00111100",
+        "00111100",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "00111100",
+        "00111100"
+      ],
+      "obstacles": [
+        {
+          "row": 2,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 4,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 6
+      },
+      {
+        "id": "crystals",
+        "type": "collect",
+        "tileType": 3,
+        "target": 18
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 23,
+    "title": "Коридор без конца",
+    "difficulty": "hard",
+    "moves": 29,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "11111111",
+        "11111111",
+        "11100111",
+        "11111111",
+        "11111111",
+        "11100111",
+        "11111111",
+        "11111111"
       ],
       "obstacles": [
         {
@@ -606,6 +1875,141 @@
           "row": 4,
           "col": 2,
           "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "chains",
+        "type": "clear-obstacle",
+        "obstacleKind": "chain",
+        "target": 4
+      },
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 4
+      },
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 4
+      },
+      {
+        "id": "keys",
+        "type": "collect",
+        "tileType": 2,
+        "target": 18
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 24,
+    "title": "Договор под камнем",
+    "difficulty": "finale",
+    "moves": 32,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "11111111",
+        "11100111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11100111",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 1,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 6,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 1,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 6,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 1,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 6,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 2,
+          "kind": "rubble",
           "layers": 2
         },
         {
@@ -615,26 +2019,545 @@
           "layers": 2
         },
         {
+          "row": 5,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
           "row": 2,
-          "col": 1,
+          "col": 3,
           "kind": "fog",
           "layers": 2
         },
         {
           "row": 2,
-          "col": 6,
+          "col": 4,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 3,
           "kind": "fog",
           "layers": 2
         },
         {
           "row": 5,
+          "col": 4,
+          "kind": "fog",
+          "layers": 2
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "chains",
+        "type": "clear-obstacle",
+        "obstacleKind": "chain",
+        "target": 6
+      },
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 6
+      },
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 6
+      },
+      {
+        "id": "crystals",
+        "type": "collect",
+        "tileType": 3,
+        "target": 20
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 25,
+    "title": "Сломанные ступени",
+    "difficulty": "easy",
+    "moves": 22,
+    "starThresholds": {
+      "twoStarsMovesLeft": 5,
+      "threeStarsMovesLeft": 10
+    },
+    "board": {
+      "mask": [
+        "11111100",
+        "11111110",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "01111111",
+        "00111111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
           "col": 1,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 6
+      },
+      {
+        "id": "keys",
+        "type": "collect",
+        "tileType": 2,
+        "target": 16
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 26,
+    "title": "Окна обсерватории",
+    "difficulty": "normal",
+    "moves": 25,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 9
+    },
+    "board": {
+      "mask": [
+        "00111100",
+        "01111110",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 2,
+          "col": 1,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 2,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 6,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 2,
           "kind": "fog",
           "layers": 2
         },
         {
+          "row": 4,
+          "col": 5,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 2,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 5,
+          "kind": "fog",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 8
+      },
+      {
+        "id": "crystals",
+        "type": "collect",
+        "tileType": 3,
+        "target": 18
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 27,
+    "title": "Механизм ворона",
+    "difficulty": "hard",
+    "moves": 29,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 1,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 2,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 5,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 6,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 1,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 2,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 5,
+          "kind": "chain",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 6,
+          "kind": "chain",
+          "layers": 2
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "chains",
+        "type": "clear-obstacle",
+        "obstacleKind": "chain",
+        "target": 8
+      },
+      {
+        "id": "bats",
+        "type": "collect",
+        "tileType": 4,
+        "target": 20
+      },
+      {
+        "id": "scrolls",
+        "type": "collect",
+        "tileType": 5,
+        "target": 14
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 28,
+    "title": "Комната без отражений",
+    "difficulty": "normal",
+    "moves": 27,
+    "starThresholds": {
+      "twoStarsMovesLeft": 4,
+      "threeStarsMovesLeft": 9
+    },
+    "board": {
+      "mask": [
+        "11111111",
+        "11100111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11111111",
+        "11100111",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 2,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
           "row": 5,
           "col": 6,
+          "kind": "rubble",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 6,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 1,
+          "kind": "fog",
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 6,
+          "kind": "fog",
+          "layers": 1
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 6
+      },
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 6
+      },
+      {
+        "id": "roses",
+        "type": "collect",
+        "tileType": 0,
+        "target": 18
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 29,
+    "title": "Последняя печать",
+    "difficulty": "hard",
+    "moves": 31,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "11111111",
+        "01111110",
+        "00111100",
+        "00111100",
+        "00111100",
+        "00111100",
+        "01111110",
+        "11111111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 2,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 5,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 2,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 5,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 2,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 5,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 2,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 5,
           "kind": "fog",
           "layers": 2
         }
@@ -660,10 +2583,169 @@
         "target": 4
       },
       {
+        "id": "keys",
+        "type": "collect",
+        "tileType": 2,
+        "target": 18
+      }
+    ]
+  },
+  {
+    "schemaVersion": 3,
+    "id": 30,
+    "title": "Часы пробуждения",
+    "difficulty": "finale",
+    "moves": 34,
+    "starThresholds": {
+      "twoStarsMovesLeft": 3,
+      "threeStarsMovesLeft": 7
+    },
+    "board": {
+      "mask": [
+        "11100111",
+        "11111111",
+        "11111111",
+        "01111110",
+        "01111110",
+        "11111111",
+        "11111111",
+        "11100111"
+      ],
+      "obstacles": [
+        {
+          "row": 1,
+          "col": 1,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 6,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 2,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 5,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 1,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 6,
+          "kind": "chain",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 2,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 5,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 1,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 6,
+          "kind": "rubble",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 3,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 4,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 3,
+          "kind": "fog",
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 4,
+          "kind": "fog",
+          "layers": 2
+        }
+      ]
+    },
+    "objectives": [
+      {
+        "id": "chains",
+        "type": "clear-obstacle",
+        "obstacleKind": "chain",
+        "target": 6
+      },
+      {
+        "id": "rubble",
+        "type": "clear-obstacle",
+        "obstacleKind": "rubble",
+        "target": 6
+      },
+      {
+        "id": "fog",
+        "type": "clear-obstacle",
+        "obstacleKind": "fog",
+        "target": 6
+      },
+      {
         "id": "crystals",
         "type": "collect",
         "tileType": 3,
-        "target": 20
+        "target": 22
       }
     ]
   }

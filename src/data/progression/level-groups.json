@@ -1,18 +1,28 @@
 [
   {
     "schemaVersion": 1,
-    "id": "arrival",
-    "title": "Первые следы",
-    "description": "Первые уровни дают звёзды для восстановления вестибюля.",
-    "levelIds": [1, 2, 3],
-    "unlock": { "type": "always" }
+    "id": "hall-arrival",
+    "title": "Вестибюль · Прибытие",
+    "description": "Первые следы в разрушенном парадном зале.",
+    "levelIds": [
+      1,
+      2,
+      3
+    ],
+    "unlock": {
+      "type": "always"
+    }
   },
   {
     "schemaVersion": 1,
-    "id": "whispers",
-    "title": "Шёпот особняка",
-    "description": "Зажгите люстру в Вестибюле, чтобы открыть составные цели, цепи и завалы.",
-    "levelIds": [4, 5, 6],
+    "id": "hall-restoration",
+    "title": "Вестибюль · Свет во тьме",
+    "description": "Люстра открывает составные цели, цепи и завалы.",
+    "levelIds": [
+      4,
+      5,
+      6
+    ],
     "unlock": {
       "type": "restoration-task",
       "taskId": "hall-light-chandelier"
@@ -20,10 +30,29 @@
   },
   {
     "schemaVersion": 1,
-    "id": "deepening-mystery",
-    "title": "Тайна сгущается",
-    "description": "Почините стеллажи Библиотеки, чтобы открыть туман и сложные формы поля.",
-    "levelIds": [7, 8, 9],
+    "id": "library-entry",
+    "title": "Библиотека · Лунный свет",
+    "description": "Открытые ставни ведут к туману и сложным формам поля.",
+    "levelIds": [
+      7,
+      8,
+      9
+    ],
+    "unlock": {
+      "type": "restoration-task",
+      "taskId": "library-open-shutters"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "id": "library-archive",
+    "title": "Библиотека · Запретный архив",
+    "description": "Починенные стеллажи открывают глубинные испытания библиотеки.",
+    "levelIds": [
+      10,
+      11,
+      12
+    ],
     "unlock": {
       "type": "restoration-task",
       "taskId": "library-repair-shelves"
@@ -31,13 +60,92 @@
   },
   {
     "schemaVersion": 1,
-    "id": "prototype-finale",
-    "title": "Финал прототипа",
-    "description": "Почините фонтан Зимнего сада, чтобы открыть итоговое испытание.",
-    "levelIds": [10],
+    "id": "garden-entry",
+    "title": "Зимний сад · Лунная роса",
+    "description": "Расчищенные лозы открывают первые дорожки оранжереи.",
+    "levelIds": [
+      13,
+      14,
+      15
+    ],
+    "unlock": {
+      "type": "restoration-task",
+      "taskId": "garden-clear-vines"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "id": "garden-heart",
+    "title": "Зимний сад · Сердце розария",
+    "description": "Оживший фонтан пробуждает самые опасные участки сада.",
+    "levelIds": [
+      16,
+      17,
+      18
+    ],
     "unlock": {
       "type": "restoration-task",
       "taskId": "garden-repair-fountain"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "id": "crypt-entry",
+    "title": "Крипта · Каменный спуск",
+    "description": "Очищенная лестница ведёт к древним семейным печатям.",
+    "levelIds": [
+      19,
+      20,
+      21
+    ],
+    "unlock": {
+      "type": "restoration-task",
+      "taskId": "crypt-clear-stairs"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "id": "crypt-contract",
+    "title": "Крипта · Древний договор",
+    "description": "Восстановленные печати открывают зал под саркофагами.",
+    "levelIds": [
+      22,
+      23,
+      24
+    ],
+    "unlock": {
+      "type": "restoration-task",
+      "taskId": "crypt-restore-seals"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "id": "tower-entry",
+    "title": "Воронья башня · Подъём",
+    "description": "Починенные ступени позволяют подняться к часовому механизму.",
+    "levelIds": [
+      25,
+      26,
+      27
+    ],
+    "unlock": {
+      "type": "restoration-task",
+      "taskId": "tower-repair-steps"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "id": "tower-awakening",
+    "title": "Воронья башня · Пробуждение",
+    "description": "Открытая обсерватория ведёт к финалу первой главы.",
+    "levelIds": [
+      28,
+      29,
+      30
+    ],
+    "unlock": {
+      "type": "restoration-task",
+      "taskId": "tower-open-observatory"
     }
   }
 ]

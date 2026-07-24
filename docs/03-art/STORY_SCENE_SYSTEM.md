@@ -1,19 +1,17 @@
 # Story Scene System
 
-## Vertical-slice contract
+## FEATURE-051 interim contract
 
-The ten prototype levels each own one authored story scene. Scenes no longer
-rotate through a short reusable list.
+The current ten authored scenes are retained as milestone scenes across the
+30-level chapter:
 
 ```text
-level 1 -> scene 1
-...
-level 10 -> scene 10
+1, 3, 6, 9, 12, 15, 21, 24, 27, 30
 ```
 
-Every scene contains at least four dialogue beats. A beat may change speaker,
-portrait, and portrait side while retaining the scene backdrop and title. This
-creates a compact visual-novel conversation rather than one short paragraph.
+Levels without an authored scene do not show a non-functional story button on
+the victory screen. FEATURE-052 will add twenty additional events and the
+replayable journal, producing one event per level.
 
 ## Data model
 
@@ -26,52 +24,32 @@ creates a compact visual-novel conversation rather than one short paragraph.
 - speaker, text, portrait key, and portrait side per beat.
 
 `storyPresentation.ts` resolves semantic keys to local SVG assets. Existing room
-art may also be used as a story backdrop, so writing and art can evolve without
-embedding file paths in narrative data.
+art may be reused as story backdrops.
 
 ## Progression
 
-`ProgressState.viewedStoryScenes` records viewed scenes by level ID.
+`ProgressState.viewedStoryScenes` records viewed scenes by milestone level ID.
 
-- the victory screen always opens the scene associated with the completed level;
-- replaying a level may replay its scene;
-- Home offers the earliest completed but unviewed scene;
-- after all unlocked scenes are viewed, Home shows no new-story action;
-- story progression never wraps back to scene 1.
-
-The additional field is restored into existing `ravenManorStateV4` saves without
-changing the storage key.
+- replaying a milestone may replay its scene;
+- Home offers the earliest completed but unviewed milestone;
+- story progression never wraps to an already viewed scene;
+- levels without scenes continue normally to the next level or level map.
 
 ## Continuation context
 
-A scene opened from Home returns to Home after its final beat.
+A scene opened from Home returns Home after its final beat. A scene opened from
+a victory retains the calculated next-level destination. Intermediate beats use
+`Далее`; only the final beat marks the scene viewed and navigates.
 
-A scene opened from a victory retains the already calculated destination:
-
-- `Следующий уровень` starts the next unlocked unfinished level;
-- `К уровням` opens the map after the final available level.
-
-Intermediate beats use `Далее`; only the final beat performs navigation and
-marks the scene viewed.
-
-## Current narrative arc
+## Current narrative milestones
 
 1. The unsigned letter opens the manor gates.
-2. Evelyn meets the reflectionless Lord Adrian.
+2. Evelyn meets reflectionless Lord Adrian.
 3. A damaged portrait reveals an erased childhood.
 4. Her mother's diary exposes the Night Circle contract.
-5. Moon roses return the name Lucian.
-6. Evelyn finds her own empty sarcophagus.
-7. Adrian confesses his role as guardian.
-8. Evelyn finds the order she wrote to erase her memory.
+5. Evelyn finds the order she wrote to erase her memory.
+6. Moon roses return the name Lucian.
+7. Evelyn finds her own empty sarcophagus.
+8. Adrian confesses his role as guardian.
 9. Lucian recounts the stolen night in the tower.
 10. The tower opens and a deeper part of the contract awakens.
-
-## Mobile and accessibility
-
-- dialogue remains selectable text, never baked into art;
-- beat progress is visible but decorative;
-- the scene card scrolls internally on short phones;
-- the page behind the modal never scrolls;
-- each continuation action is touch-safe;
-- reduced motion removes decorative travel but not dialogue or progression.
