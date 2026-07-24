@@ -93,3 +93,16 @@ progression or UI code.
 Rationale: restoration must be visible now, but independent artists and AI
 agents need a safe replacement boundary. Story dialogue remains live text and
 is never baked into an illustration.
+
+
+## FEATURE-042 — Motion language
+
+- Use restrained antique-gold glints as the default positive effect.
+- Use colour-linked sparks for matches, moon-silver mist for loss, and pale
+  violet feather/petal forms for unlocks.
+- Treat room restoration as the longest and most important animation in the
+  vertical slice.
+- Animate screen entry only on navigation, never on every board re-render.
+- Keep all particle systems DOM/CSS based and bounded for low-end phones.
+- Follow `prefers-reduced-motion` automatically; no information may rely only
+  on movement.

@@ -1247,3 +1247,379 @@ body {
   .story-dialogue { padding: .65rem .75rem; gap: .5rem; }
   .story-dialogue button { min-height: 40px; }
 }
+
+/* FEATURE-042 — motion, VFX, transitions, and restoration feedback. */
+.screen-enter {
+  animation: screen-enter var(--motion-standard) var(--ease-out) both;
+}
+
+@keyframes screen-enter {
+  from { opacity: 0; transform: translateY(8px) scale(.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal.show {
+  animation: modal-backdrop-in var(--motion-standard) ease-out both;
+}
+.modal.is-closing {
+  pointer-events: none;
+  animation: modal-backdrop-out var(--motion-fast) ease-in both;
+}
+.modal-card-enter {
+  animation: modal-card-in var(--motion-standard) var(--ease-emphasis) both;
+}
+.modal.is-closing .modal-card {
+  animation: modal-card-out var(--motion-fast) ease-in both;
+}
+
+@keyframes modal-backdrop-in {
+  from { opacity: 0; backdrop-filter: blur(0); }
+  to { opacity: 1; backdrop-filter: blur(10px); }
+}
+@keyframes modal-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes modal-card-in {
+  from { opacity: 0; transform: translateY(18px) scale(.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes modal-card-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(10px) scale(.97); }
+}
+
+/* Match-3 movement */
+.tile.swapping {
+  z-index: 7;
+  animation: tile-swap var(--motion-fast) var(--ease-out) both;
+  will-change: transform;
+}
+@keyframes tile-swap {
+  from {
+    transform: translate(
+      calc(var(--swap-x) * 100%),
+      calc(var(--swap-y) * 100%)
+    ) scale(.96);
+    filter: brightness(1.24);
+  }
+  to { transform: translate(0,0) scale(1); filter: brightness(1); }
+}
+
+.board-match-vfx {
+  position: absolute;
+  inset: clamp(7px,2vw,11px);
+  z-index: 9;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.match-spark {
+  --spark-color: var(--color-gold-bright);
+  position: absolute;
+  left: calc(var(--left) * 1%);
+  top: calc(var(--top) * 1%);
+  width: clamp(4px,1.4vw,7px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--spark-color);
+  box-shadow: 0 0 10px var(--spark-color);
+  animation: match-spark-fly 260ms ease-out both;
+}
+.match-spark:nth-child(2n) { animation-delay: 35ms; }
+.match-spark--rose { --spark-color: #ed7897; }
+.match-spark--candle { --spark-color: #ffd984; }
+.match-spark--key { --spark-color: #f1cc72; }
+.match-spark--crystal { --spark-color: #b9c8ff; }
+.match-spark--bat { --spark-color: #bca0e3; }
+.match-spark--scroll { --spark-color: #e7c48a; }
+@keyframes match-spark-fly {
+  from { opacity: 1; transform: translate(-50%,-50%) scale(.5); }
+  to {
+    opacity: 0;
+    transform: translate(
+      calc(-50% + (var(--particle) * 18px - 9px)),
+      calc(-50% - 28px + (var(--particle) * 9px))
+    ) scale(1.6) rotate(90deg);
+  }
+}
+
+.board-wrap.has-cascade {
+  animation: board-cascade-pulse 280ms var(--ease-emphasis);
+}
+.board-feedback.cascade {
+  border-color: rgba(240,213,142,.78);
+  background: linear-gradient(135deg, rgba(110,35,62,.96), rgba(12,9,15,.95));
+  color: var(--color-gold-bright);
+  text-transform: uppercase;
+  animation: cascade-label 320ms var(--ease-emphasis) both;
+}
+@keyframes board-cascade-pulse {
+  50% { filter: brightness(1.16); box-shadow: 0 1rem 2.6rem rgba(0,0,0,.58), 0 0 28px rgba(214,181,109,.18); }
+}
+@keyframes cascade-label {
+  from { opacity: 0; transform: translate(-50%,-35%) scale(.72); letter-spacing: .18em; }
+  to { opacity: 1; transform: translate(-50%,-50%) scale(1); letter-spacing: .05em; }
+}
+
+/* Room restoration reveal */
+.room-visual.is-revealing .room-visual-copy {
+  animation: restored-copy-in 620ms 430ms var(--ease-out) both;
+}
+.room-restoration-reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+.room-restoration-reveal.is-finished { opacity: 0; }
+.room-restoration-before {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: restoration-before-away var(--motion-reveal) var(--ease-out) both;
+}
+.room-restoration-flash {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(255,238,183,.92), rgba(214,181,109,.3) 24%, transparent 56%),
+    linear-gradient(110deg, transparent 35%, rgba(255,255,255,.72) 49%, transparent 64%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: restoration-flash var(--motion-reveal) ease-out both;
+}
+.room-restoration-particles,
+.result-vfx {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.restoration-spark,
+.result-particle {
+  position: absolute;
+  left: calc(var(--x) * 1%);
+  top: calc(var(--y) * 1%);
+  width: var(--particle-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color-gold-bright);
+  box-shadow: 0 0 9px rgba(240,213,142,.82);
+  animation-delay: var(--delay);
+}
+.restoration-spark {
+  animation: restoration-spark-rise 760ms calc(250ms + var(--delay)) ease-out both;
+}
+.restoration-spark--unlock {
+  border-radius: 80% 0 80% 0;
+  background: #d8c7e4;
+  box-shadow: 0 0 10px rgba(188,160,227,.72);
+}
+.room-restoration-message {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(84%, 280px);
+  display: grid;
+  gap: .15rem;
+  padding: .65rem .75rem;
+  border: 1px solid rgba(240,213,142,.58);
+  border-radius: var(--radius-md);
+  background: rgba(11,8,16,.86);
+  box-shadow: 0 .8rem 2rem rgba(0,0,0,.55), 0 0 25px rgba(214,181,109,.18);
+  text-align: center;
+  transform: translate(-50%,-50%);
+  backdrop-filter: blur(8px);
+  animation: restoration-message-in 760ms 230ms var(--ease-emphasis) both;
+}
+.room-restoration-message span {
+  color: var(--color-gold);
+  font-family: var(--font-ui);
+  font-size: .56rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.room-restoration-message strong { font-size: clamp(.9rem,4vw,1.15rem); }
+.room-restoration-message small { color: #d8c7e4; font-family: var(--font-ui); font-size: .68rem; }
+
+@keyframes restoration-before-away {
+  0%,20% { opacity: 1; filter: brightness(.78) saturate(.65); transform: scale(1); }
+  55% { opacity: .55; filter: brightness(1.25) saturate(.85); transform: scale(1.025); }
+  100% { opacity: 0; filter: brightness(1.5) blur(3px); transform: scale(1.05); }
+}
+@keyframes restoration-flash {
+  0%,18% { opacity: 0; transform: translateX(-22%) rotate(-5deg); }
+  36% { opacity: .92; }
+  66%,100% { opacity: 0; transform: translateX(18%) rotate(3deg); }
+}
+@keyframes restoration-spark-rise {
+  from { opacity: 0; transform: translate(-50%,18px) scale(.4) rotate(0); }
+  25% { opacity: 1; }
+  to { opacity: 0; transform: translate(calc(-50% + 12px),-48px) scale(1.35) rotate(calc(var(--angle) * 1deg)); }
+}
+@keyframes restoration-message-in {
+  from { opacity: 0; transform: translate(-50%,-42%) scale(.82); }
+  45% { opacity: 1; }
+  to { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+}
+@keyframes restored-copy-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.room-card--visual.just-unlocked {
+  animation: room-unlocked 900ms var(--ease-emphasis) both;
+}
+.room-card--visual.just-unlocked::after {
+  content: 'Новая комната';
+  position: absolute;
+  z-index: 7;
+  top: .5rem;
+  left: 50%;
+  padding: .3rem .58rem;
+  border: 1px solid rgba(240,213,142,.65);
+  border-radius: var(--radius-pill);
+  background: rgba(11,8,16,.9);
+  color: var(--color-gold-bright);
+  font-family: var(--font-ui);
+  font-size: .58rem;
+  font-weight: 850;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  animation: room-unlock-label 900ms ease-out both;
+}
+@keyframes room-unlocked {
+  0% { opacity: .5; transform: scale(.94); filter: brightness(.8); }
+  45% { opacity: 1; transform: scale(1.02); filter: brightness(1.28); box-shadow: 0 0 28px rgba(214,181,109,.3); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes room-unlock-label {
+  0%,100% { opacity: 0; transform: translate(-50%,-6px); }
+  20%,75% { opacity: 1; transform: translate(-50%,0); }
+}
+
+/* Win, loss, and story cinematics */
+.modal-card--result {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.result-vfx { z-index: 0; }
+.modal-card--result > *:not(.result-vfx) { position: relative; z-index: 1; }
+.result-emblem {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto .35rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(214,181,109,.22), rgba(11,8,16,.7));
+  color: var(--color-gold-bright);
+  font-size: 1.5rem;
+}
+.result-emblem--win { animation: win-emblem 780ms var(--ease-emphasis) both; }
+.result-emblem--loss { color: var(--color-silver); animation: loss-emblem 900ms ease-out both; }
+.result-particle--win {
+  background: var(--color-gold-bright);
+  animation: result-confetti 900ms var(--delay) ease-out both;
+}
+.result-particle--loss {
+  width: calc(var(--particle-size) + 10px);
+  background: rgba(167,167,188,.18);
+  filter: blur(3px);
+  animation: loss-mist 1300ms var(--delay) ease-out both;
+}
+.big-stars { animation: stars-award 680ms 160ms var(--ease-emphasis) both; }
+@keyframes win-emblem {
+  from { opacity: 0; transform: rotate(-35deg) scale(.45); }
+  65% { opacity: 1; transform: rotate(6deg) scale(1.12); }
+  to { transform: rotate(0) scale(1); }
+}
+@keyframes loss-emblem {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes result-confetti {
+  from { opacity: 0; transform: translate(-50%,-30px) rotate(0) scale(.4); }
+  20% { opacity: 1; }
+  to { opacity: 0; transform: translate(calc(-50% + 20px),80px) rotate(calc(var(--angle) * 1deg)) scale(1.2); }
+}
+@keyframes loss-mist {
+  from { opacity: 0; transform: translate(-30%,15px) scale(.5); }
+  40% { opacity: .75; }
+  to { opacity: 0; transform: translate(35%,-25px) scale(1.8); }
+}
+@keyframes stars-award {
+  from { opacity: 0; letter-spacing: .35em; transform: scale(.7); filter: brightness(2); }
+  to { opacity: 1; letter-spacing: .12em; transform: scale(1); filter: brightness(1); }
+}
+
+.modal-card--cinematic .story-background {
+  animation: story-camera 8s ease-out both;
+}
+.modal-card--cinematic .story-portrait {
+  animation: story-portrait-in 520ms 100ms var(--ease-out) both;
+}
+.modal-card--cinematic .story-scene-heading {
+  animation: story-heading-in 420ms 220ms var(--ease-out) both;
+}
+.modal-card--cinematic .story-dialogue {
+  animation: story-dialogue-in 400ms 300ms var(--ease-out) both;
+}
+@keyframes story-camera {
+  from { transform: scale(1.035); }
+  to { transform: scale(1.1) translateY(-1%); }
+}
+@keyframes story-portrait-in {
+  from { opacity: 0; transform: translateY(18px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes story-heading-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes story-dialogue-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-enter,
+  .modal.show,
+  .modal.is-closing,
+  .modal-card-enter,
+  .modal.is-closing .modal-card,
+  .tile.swapping,
+  .board-wrap.has-cascade,
+  .board-feedback.cascade,
+  .room-visual.is-revealing .room-visual-copy,
+  .room-restoration-before,
+  .room-restoration-flash,
+  .room-restoration-message,
+  .room-card--visual.just-unlocked,
+  .room-card--visual.just-unlocked::after,
+  .result-emblem,
+  .big-stars,
+  .modal-card--cinematic .story-background,
+  .modal-card--cinematic .story-portrait,
+  .modal-card--cinematic .story-scene-heading,
+  .modal-card--cinematic .story-dialogue {
+    animation: none !important;
+    transition: none !important;
+  }
+  .board-match-vfx,
+  .room-restoration-particles,
+  .result-vfx { display: none; }
+  .room-restoration-before,
+  .room-restoration-flash { opacity: 0; }
+  .room-restoration-message { opacity: 1; transform: translate(-50%,-50%); }
+}
+
+.settings-section-label { margin-top: 1.1rem; }

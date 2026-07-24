@@ -147,3 +147,17 @@ Story uses a portrait backdrop plus a transparent character layer. The artwork
 occupies the upper portion of the modal and dialogue remains in a dedicated
 lower panel. At short viewport heights the story card scrolls internally; the
 browser document never scrolls.
+
+
+## FEATURE-042 motion overlays
+
+Motion overlays never participate in document layout:
+
+- Match particles are absolutely positioned inside `board-wrap`.
+- Restoration before/after layers stay inside the 16:9 room scene.
+- Win/loss particles stay inside the modal card.
+- New-room labels stay inside their room card.
+
+Therefore FEATURE-042 must not add viewport height, create page scrolling, or
+reduce the board's touch area. At 320 × 568 the Match-3 composition is unchanged
+from FEATURE-039/040; only transform and opacity layers are added.

@@ -50,6 +50,14 @@
   --shadow-raised: 0 .65rem 1.5rem rgba(0, 0, 0, .3);
   --focus-ring: 0 0 0 3px rgba(214, 181, 109, .28);
 
+  --motion-instant: 90ms;
+  --motion-fast: 150ms;
+  --motion-standard: 240ms;
+  --motion-emphasis: 460ms;
+  --motion-reveal: 1180ms;
+  --ease-out: cubic-bezier(.2, .8, .25, 1);
+  --ease-emphasis: cubic-bezier(.18, .9, .22, 1.18);
+
   --touch-target: 44px;
   --app-max-width: 480px;
   --safe-top: env(safe-area-inset-top, 0px);
