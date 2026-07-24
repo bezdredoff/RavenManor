@@ -48,6 +48,7 @@ import {
 import { getTileClassName, getTileKey } from './tilePresentation';
 import { getRoomSceneAsset } from './roomPresentation';
 import { getStoryScenePresentation } from './storyPresentation';
+import { getStoryContinueLabel, resolveStoryContinuation } from './storyFlow';
 
 type SwapOffset = Readonly<{ x: number; y: number }>;
 
@@ -891,7 +892,7 @@ export class GameApp {
           : '<button class="primary" data-action="next-level">Следующий уровень</button>'}
         <button class="${nextLevelId === null ? 'primary' : 'secondary'}" data-action="levels">К уровням</button>
         <button class="secondary" data-action="manor">В поместье</button>
-        <button class="ghost" data-action="story">Сюжетная сцена</button>
+        <button class="ghost" data-action="story">${nextLevelId === null ? 'Сюжетная сцена → к уровням' : 'Сюжетная сцена → следующий уровень'}</button>
       </div>
     `, 'modal-card--result modal-card--win');
 
@@ -911,7 +912,7 @@ export class GameApp {
     });
     this.bindModal('story', () => {
       this.closeModal();
-      this.showStory();
+      this.showStory(nextLevelId);
     });
   }
 
@@ -1034,7 +1035,7 @@ export class GameApp {
         <div class="setting-row setting-row--status">
           <div>
             <strong>Звук игры</strong>
-            <p class="subtitle">Тихая процедурная атмосфера и короткие игровые сигналы. Браузер включает звук после первого касания.</p>
+            <p class="subtitle">Простая готическая тема в ре миноре и короткие игровые сигналы. Браузер включает звук после первого касания.</p>
           </div>
           <button class="${audio.muted || !audioSupported ? 'ghost' : 'secondary'} compact audio-toggle" data-action="audio-toggle" aria-pressed="${audio.muted}" ${audioSupported ? '' : 'disabled'}>
             ${audioSupported ? (audio.muted ? 'Включить звук' : 'Выключить звук') : 'Звук недоступен'}
@@ -1048,7 +1049,10 @@ export class GameApp {
           <span><strong>Эффекты</strong><output data-audio-output="effects">${effectsPercent}%</output></span>
           <input type="range" min="0" max="100" step="1" value="${effectsPercent}" data-audio-volume="effects" ${audio.muted || !audioSupported ? 'disabled' : ''} aria-label="Громкость эффектов" />
         </label>
-        <button class="ghost" data-action="audio-preview" ${audio.muted || !audioSupported ? 'disabled' : ''}>Проверить эффекты</button>
+        <div class="audio-preview-actions">
+          <button class="ghost" data-action="audio-music-preview" ${audio.muted || !audioSupported ? 'disabled' : ''}>Проверить музыку</button>
+          <button class="ghost" data-action="audio-preview" ${audio.muted || !audioSupported ? 'disabled' : ''}>Проверить эффекты</button>
+        </div>
       </section>
       <div class="chapter settings-section-label">Доступность</div>
       <h2>Анимации и эффекты</h2>
@@ -1075,15 +1079,17 @@ export class GameApp {
       this.audio.updateSettings({ muted: !this.audio.settings.muted });
       this.showSettings();
     });
+    this.bind('audio-music-preview', () => this.audio.previewMusic());
     this.bind('audio-preview', () => this.audio.previewEffects());
     this.bindAudioVolume('music');
     this.bindAudioVolume('effects');
   }
 
-  private showStory(): void {
+  private showStory(nextLevelId?: number | null): void {
     this.audio.play('story');
     const scene = storyScenes[this.progress.advanceStory(storyScenes.length)];
     const presentation = getStoryScenePresentation(scene);
+    const continueLabel = getStoryContinueLabel(nextLevelId);
     this.openModal(`
       <article class="story-scene story-scene--${scene.portraitSide}" aria-label="Сюжетная сцена: ${scene.speaker}">
         <div class="story-scene-art">
@@ -1097,11 +1103,19 @@ export class GameApp {
         </div>
         <div class="story-dialogue">
           <p>${scene.text}</p>
-          <button class="primary" data-action="continue">Продолжить</button>
+          <button class="primary" data-action="continue">${continueLabel}</button>
         </div>
       </article>
     `, 'modal-card--story modal-card--cinematic');
-    this.bindModal('continue', () => this.closeModal());
+    this.bindModal('continue', () => {
+      const continuation = resolveStoryContinuation(nextLevelId);
+      this.closeModal();
+      if (continuation.kind === 'level') {
+        this.startLevel(continuation.levelId);
+      } else if (continuation.kind === 'level-map') {
+        this.showLevelMap();
+      }
+    });
   }
 
   private showHint(): void {

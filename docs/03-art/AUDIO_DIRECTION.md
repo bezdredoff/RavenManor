@@ -9,11 +9,24 @@ aggressive. The reference contrast is the same as the visual direction:
 cold abandoned manor → warm restored sanctuary
 ```
 
+## Prototype music
+
+The prototype uses a deliberately simple D-minor theme:
+
+- 72 BPM;
+- four slowly changing harmonies;
+- a sparse nine-note melody;
+- filtered sine and triangle tones;
+- a quiet short echo;
+- approximately 13.3 seconds per loop.
+
+It should read as actual background music rather than an unchanging low drone,
+while remaining simple enough to replace later without changing game code.
+
 ## Prototype sound language
 
-The procedural prototype uses:
+Effects use:
 
-- low, filtered sine/triangle ambience;
 - restrained antique-bell-like UI intervals;
 - soft ascending harmony for restoration and victory;
 - descending moon-silver tones for loss;
@@ -27,7 +40,7 @@ sound effect.
 1. Match feedback must be audible but short.
 2. Invalid moves must be clear without sounding punitive.
 3. Cascades and restoration may be richer than ordinary matches.
-4. Music remains below effects at default settings.
+4. The melody must be audible on phone speakers but remain below effects.
 5. Story cues should frame dialogue, not compete with reading.
 
 ## Defaults
@@ -36,5 +49,6 @@ sound effect.
 - effects: `72%`;
 - mute: off.
 
-These values are prototype hypotheses and must be revisited after a device
+The music bus applies its own conservative scaling after this user setting.
+These values remain prototype hypotheses and must be revisited after a device
 playtest with headphones and phone speakers.

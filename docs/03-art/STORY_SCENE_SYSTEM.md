@@ -21,6 +21,23 @@ scroll inside the modal, but the page behind it never scrolls.
 writers, artists, and AI agents to extend the story without embedding paths or
 markup in narrative data.
 
+## Continuation context
+
+A story opened from Home is independent navigation. Its button says
+`Продолжить` and simply closes the scene.
+
+A story opened from a victory result receives the already calculated next-level
+context:
+
+- when another unlocked unfinished level exists, the story button says
+  `Следующий уровень` and starts it directly;
+- after the final available level, the button says `К уровням` and opens the
+  level map.
+
+The completed board must never reappear as the destination after a post-win
+story scene. `storyFlow.ts` owns this pure navigation decision so it can be
+unit-tested independently of modal rendering.
+
 ## Current vertical-slice scenes
 
 1. Evelyn returns to the manor gates.

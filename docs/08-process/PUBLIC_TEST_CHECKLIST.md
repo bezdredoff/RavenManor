@@ -30,6 +30,7 @@
 - [ ] match, cascade, hint, reshuffle, win, and loss complete without stuck input;
 - [ ] levels unlock by group victories;
 - [ ] victory can continue directly to the next unlocked unfinished level;
+- [ ] a post-win story scene continues to that next level rather than revealing the completed board;
 - [ ] room restoration spends stars once;
 - [ ] restored art and newly unlocked rooms persist.
 
@@ -45,7 +46,8 @@
 ## Audio
 
 - [ ] no audio plays before the first user gesture;
-- [ ] ambient music begins quietly after activation;
+- [ ] the D-minor background theme begins after activation and is audible on phone speakers;
+- [ ] `Проверить музыку` restarts the first musical phrase;
 - [ ] music and effects sliders work independently;
 - [ ] mute stops both categories;
 - [ ] settings persist after refresh;
