@@ -18,7 +18,7 @@ resets at the start of a new room, then rises toward a room finale.
 | 5 | Вестибюль | normal | 21 | 6 chain + 16 bats | 6 | 8+ | 4+ |
 | 6 | Вестибюль | finale | 23 | 8 rubble + 18 scrolls | 8 | 7+ | 3+ |
 | 7 | Библиотека | easy | 23 | 8 fog + 20 roses | 8 | 9+ | 4+ |
-| 8 | Библиотека | normal | 24 | 4 chain + 18 candles + 14 keys | 4 | 7+ | 3+ |
+| 8 | Библиотека | normal | 24 | 4 chain + 22 candles | 4 | 7+ | 3+ |
 | 9 | Библиотека | hard | 25 | 4 rubble + 4 fog + 18 keys | 8 | 7+ | 3+ |
 | 10 | Библиотека | normal | 24 | 6 chain + 16 scrolls | 10 | 9+ | 4+ |
 | 11 | Библиотека | hard | 27 | 8 rubble + 16 keys + 14 scrolls | 8 | 7+ | 3+ |

@@ -208,9 +208,14 @@ _Status: implemented, pending project/device verification._
 
 ### FEATURE-052 — Story journal and chapter expansion
 
-- replayable archive of viewed scenes;
-- locked/new/read states grouped by room;
-- twenty additional narrative events for the 30-level chapter.
+_Status: implemented, pending project/device verification._
+
+- one authored story scene after every level 1–30;
+- ten major scenes and twenty shorter interludes;
+- replayable journal grouped into five room arcs;
+- locked/new/viewed states with spoiler-safe locked entries;
+- Home and Manor journal access plus earliest-unread continuation;
+- separate Lucian reveal portrait, journal SVG, procedural journal cue, and tests.
 
 ## Completed — FEATURE-049
 
@@ -228,3 +233,10 @@ _Status: implemented, pending project/device verification._
 - optional full-room completion rewards.
 
 Completed FEATURE-051: 30-level first chapter. Next planned: FEATURE-052 story journal and twenty additional narrative events.
+
+## FEATURE-052A — Campaign balance hotfix
+
+- level 8 now follows the two-objective opening envelope;
+- removed the secondary key collection objective;
+- increased the candle target from 18 to 22 to retain normal difficulty;
+- no save migration or runtime-system changes.

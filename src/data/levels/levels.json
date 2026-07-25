@@ -441,13 +441,7 @@
         "id": "candles",
         "type": "collect",
         "tileType": 1,
-        "target": 18
-      },
-      {
-        "id": "keys",
-        "type": "collect",
-        "tileType": 2,
-        "target": 14
+        "target": 22
       }
     ]
   },
