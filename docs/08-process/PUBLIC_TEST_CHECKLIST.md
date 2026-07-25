@@ -200,3 +200,26 @@ random-board attempt; collect repeated runs.
   top bar overlapping entries.
 - Complete level 30 and confirm Lucian uses the revealed portrait only there.
 - Update the installed iPhone PWA and repeat the journal checks offline.
+
+## FEATURE-053 localization and global navigation
+
+- On Home, confirm there is no separate story-scene button.
+- Complete a level without reading its scene and confirm the Journal button
+  shows an animated `Новое` badge.
+- Read every unlocked scene and confirm the badge and animation disappear.
+- Enable Reduce Motion and confirm the badge remains visible but does not move.
+- Open Settings and confirm Music and Sound are the first settings block.
+- Confirm the mechanics-context note appears directly after the game-board
+  guides, before Accessibility.
+- Switch between Русский, English, and Беларуская and confirm the choice
+  survives reload and PWA relaunch.
+- Confirm all 30 level titles, room tasks, journal summaries, and dialogue text
+  change language without resetting progress.
+- Open Settings from Home, Levels, Manor, Room, Journal, and Match-3; press Back
+  and confirm the exact caller screen returns.
+- From an active Match-3 level, note the board and remaining moves, open
+  Settings, change language, return, and confirm the same board and move count.
+- Confirm the gear and star wallet both fit at 320×568 and do not obscure the
+  centered page title.
+- Repeat language switching and settings return while offline in the installed
+  iPhone PWA.

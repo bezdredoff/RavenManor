@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Settings gear</title>
+  <desc id="desc">A gothic brass gear with a small central rose window.</desc>
+  <defs>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2d98f"/>
+      <stop offset=".52" stop-color="#b88443"/>
+      <stop offset="1" stop-color="#6b3f2c"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#metal)" stroke="#2b1724" stroke-width="2.4" d="M27 3h10l2 7c2 .7 3.8 1.7 5.5 3l7-2 5 8-5 5c.4 2.1.4 4.2 0 6.2l5 5-5 8-7-2a23 23 0 0 1-5.5 3l-2 7H27l-2-7a23 23 0 0 1-5.5-3l-7 2-5-8 5-5a23 23 0 0 1 0-6.2l-5-5 5-8 7 2a23 23 0 0 1 5.5-3z"/>
+  <circle cx="32" cy="32" r="12" fill="#231726" stroke="#f0d584" stroke-width="2"/>
+  <path fill="#b74f6b" d="M32 21c4 4 6 7 6 10 0 4-2.7 7-6 10-3.3-3-6-6-6-10 0-3 2-6 6-10z"/>
+  <circle cx="32" cy="32" r="3.2" fill="#f4df9a"/>
+</svg>

@@ -1,5 +1,6 @@
 import ravenMark from '../assets/ui/raven-mark.svg?url';
 import storyJournalIcon from '../assets/ui/story-journal.svg?url';
+import settingsGearIcon from '../assets/ui/settings-gear.svg?url';
 import { APP_VERSION, BUILD_LABEL } from '../appVersion';
 import { PlaytestAnalytics } from '../analytics/PlaytestAnalytics';
 import { formatBoosterReward, type BoosterKind } from '../boosters/BoosterTypes';
@@ -59,6 +60,7 @@ import type { ObjectiveSnapshot } from '../objectives/LevelObjective';
 import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 import { getObstacleLabel, type ObstacleKind } from '../engine/ObstacleTypes';
 import { getScreenClassName, type ScreenMode } from './layoutPolicy';
+import { resolveSettingsCallerMode } from './settingsNavigation';
 import { getViewportProfile } from './responsivePolicy';
 import {
   createParticleIndexes,
@@ -82,6 +84,7 @@ import { downloadJson } from '../platform/Download';
 import { preloadImageAssets } from '../platform/AssetPreloader';
 import { ErrorLog } from '../platform/ErrorLog';
 import { PwaManager, getPwaStatusLabel } from '../pwa/PwaManager';
+import { LocalizationManager, LOCALE_OPTIONS, type AppLocale } from '../localization/Localization';
 
 type SwapOffset = Readonly<{ x: number; y: number }>;
 
@@ -107,6 +110,7 @@ export class GameApp {
   private readonly audio = new AudioManager();
   private readonly analytics = new PlaytestAnalytics();
   private readonly pwa = new PwaManager();
+  private readonly localization = new LocalizationManager();
   private readonly errors: ErrorLog;
   private engine = new Match3Engine();
 
@@ -132,13 +136,14 @@ export class GameApp {
   private toastTimer: number | null = null;
   private starWalletExpanded = false;
   private activeBooster: BoosterKind | null = null;
+  private settingsReturnAction: (() => void) | null = null;
 
   constructor(root: HTMLElement, errors: ErrorLog = new ErrorLog()) {
     this.root = root;
     this.errors = errors;
     this.audio.arm();
     void this.pwa.register();
-    preloadImageAssets([ravenMark, storyJournalIcon, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets, ...boosterAssets, ...storyAssets]);
+    preloadImageAssets([ravenMark, storyJournalIcon, settingsGearIcon, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets, ...boosterAssets, ...storyAssets]);
     this.renderShell();
     this.syncViewportProfile();
     window.addEventListener('resize', () => this.syncViewportProfile());
@@ -187,32 +192,73 @@ export class GameApp {
     this.screen.className = `${getScreenClassName(mode)}${isNavigation ? ' screen-enter' : ''}`;
     this.screen.innerHTML = content;
     this.bindImageStates(this.screen);
+    this.localization.translateElement(this.screen);
     this.bindStarWalletToggle();
+    this.bindGlobalSettings();
   }
 
-  private topbar(title: string, back?: () => void): string {
+  private topbar(title: string, back?: () => void, showSettings = true): string {
     return `
       <header class="topbar">
         ${back
           ? '<button class="icon-button" data-action="back" aria-label="Назад"><span aria-hidden="true">‹</span></button>'
           : '<div class="topbar-spacer" aria-hidden="true"></div>'}
         <div class="brand" title="${title}">${title}</div>
-        <div class="star-wallet-control">
-          <button
-            type="button"
-            class="resource"
-            data-action="star-wallet-toggle"
-            aria-expanded="${this.starWalletExpanded}"
-            aria-controls="star-wallet-popover"
-            title="Показать баланс звёзд"
-            aria-label="Доступно звёзд: ${this.availableStars}. Показать подробный баланс"
-          >
-            <span aria-hidden="true">★</span><strong>${this.availableStars}</strong>
-          </button>
-          ${this.renderStarWallet()}
+        <div class="topbar-actions">
+          ${showSettings ? `
+            <button type="button" class="icon-button settings-gear-button" data-action="settings-global" aria-label="Открыть настройки" title="Настройки">
+              <img src="${settingsGearIcon}" alt="" draggable="false" />
+            </button>
+          ` : ''}
+          <div class="star-wallet-control">
+            <button
+              type="button"
+              class="resource"
+              data-action="star-wallet-toggle"
+              aria-expanded="${this.starWalletExpanded}"
+              aria-controls="star-wallet-popover"
+              title="Показать баланс звёзд"
+              aria-label="Доступно звёзд: ${this.availableStars}. Показать подробный баланс"
+            >
+              <span aria-hidden="true">★</span><strong>${this.availableStars}</strong>
+            </button>
+            ${this.renderStarWallet()}
+          </div>
         </div>
       </header>
     `;
+  }
+
+  private bindGlobalSettings(): void {
+    const button = this.screen.querySelector<HTMLElement>('[data-action="settings-global"]');
+    button?.addEventListener('click', () => {
+      this.audio.play('ui');
+      this.openSettingsFromCurrentScreen();
+    });
+  }
+
+  private openSettingsFromCurrentScreen(): void {
+    if (this.currentScreenMode === 'settings') return;
+    const returnAction = this.getCurrentScreenReturnAction();
+    this.showSettings(returnAction);
+  }
+
+  private getCurrentScreenReturnAction(): () => void {
+    switch (resolveSettingsCallerMode(this.currentScreenMode)) {
+      case 'journal': return () => this.showStoryJournal();
+      case 'manor': return () => this.showManor();
+      case 'levels': return () => this.showLevelMap();
+      case 'room': return () => this.showRoom(this.currentRoomId);
+      case 'game': return () => this.renderGame();
+      case 'home':
+      default: return () => this.showHome();
+    }
+  }
+
+  private returnFromSettings(): void {
+    const action = this.settingsReturnAction ?? (() => this.showHome());
+    this.settingsReturnAction = null;
+    action();
   }
 
   private get availableStars(): number {
@@ -308,16 +354,12 @@ export class GameApp {
   }
 
   showHome(): void {
-    const nextStoryScene = getNextUnviewedStoryScene(
-      storyScenes,
-      this.progress.state.completed,
-      this.progress.state.viewedStoryScenes,
-    );
     const storyProgress = getStoryJournalProgress(
       storyScenes,
       this.progress.state.completed,
       this.progress.state.viewedStoryScenes,
     );
+    const hasNewStory = storyProgress.newCount > 0;
     this.renderScreen('home', `
       ${this.topbar('Raven Manor')}
       <section class="hero">
@@ -325,12 +367,14 @@ export class GameApp {
         <h1>Raven Manor</h1>
         <p class="subtitle">Проходите match-3 уровни, восстанавливайте поместье и раскрывайте тайну семьи Блэквуд.</p>
       </section>
-      <div class="stack">
+      <div class="stack home-actions">
         <button class="primary" data-action="play">Играть</button>
         <button class="secondary" data-action="manor">Поместье</button>
-        <button class="ghost" data-action="journal">Дневник · ${storyProgress.viewed}/${storyProgress.total}${storyProgress.newCount > 0 ? ` · Новых: ${storyProgress.newCount}` : ''}</button>
-        <button class="ghost" data-action="story" ${nextStoryScene ? '' : 'disabled'}>${nextStoryScene ? 'Продолжить историю' : 'Новых сюжетных сцен нет'}</button>
-        <button class="ghost" data-action="settings">Настройки</button>
+        <button class="ghost journal-home-button ${hasNewStory ? 'journal-home-button--new' : ''}" data-action="journal">
+          <img src="${storyJournalIcon}" alt="" draggable="false" />
+          <span>Дневник · ${storyProgress.viewed}/${storyProgress.total}</span>
+          ${hasNewStory ? '<span class="journal-new-bubble">Новое</span>' : ''}
+        </button>
       </div>
       <p class="footer-note">Глава I · Возвращение в Raven Manor · ${APP_VERSION}</p>
     `);
@@ -338,8 +382,6 @@ export class GameApp {
     this.bind('play', () => this.showLevelMap());
     this.bind('manor', () => this.showManor());
     this.bind('journal', () => this.showStoryJournal());
-    if (nextStoryScene) this.bind('story', () => this.showStory(nextStoryScene.afterLevelId));
-    this.bind('settings', () => this.showSettings());
   }
 
   private showStoryJournal(): void {
@@ -498,7 +540,7 @@ export class GameApp {
     this.bind('levels', () => this.showLevelMap());
     this.bind('journal', () => this.showStoryJournal());
     this.bind('reset', () => {
-      if (confirm('Сбросить весь прогресс?')) {
+      if (confirm(this.localization.translate('Сбросить весь прогресс?'))) {
         this.progress.reset();
         this.analytics.recordAction('progress_reset');
         this.pendingRoomReveal = null;
@@ -1862,7 +1904,10 @@ export class GameApp {
     this.bindModal('close-booster-guide', () => this.closeModal());
   }
 
-  private showSettings(): void {
+  private showSettings(returnAction?: () => void): void {
+    if (returnAction) this.settingsReturnAction = returnAction;
+    if (!this.settingsReturnAction) this.settingsReturnAction = () => this.showHome();
+
     const preference: TutorialPreference = this.progress.state.tutorial.preference;
     const status = preference === 'undecided'
       ? 'Будет предложено при запуске уровня'
@@ -1880,33 +1925,19 @@ export class GameApp {
     const recoveryStatus = this.progress.recoveryNotice
       ? `<div class="setting-status setting-status--warning">${this.progress.recoveryNotice}</div>`
       : `<div class="setting-status">${this.progress.storageAvailable ? 'Сохранение работает' : 'Хранилище недоступно'}</div>`;
+    const languageButtons = LOCALE_OPTIONS.map((option) => `
+      <button
+        type="button"
+        class="language-option ${option.code === this.localization.locale ? 'active' : ''}"
+        data-locale="${option.code}"
+        aria-pressed="${option.code === this.localization.locale}"
+        data-no-translate
+      >${option.nativeName}</button>
+    `).join('');
 
     this.renderScreen('settings', `
-      ${this.topbar('Настройки', () => this.showHome())}
-      <div class="chapter">Игровые настройки</div>
-      <h2>Подсказки и обучение</h2>
-      <section class="settings-card">
-        <div>
-          <strong>Короткое обучение match-3</strong>
-          <p class="subtitle">Две контекстные подсказки без обязательного обучающего уровня.</p>
-        </div>
-        <div class="setting-status">${status}</div>
-        <div class="stack">
-          <button class="secondary" data-action="tutorial-restart">Показать снова</button>
-          <button class="ghost" data-action="tutorial-disable">Отключить подсказки</button>
-        </div>
-      </section>
-      <div class="chapter settings-section-label">Игровое поле</div>
-      <h2>Усиления</h2>
-      <section class="settings-card">
-        <div>
-          <strong>Сильные комбинации</strong>
-          <p class="subtitle">Линии из 4–5, формы T/L и квадраты 2×2 создают специальные фишки.</p>
-        </div>
-        <div class="setting-status">Молоты: ${this.progress.getBoosterCount('hammer')} · Перемешивания: ${this.progress.getBoosterCount('shuffle')}</div>
-        <div class="stack"><button class="secondary" data-action="booster-guide">Активные бустеры</button><button class="ghost" data-action="special-guide">Комбинации</button><button class="ghost" data-action="obstacle-guide">Препятствия</button></div>
-      </section>
-      <div class="chapter settings-section-label">Аудио</div>
+      ${this.topbar('Настройки', () => this.returnFromSettings(), false)}
+      <div class="chapter">Аудио</div>
       <h2>Музыка и звуки</h2>
       <section class="settings-card audio-settings-card">
         <div class="setting-row setting-row--status">
@@ -1931,6 +1962,40 @@ export class GameApp {
           <button class="ghost" data-action="audio-preview" ${audio.muted || !audioSupported ? 'disabled' : ''}>Проверить эффекты</button>
         </div>
       </section>
+
+      <div class="chapter settings-section-label">Язык</div>
+      <h2>Язык интерфейса и сюжета</h2>
+      <section class="settings-card language-settings-card">
+        <p class="subtitle">Изменение языка не сбрасывает игровой прогресс.</p>
+        <div class="language-options" role="group" aria-label="Язык интерфейса и сюжета">${languageButtons}</div>
+      </section>
+
+      <div class="chapter settings-section-label">Игровые настройки</div>
+      <h2>Подсказки и обучение</h2>
+      <section class="settings-card">
+        <div>
+          <strong>Короткое обучение match-3</strong>
+          <p class="subtitle">Две контекстные подсказки без обязательного обучающего уровня.</p>
+        </div>
+        <div class="setting-status">${status}</div>
+        <div class="stack">
+          <button class="secondary" data-action="tutorial-restart">Показать снова</button>
+          <button class="ghost" data-action="tutorial-disable">Отключить подсказки</button>
+        </div>
+      </section>
+
+      <div class="chapter settings-section-label">Игровое поле</div>
+      <h2>Усиления</h2>
+      <section class="settings-card">
+        <div>
+          <strong>Сильные комбинации</strong>
+          <p class="subtitle">Линии из 4–5, формы T/L и квадраты 2×2 создают специальные фишки.</p>
+        </div>
+        <div class="setting-status">Молоты: ${this.progress.getBoosterCount('hammer')} · Перемешивания: ${this.progress.getBoosterCount('shuffle')}</div>
+        <div class="stack"><button class="secondary" data-action="booster-guide">Активные бустеры</button><button class="ghost" data-action="special-guide">Комбинации</button><button class="ghost" data-action="obstacle-guide">Препятствия</button></div>
+      </section>
+      <p class="footer-note settings-context-note">Новые механики позднее будут объясняться такими же короткими контекстными карточками.</p>
+
       <div class="chapter settings-section-label">Доступность</div>
       <h2>Анимации и эффекты</h2>
       <section class="settings-card">
@@ -1940,6 +2005,7 @@ export class GameApp {
         </div>
         <div class="setting-status">${this.prefersReducedMotion() ? 'Сокращённые эффекты активны' : 'Полные эффекты активны'}</div>
       </section>
+
       <div class="chapter settings-section-label">Установка</div>
       <h2>Приложение на телефоне</h2>
       <section class="settings-card">
@@ -1956,6 +2022,7 @@ export class GameApp {
           ${pwaStatus.serviceWorkerReady ? '<button class="ghost" data-action="pwa-update">Проверить обновление</button>' : ''}
         </div>
       </section>
+
       <div class="chapter settings-section-label">Playtest</div>
       <h2>Сохранение и диагностика</h2>
       <section class="settings-card diagnostics-card">
@@ -1982,10 +2049,18 @@ export class GameApp {
         <input class="visually-hidden" type="file" accept="application/json,.json" data-save-import-file aria-label="Выбрать файл сохранения" />
         <p class="subtitle settings-privacy-note">Данные остаются только на устройстве, пока игрок сам не экспортирует JSON. Сторонняя аналитика не подключается.</p>
       </section>
-      <p class="footer-note">Новые механики позднее будут объясняться такими же короткими контекстными карточками.</p>
     `);
 
-    this.bind('back', () => this.showHome());
+    this.bind('back', () => this.returnFromSettings());
+    this.screen.querySelectorAll<HTMLButtonElement>('[data-locale]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const locale = button.dataset.locale as AppLocale | undefined;
+        if (!locale || !LOCALE_OPTIONS.some((option) => option.code === locale)) return;
+        this.localization.setLocale(locale);
+        this.analytics.recordAction('locale_changed', { locale });
+        this.showSettings();
+      });
+    });
     this.bind('tutorial-restart', () => {
       this.progress.restartTutorial();
       this.showSettings();
@@ -2011,7 +2086,7 @@ export class GameApp {
     this.bind('analytics-export', () => this.exportAnalytics());
     this.bind('diagnostics-export', () => this.exportDiagnostics());
     this.bind('analytics-reset', () => {
-      if (confirm('Очистить только локальные данные плейтеста? Игровой прогресс сохранится.')) {
+      if (confirm(this.localization.translate('Очистить только локальные данные плейтеста? Игровой прогресс сохранится.'))) {
         this.analytics.reset();
         this.showSettings();
       }
@@ -2038,7 +2113,7 @@ export class GameApp {
   }
 
   private async importSave(file: File): Promise<void> {
-    if (!confirm('Заменить текущий игровой прогресс данными из выбранного файла?')) return;
+    if (!confirm(this.localization.translate('Заменить текущий игровой прогресс данными из выбранного файла?'))) return;
     try {
       this.progress.importData(await file.text());
       this.analytics.recordAction('save_imported');
@@ -2075,6 +2150,7 @@ export class GameApp {
         environment: {
           userAgent: navigator.userAgent,
           language: navigator.language,
+          appLocale: this.localization.locale,
           online: navigator.onLine,
           viewport: {
             width: window.visualViewport?.width ?? window.innerWidth,
@@ -2257,7 +2333,7 @@ export class GameApp {
       button.setAttribute('aria-expanded', String(this.starWalletExpanded));
       button.setAttribute(
         'aria-label',
-        `Доступно звёзд: ${this.availableStars}. ${this.starWalletExpanded ? 'Скрыть' : 'Показать'} подробный баланс`,
+        this.localization.translate(`Доступно звёзд: ${this.availableStars}. ${this.starWalletExpanded ? 'Скрыть' : 'Показать'} подробный баланс`),
       );
       popover.hidden = !this.starWalletExpanded;
     });
@@ -2265,7 +2341,7 @@ export class GameApp {
 
   private showToast(message: string, tone: 'warning' | 'info' = 'info'): void {
     if (this.toastTimer !== null) window.clearTimeout(this.toastTimer);
-    this.toast.textContent = message;
+    this.toast.textContent = this.localization.translate(message);
     this.toast.className = `toast show toast--${tone}`;
     this.toastTimer = window.setTimeout(() => {
       this.toast.className = 'toast';
@@ -2325,6 +2401,7 @@ export class GameApp {
     this.modal.innerHTML = `<div class="${className}">${content}</div>`;
     this.modal.classList.add('show');
     this.bindImageStates(this.modal);
+    this.localization.translateElement(this.modal);
   }
 
   private closeModal(): void {
@@ -2346,7 +2423,7 @@ export class GameApp {
         fallback.className = 'asset-fallback';
         fallback.textContent = 'RM';
         fallback.setAttribute('role', 'img');
-        fallback.setAttribute('aria-label', 'Изображение временно недоступно');
+        fallback.setAttribute('aria-label', this.localization.translate('Изображение временно недоступно'));
         image.replaceWith(fallback);
       };
 
