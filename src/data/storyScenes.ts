@@ -587,7 +587,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
       },
       {
         speaker: "Эвелин",
-        text: "Почему вам было важно, чтобы мы ушли?",
+        text: "Почему вам было настолько важно, чтобы мы с Люцианом успели уйти?",
         portraitKey: "evelyn",
         portraitSide: "left",
       },
@@ -833,7 +833,7 @@ export const storyScenes: readonly StorySceneDefinition[] = [
       },
       {
         speaker: "Эвелин",
-        text: "Какую часть истории вы всё ещё скрываете?",
+        text: "Какую часть этой истории вы всё ещё намеренно скрываете от меня?",
         portraitKey: "evelyn",
         portraitSide: "left",
       },
