@@ -1,25 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import { storyScenes } from '../src/data/storyScenes';
-import { getStoryScenePresentation } from '../src/ui/storyPresentation';
+import { getStoryScenePresentation, storyAssets } from '../src/ui/storyPresentation';
 
-describe('story presentation during level expansion', () => {
-  it('keeps ten authored scenes as chapter milestones until FEATURE-052', () => {
-    expect(storyScenes).toHaveLength(10);
-    expect(new Set(storyScenes.map((scene) => scene.id)).size).toBe(10);
-    expect([...storyScenes].sort((a, b) => a.afterLevelId - b.afterLevelId)
-      .map((scene) => scene.afterLevelId))
-      .toEqual([1, 3, 6, 9, 12, 15, 21, 24, 27, 30]);
+describe('complete first-chapter story presentation', () => {
+  it('contains thirty unique scenes split into ten major and twenty interludes', () => {
+    expect(storyScenes).toHaveLength(30);
+    expect(new Set(storyScenes.map((scene) => scene.id)).size).toBe(30);
+    expect(storyScenes.filter((scene) => scene.importance === 'major')).toHaveLength(10);
+    expect(storyScenes.filter((scene) => scene.importance === 'interlude')).toHaveLength(20);
+    expect(storyScenes.map((scene) => scene.afterLevelId)).toEqual(
+      Array.from({ length: 30 }, (_, index) => index + 1),
+    );
   });
 
-  it('uses multi-beat scenes with substantial dialogue', () => {
+  it('keeps key scenes longer than interludes', () => {
     for (const scene of storyScenes) {
-      expect(scene.beats.length).toBeGreaterThanOrEqual(4);
-      expect(scene.beats.reduce((total, beat) => total + beat.text.length, 0))
-        .toBeGreaterThan(300);
+      if (scene.importance === 'major') expect(scene.beats.length).toBeGreaterThanOrEqual(5);
+      else expect(scene.beats.length).toBeGreaterThanOrEqual(3);
+      expect(scene.summary.length).toBeGreaterThan(35);
+      expect(scene.beats.every((beat) => beat.text.length > 45)).toBe(true);
     }
   });
 
   it('resolves a portrait and background for every dialogue beat', () => {
+    expect(storyAssets.length).toBeGreaterThanOrEqual(12);
     for (const scene of storyScenes) {
       for (const beat of scene.beats) {
         const presentation = getStoryScenePresentation(scene, beat);
@@ -27,5 +31,10 @@ describe('story presentation during level expansion', () => {
         expect(presentation.backgroundAsset.length).toBeGreaterThan(0);
       }
     }
+  });
+
+  it('reveals Lucian only in the final authored scene', () => {
+    const lucianScenes = storyScenes.filter((scene) => scene.beats.some((beat) => beat.portraitKey === 'lucian'));
+    expect(lucianScenes.map((scene) => scene.afterLevelId)).toEqual([30]);
   });
 });

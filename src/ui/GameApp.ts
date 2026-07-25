@@ -1,4 +1,5 @@
 import ravenMark from '../assets/ui/raven-mark.svg?url';
+import storyJournalIcon from '../assets/ui/story-journal.svg?url';
 import { APP_VERSION, BUILD_LABEL } from '../appVersion';
 import { PlaytestAnalytics } from '../analytics/PlaytestAnalytics';
 import { formatBoosterReward, type BoosterKind } from '../boosters/BoosterTypes';
@@ -40,7 +41,12 @@ import {
   getRoomRestorationTasks,
 } from '../meta/RoomRestoration';
 import { getRoomUnlockState } from '../meta/RoomProgression';
-import { getNextUnviewedStoryScene, getStorySceneForLevel } from '../meta/StoryProgression';
+import {
+  getNextUnviewedStoryScene,
+  getStoryJournalGroups,
+  getStoryJournalProgress,
+  getStorySceneForLevel,
+} from '../meta/StoryProgression';
 import { getRoomVisualState } from '../meta/RoomVisualState';
 import { getActiveRestoration } from '../meta/ActiveRestoration';
 import {
@@ -65,9 +71,13 @@ import { getSpecialPresentation, specialAssets } from './specialPresentation';
 import { getObstaclePresentation, obstacleAssets } from './obstaclePresentation';
 import { getBoosterPresentation, boosterAssets } from './boosterPresentation';
 import { getRoomSceneAsset } from './roomPresentation';
-import { getStoryScenePresentation } from './storyPresentation';
+import { getStoryScenePresentation, storyAssets } from './storyPresentation';
 import { getRestorationBlockedMessage } from './restorationFeedback';
-import { getStoryContinueLabel, resolveStoryContinuation } from './storyFlow';
+import {
+  getStoryContinueLabel,
+  resolveStoryContinuation,
+  type StoryReturnTarget,
+} from './storyFlow';
 import { downloadJson } from '../platform/Download';
 import { preloadImageAssets } from '../platform/AssetPreloader';
 import { ErrorLog } from '../platform/ErrorLog';
@@ -128,7 +138,7 @@ export class GameApp {
     this.errors = errors;
     this.audio.arm();
     void this.pwa.register();
-    preloadImageAssets([ravenMark, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets, ...boosterAssets]);
+    preloadImageAssets([ravenMark, storyJournalIcon, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets, ...boosterAssets, ...storyAssets]);
     this.renderShell();
     this.syncViewportProfile();
     window.addEventListener('resize', () => this.syncViewportProfile());
@@ -303,6 +313,11 @@ export class GameApp {
       this.progress.state.completed,
       this.progress.state.viewedStoryScenes,
     );
+    const storyProgress = getStoryJournalProgress(
+      storyScenes,
+      this.progress.state.completed,
+      this.progress.state.viewedStoryScenes,
+    );
     this.renderScreen('home', `
       ${this.topbar('Raven Manor')}
       <section class="hero">
@@ -313,6 +328,7 @@ export class GameApp {
       <div class="stack">
         <button class="primary" data-action="play">Играть</button>
         <button class="secondary" data-action="manor">Поместье</button>
+        <button class="ghost" data-action="journal">Дневник · ${storyProgress.viewed}/${storyProgress.total}${storyProgress.newCount > 0 ? ` · Новых: ${storyProgress.newCount}` : ''}</button>
         <button class="ghost" data-action="story" ${nextStoryScene ? '' : 'disabled'}>${nextStoryScene ? 'Продолжить историю' : 'Новых сюжетных сцен нет'}</button>
         <button class="ghost" data-action="settings">Настройки</button>
       </div>
@@ -321,8 +337,104 @@ export class GameApp {
 
     this.bind('play', () => this.showLevelMap());
     this.bind('manor', () => this.showManor());
+    this.bind('journal', () => this.showStoryJournal());
     if (nextStoryScene) this.bind('story', () => this.showStory(nextStoryScene.afterLevelId));
     this.bind('settings', () => this.showSettings());
+  }
+
+  private showStoryJournal(): void {
+    const groups = getStoryJournalGroups(
+      storyScenes,
+      rooms,
+      this.progress.state.completed,
+      this.progress.state.viewedStoryScenes,
+    );
+    const progress = getStoryJournalProgress(
+      storyScenes,
+      this.progress.state.completed,
+      this.progress.state.viewedStoryScenes,
+    );
+    const nextStoryScene = getNextUnviewedStoryScene(
+      storyScenes,
+      this.progress.state.completed,
+      this.progress.state.viewedStoryScenes,
+    );
+
+    const groupCards = groups.map((group) => {
+      const entries = group.entries.map((entry) => {
+        const locked = entry.status === 'locked';
+        const isNew = entry.status === 'new';
+        const title = locked ? `Запись после уровня ${entry.scene.afterLevelId}` : entry.scene.title;
+        const summary = locked
+          ? `Пройдите уровень ${entry.scene.afterLevelId}, чтобы открыть эту запись.`
+          : entry.scene.summary;
+        const statusLabel = locked ? 'Закрыто' : isNew ? 'Новое' : 'Просмотрено';
+        return `
+          <article class="journal-entry journal-entry--${entry.status} ${entry.scene.importance === 'major' ? 'journal-entry--major' : ''}">
+            <div class="journal-entry-number" aria-hidden="true">${String(entry.scene.afterLevelId).padStart(2, '0')}</div>
+            <div class="journal-entry-copy">
+              <div class="journal-entry-meta">
+                <span>После уровня ${entry.scene.afterLevelId}</span>
+                ${entry.scene.importance === 'major' && !locked ? '<span class="journal-major-badge">Ключевая сцена</span>' : ''}
+                <span class="journal-status journal-status--${entry.status}">${statusLabel}</span>
+              </div>
+              <strong>${title}</strong>
+              <p>${summary}</p>
+            </div>
+            ${locked
+              ? '<div class="journal-lock" aria-hidden="true">◆</div>'
+              : `<button class="${isNew ? 'primary' : 'secondary'} compact" data-story-level="${entry.scene.afterLevelId}">${isNew ? 'Смотреть' : 'Пересмотреть'}</button>`}
+          </article>
+        `;
+      }).join('');
+
+      return `
+        <section class="journal-group" aria-label="${group.room.title}">
+          <header class="journal-group-heading">
+            <div>
+              <div class="chapter">${group.room.title}</div>
+              <h2>${group.entries[0]?.scene.chapter ?? group.room.title}</h2>
+            </div>
+            <strong>${group.viewedCount}/${group.entries.length}</strong>
+          </header>
+          <div class="journal-entry-list">${entries}</div>
+        </section>
+      `;
+    }).join('');
+
+    this.audio.play('journalOpen');
+    this.renderScreen('journal', `
+      ${this.topbar('Дневник', () => this.showHome())}
+      <section class="journal-hero">
+        <img src="${storyJournalIcon}" alt="" draggable="false" />
+        <div>
+          <div class="chapter">Архив воспоминаний</div>
+          <h1>Дневник Raven Manor</h1>
+          <p>Здесь сохраняются все открытые сюжетные эпизоды. Повторный просмотр не изменяет прогресс.</p>
+        </div>
+      </section>
+      <section class="journal-progress-card">
+        <div><span>Открыто</span><strong>${progress.unlocked}/${progress.total}</strong></div>
+        <div><span>Просмотрено</span><strong>${progress.viewed}/${progress.total}</strong></div>
+        <div><span>Новых</span><strong>${progress.newCount}</strong></div>
+      </section>
+      ${nextStoryScene
+        ? `<button class="primary wide-action" data-action="journal-continue">Продолжить: ${nextStoryScene.title}</button>`
+        : '<div class="journal-complete-note">Все открытые сцены просмотрены.</div>'}
+      <div class="journal-group-list">${groupCards}</div>
+    `);
+
+    this.bind('back', () => this.showHome());
+    if (nextStoryScene) {
+      this.bind('journal-continue', () => this.showStory(nextStoryScene.afterLevelId, undefined, 'journal'));
+    }
+    this.screen.querySelectorAll<HTMLButtonElement>('[data-story-level]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const levelId = Number(button.dataset.storyLevel);
+        if (!Number.isInteger(levelId)) return;
+        this.showStory(levelId, undefined, 'journal');
+      });
+    });
   }
 
   private showManor(): void {
@@ -374,13 +486,17 @@ export class GameApp {
       <div class="chapter">Глава I · Возвращение</div>
       <h2>Комнаты Raven Manor</h2>
       <p class="subtitle">Ремонт комнат открывает новые группы уровней, механики и полезные бустеры.</p>
-      <button class="primary wide-action" data-action="levels">Перейти к уровням</button>
+      <div class="wide-action-grid">
+        <button class="primary" data-action="levels">Перейти к уровням</button>
+        <button class="secondary" data-action="journal">Открыть дневник</button>
+      </div>
       <div class="room-list">${cards}</div>
       <button class="ghost reset" data-action="reset">Сбросить прогресс</button>
     `);
 
     this.bind('back', () => this.showHome());
     this.bind('levels', () => this.showLevelMap());
+    this.bind('journal', () => this.showStoryJournal());
     this.bind('reset', () => {
       if (confirm('Сбросить весь прогресс?')) {
         this.progress.reset();
@@ -2027,7 +2143,11 @@ export class GameApp {
     }
   }
 
-  private showStory(levelId: number, nextLevelId?: number | null): void {
+  private showStory(
+    levelId: number,
+    nextLevelId?: number | null,
+    returnTarget: StoryReturnTarget = 'home',
+  ): void {
     const scene = getStorySceneForLevel(storyScenes, levelId);
     if (!scene) {
       this.showToast('Для этого уровня сюжетная сцена пока не подготовлена.', 'warning');
@@ -2035,19 +2155,20 @@ export class GameApp {
     }
 
     this.audio.play('story');
-    this.showStoryBeat(scene, 0, nextLevelId);
+    this.showStoryBeat(scene, 0, nextLevelId, returnTarget);
   }
 
   private showStoryBeat(
     scene: (typeof storyScenes)[number],
     beatIndex: number,
     nextLevelId?: number | null,
+    returnTarget: StoryReturnTarget = 'home',
   ): void {
     const beat = scene.beats[beatIndex];
     const presentation = getStoryScenePresentation(scene, beat);
     const isFinalBeat = beatIndex === scene.beats.length - 1;
     const continueLabel = isFinalBeat
-      ? getStoryContinueLabel(nextLevelId)
+      ? getStoryContinueLabel(nextLevelId, returnTarget)
       : 'Далее';
     const progressDots = scene.beats.map((_, index) => (
       `<span class="${index <= beatIndex ? 'active' : ''}"></span>`
@@ -2075,18 +2196,25 @@ export class GameApp {
 
     this.bindModal('continue', () => {
       if (!isFinalBeat) {
-        this.showStoryBeat(scene, beatIndex + 1, nextLevelId);
+        this.showStoryBeat(scene, beatIndex + 1, nextLevelId, returnTarget);
         return;
       }
 
+      const wasViewed = this.progress.isStoryViewed(scene.afterLevelId);
       this.progress.markStoryViewed(scene.afterLevelId);
-      this.analytics.recordStory(scene.afterLevelId);
-      const continuation = resolveStoryContinuation(nextLevelId);
+      if (wasViewed) {
+        this.analytics.recordAction('story_replayed', { levelId: scene.afterLevelId });
+      } else {
+        this.analytics.recordStory(scene.afterLevelId);
+      }
+      const continuation = resolveStoryContinuation(nextLevelId, returnTarget);
       this.closeModal();
       if (continuation.kind === 'level') {
         this.startLevel(continuation.levelId);
       } else if (continuation.kind === 'level-map') {
         this.showLevelMap();
+      } else if (continuation.kind === 'journal') {
+        this.showStoryJournal();
       } else {
         this.showHome();
       }

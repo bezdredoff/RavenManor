@@ -1,4 +1,4 @@
-export type ScreenMode = 'home' | 'manor' | 'levels' | 'room' | 'game' | 'settings';
+export type ScreenMode = 'home' | 'manor' | 'levels' | 'room' | 'game' | 'journal' | 'settings';
 
 export type ScreenScrollPolicy = 'locked' | 'contained';
 
@@ -15,6 +15,7 @@ const CONTAINED_SCROLL_SCREENS = new Set<ScreenMode>([
   'manor',
   'levels',
   'room',
+  'journal',
   'settings',
 ]);
 

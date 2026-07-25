@@ -2,6 +2,7 @@ import evelynPortrait from '../assets/story/portraits/evelyn.svg?url';
 import ravenPortrait from '../assets/story/portraits/raven.svg?url';
 import adrianPortrait from '../assets/story/portraits/adrian.svg?url';
 import silhouettePortrait from '../assets/story/portraits/silhouette.svg?url';
+import lucianPortrait from '../assets/story/portraits/lucian.svg?url';
 import gatesBackground from '../assets/story/backgrounds/gates.svg?url';
 import ravenWindowBackground from '../assets/story/backgrounds/raven-window.svg?url';
 import hallBackground from '../assets/story/backgrounds/hall.svg?url';
@@ -21,6 +22,7 @@ const portraitAssets: Record<StoryPortraitKey, string> = {
   raven: ravenPortrait,
   adrian: adrianPortrait,
   silhouette: silhouettePortrait,
+  lucian: lucianPortrait,
 };
 
 const backgroundAssets: Record<StoryBackgroundKey, string> = {
@@ -32,6 +34,12 @@ const backgroundAssets: Record<StoryBackgroundKey, string> = {
   crypt: cryptBackground,
   tower: towerBackground,
 };
+
+
+export const storyAssets = [
+  ...Object.values(portraitAssets),
+  ...Object.values(backgroundAssets),
+];
 
 export type StoryScenePresentation = {
   portraitAsset: string;

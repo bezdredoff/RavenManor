@@ -184,3 +184,19 @@ random-board attempt; collect repeated runs.
   phone sizes without the header overlaying content.
 - Confirm PWA update, offline launch, save export/import, audio, and analytics
   still work after the larger data bundle is deployed.
+
+## FEATURE-052 story journal
+
+- Complete levels 1 and 2 without reading their scenes; confirm both journal
+  entries show `Новое` and level 3 remains locked.
+- Read level 1 from the journal; confirm it becomes `Просмотрено` and returns to
+  the journal.
+- Replay level 1; confirm stars, boosters, repairs, and completed levels do not
+  change.
+- Confirm the Continue action selects the earliest unread unlocked scene.
+- Confirm each room group contains six entries and the total is 30.
+- Confirm locked entries hide their authored title and summary.
+- Confirm the journal scrolls inside the app on 320×568 and 430×932 without the
+  top bar overlapping entries.
+- Complete level 30 and confirm Lucian uses the revealed portrait only there.
+- Update the installed iPhone PWA and repeat the journal checks offline.

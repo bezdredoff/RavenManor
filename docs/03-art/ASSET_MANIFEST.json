@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "direction": "romantic-gothic-restoration",
   "statusValues": [
     "planned",
@@ -201,8 +201,8 @@
       "key": "ui/icons/story",
       "type": "icon",
       "priority": "P0",
-      "status": "planned",
-      "master": "24px SVG"
+      "status": "integrated",
+      "master": "128x128 story journal SVG prototype"
     },
     {
       "key": "ui/icons/hint",
@@ -497,6 +497,20 @@
       "priority": "P0",
       "status": "integrated",
       "master": "128x128 transparent SVG"
+    },
+    {
+      "key": "ui/story-journal",
+      "type": "icon",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "128x128 SVG prototype"
+    },
+    {
+      "key": "story/portraits/lucian",
+      "type": "character-portrait",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "300x420 transparent SVG prototype; revealed only after level 30"
     }
   ]
 }

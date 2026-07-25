@@ -5,14 +5,19 @@ import {
 } from '../src/ui/storyFlow';
 
 describe('story continuation', () => {
-  it('simply closes a story opened from Home', () => {
-    expect(resolveStoryContinuation()).toEqual({ kind: 'close' });
+  it('returns a story opened from Home back to Home', () => {
+    expect(resolveStoryContinuation()).toEqual({ kind: 'home' });
     expect(getStoryContinueLabel()).toBe('Продолжить');
   });
 
+  it('returns a replay opened from the journal back to the journal', () => {
+    expect(resolveStoryContinuation(undefined, 'journal')).toEqual({ kind: 'journal' });
+    expect(getStoryContinueLabel(undefined, 'journal')).toBe('Вернуться в дневник');
+  });
+
   it('starts the next level after a post-win scene', () => {
-    expect(resolveStoryContinuation(4)).toEqual({ kind: 'level', levelId: 4 });
-    expect(getStoryContinueLabel(4)).toBe('Следующий уровень');
+    expect(resolveStoryContinuation(4, 'journal')).toEqual({ kind: 'level', levelId: 4 });
+    expect(getStoryContinueLabel(4, 'journal')).toBe('Следующий уровень');
   });
 
   it('returns to the level map after the final available level', () => {
