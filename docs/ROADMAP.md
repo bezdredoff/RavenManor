@@ -240,3 +240,22 @@ Completed FEATURE-051: 30-level first chapter. Next planned: FEATURE-052 story j
 - removed the secondary key collection objective;
 - increased the candle target from 18 to 22 to retain normal difficulty;
 - no save migration or runtime-system changes.
+
+## FEATURE-052B / 052C — story delivery corrections
+
+- StackBlitz-safe archive layout with no outer wrapper;
+- FEATURE-052A level-8 balance correction included;
+- two short dialogue beats expanded to satisfy the story presentation gate.
+
+## FEATURE-053 — localization and global settings navigation
+
+_Status: implemented, pending project/device verification._
+
+- Journal replaces the duplicate Home story action;
+- unread story badge and reduced-motion-safe attention animation;
+- audio-first Settings information architecture;
+- runtime Russian, English, and Belarusian localization for UI and all chapter
+  content;
+- persistent language choice outside the gameplay save;
+- settings gear beside the star wallet on every primary screen;
+- caller-aware Back navigation that preserves an active Match-3 session.
