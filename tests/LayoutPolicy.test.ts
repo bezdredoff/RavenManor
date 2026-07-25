@@ -16,6 +16,7 @@ describe('mobile layout policy', () => {
     expect(getScreenScrollPolicy('manor')).toBe('contained');
     expect(getScreenScrollPolicy('levels')).toBe('contained');
     expect(getScreenScrollPolicy('room')).toBe('contained');
+    expect(getScreenScrollPolicy('journal')).toBe('contained');
     expect(getScreenScrollPolicy('settings')).toBe('contained');
   });
 
@@ -28,5 +29,6 @@ describe('mobile layout policy', () => {
   it('produces stable CSS classes for the screen shell', () => {
     expect(getScreenClassName('game')).toBe('screen screen-game scroll-locked');
     expect(getScreenClassName('levels')).toBe('screen screen-levels scroll-contained');
+    expect(getScreenClassName('journal')).toBe('screen screen-journal scroll-contained');
   });
 });

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Дневник истории</title>
+  <defs>
+    <linearGradient id="cover" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#6e233e"/>
+      <stop offset="1" stop-color="#241322"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#f0d58e"/>
+      <stop offset="1" stop-color="#9f7135"/>
+    </linearGradient>
+  </defs>
+  <path d="M27 16h70a9 9 0 0 1 9 9v85H35a13 13 0 0 1-13-13V21a5 5 0 0 1 5-5Z" fill="url(#cover)" stroke="url(#gold)" stroke-width="4"/>
+  <path d="M35 16v94" stroke="#d6b56d" stroke-width="4" opacity=".65"/>
+  <path d="M46 29h45M46 99h45" stroke="#d6b56d" stroke-width="2" opacity=".44"/>
+  <circle cx="71" cy="64" r="24" fill="#15101b" stroke="url(#gold)" stroke-width="3"/>
+  <path d="M51 71c12-3 15-15 21-25 2 11 9 14 22 9-4 7-10 10-18 11 6 4 13 4 21 2-6 10-16 15-28 13-7-1-13-4-18-10Z" fill="#09070d" stroke="#a7a7bc" stroke-width="2"/>
+  <circle cx="83" cy="53" r="2" fill="#f0d58e"/>
+  <path d="M101 26v72l-8-7-8 7V26Z" fill="#b74f6b" stroke="#d6b56d" stroke-width="2"/>
+</svg>

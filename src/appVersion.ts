@@ -1,2 +1,2 @@
-export const APP_VERSION = '0.7.1-playtest.052a';
-export const BUILD_LABEL = 'FEATURE-052A';
+export const APP_VERSION = '0.7.3-playtest.052c';
+export const BUILD_LABEL = 'FEATURE-052C';

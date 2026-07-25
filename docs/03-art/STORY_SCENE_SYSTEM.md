@@ -1,55 +1,34 @@
 # Story Scene System
 
-## FEATURE-051 interim contract
+## FEATURE-052 contract
 
-The current ten authored scenes are retained as milestone scenes across the
-30-level chapter:
+The first chapter contains 30 authored scenes: one after every level.
 
-```text
-1, 3, 6, 9, 12, 15, 21, 24, 27, 30
-```
+- ten major scenes use at least five dialogue beats;
+- twenty interludes use at least three dialogue beats;
+- all scenes use semantic portrait and backdrop keys;
+- room restoration artwork is reused as Library, Garden, and Crypt backdrops;
+- locked journal entries do not expose scene titles or summaries.
 
-Levels without an authored scene do not show a non-functional story button on
-the victory screen. FEATURE-052 will add twenty additional events and the
-replayable journal, producing one event per level.
+## Portraits
 
-## Data model
+Integrated prototype portraits:
 
-`storyScenes.ts` stores:
+- Evelyn;
+- Adrian;
+- Raven;
+- unknown/Lucian silhouette;
+- revealed Lucian.
 
-- the level that unlocks the scene;
-- chapter and scene title;
-- semantic background key;
-- ordered dialogue beats;
-- speaker, text, portrait key, and portrait side per beat.
+The revealed Lucian asset is intentionally restricted to the level-30 scene.
 
-`storyPresentation.ts` resolves semantic keys to local SVG assets. Existing room
-art may be reused as story backdrops.
+## Journal art
 
-## Progression
+`story-journal.svg` is the reusable archive icon. It combines the book, raven,
+and Blackwood wine/gold visual language without adding final emoji assets.
 
-`ProgressState.viewedStoryScenes` records viewed scenes by milestone level ID.
+## Production replacement
 
-- replaying a milestone may replay its scene;
-- Home offers the earliest completed but unviewed milestone;
-- story progression never wraps to an already viewed scene;
-- levels without scenes continue normally to the next level or level map.
-
-## Continuation context
-
-A scene opened from Home returns Home after its final beat. A scene opened from
-a victory retains the calculated next-level destination. Intermediate beats use
-`Далее`; only the final beat marks the scene viewed and navigates.
-
-## Current narrative milestones
-
-1. The unsigned letter opens the manor gates.
-2. Evelyn meets reflectionless Lord Adrian.
-3. A damaged portrait reveals an erased childhood.
-4. Her mother's diary exposes the Night Circle contract.
-5. Evelyn finds the order she wrote to erase her memory.
-6. Moon roses return the name Lucian.
-7. Evelyn finds her own empty sarcophagus.
-8. Adrian confesses his role as guardian.
-9. Lucian recounts the stolen night in the tower.
-10. The tower opens and a deeper part of the contract awakens.
+Final art may replace any semantic asset without editing scene data. Keep the
+same `StoryPortraitKey` and `StoryBackgroundKey` values, or add a resolver entry
+before authoring a new key.

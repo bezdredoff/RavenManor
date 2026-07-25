@@ -12,6 +12,7 @@ export type AudioCue =
   | 'restore'
   | 'unlock'
   | 'story'
+  | 'journalOpen'
   | 'specialCreate'
   | 'rocket'
   | 'bomb'
@@ -46,6 +47,7 @@ const CUES: Readonly<Record<AudioCue, CueDefinition>> = {
   restore: { frequencies: [330, 440, 554, 660], durationMs: 650, gain: 0.1, wave: 'triangle' },
   unlock: { frequencies: [392, 494, 659, 784], durationMs: 800, gain: 0.11, wave: 'sine' },
   story: { frequencies: [262, 392], durationMs: 300, gain: 0.06, wave: 'sine' },
+  journalOpen: { frequencies: [220, 330, 494], durationMs: 420, gain: 0.07, wave: 'triangle' },
   specialCreate: { frequencies: [523, 659, 784], durationMs: 320, gain: 0.1, wave: 'sine' },
   rocket: { frequencies: [240, 480, 960], durationMs: 360, gain: 0.1, wave: 'sawtooth' },
   bomb: { frequencies: [147, 98, 73], durationMs: 460, gain: 0.12, wave: 'triangle' },
