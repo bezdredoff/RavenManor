@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "direction": "romantic-gothic-restoration",
   "statusValues": [
     "planned",
@@ -258,28 +258,63 @@
       "type": "room-stage",
       "priority": "P0",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1344 layered PNG composite; derived from the hall layer kit"
     },
     {
       "key": "rooms/hall/stage-1-cleared",
       "type": "room-stage",
       "priority": "P0",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1344 layered PNG composite; derived from the hall layer kit"
     },
     {
       "key": "rooms/hall/stage-2-lit",
       "type": "room-stage",
       "priority": "P0",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1344 layered PNG composite; derived from the hall layer kit"
     },
     {
       "key": "rooms/hall/stage-3-restored",
       "type": "room-stage",
       "priority": "P0",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1344 layered PNG composite; derived from the hall layer kit"
+    },
+    {
+      "key": "rooms/hall/layered/base",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1344 PNG; cold architectural base for the vestibule"
+    },
+    {
+      "key": "rooms/hall/layered/task1-debris",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1344 transparent PNG overlay; debris and cobweb clutter"
+    },
+    {
+      "key": "rooms/hall/layered/task2-chandelier-on",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1344 transparent PNG overlay; chandelier and candlelight"
+    },
+    {
+      "key": "rooms/hall/layered/task3-decor-on",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1344 transparent PNG overlay; restored portraits and decor"
+    },
+    {
+      "key": "rooms/hall/layered/ambient-restored-glow",
+      "type": "room-layer",
+      "priority": "P1",
+      "status": "integrated",
+      "master": "768x1344 transparent PNG overlay; final warm restoration glow"
     },
     {
       "key": "rooms/library/stage-0-sealed",

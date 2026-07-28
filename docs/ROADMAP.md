@@ -259,3 +259,13 @@ _Status: implemented, pending project/device verification._
 - persistent language choice outside the gameplay save;
 - settings gear beside the star wallet on every primary screen;
 - caller-aware Back navigation that preserves an active Match-3 session.
+
+## FEATURE-054 — layered vestibule art integration
+
+_Status: implemented, pending project/device verification._
+
+- replace the Hall stage SVG prototypes with foyer-based layered PNG art;
+- add a reusable `roomLayeredPresentation` path for multi-layer room kits;
+- render layered hall art on Manor cards and the room-detail hero;
+- preserve flat composite stage assets for restoration reveal transitions;
+- establish the production template for layered Library/Garden/Crypt/Tower work.
