@@ -73,6 +73,7 @@ import { getSpecialPresentation, specialAssets } from './specialPresentation';
 import { getObstaclePresentation, obstacleAssets } from './obstaclePresentation';
 import { getBoosterPresentation, boosterAssets } from './boosterPresentation';
 import { getRoomSceneAsset } from './roomPresentation';
+import { getLayeredRoomSceneMarkup, isLayeredRoom, layeredRoomAssets } from './roomLayeredPresentation';
 import { getStoryScenePresentation, storyAssets } from './storyPresentation';
 import { getRestorationBlockedMessage } from './restorationFeedback';
 import {
@@ -143,7 +144,7 @@ export class GameApp {
     this.errors = errors;
     this.audio.arm();
     void this.pwa.register();
-    preloadImageAssets([ravenMark, storyJournalIcon, settingsGearIcon, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets, ...boosterAssets, ...storyAssets]);
+    preloadImageAssets([ravenMark, storyJournalIcon, settingsGearIcon, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets, ...boosterAssets, ...storyAssets, ...layeredRoomAssets]);
     this.renderShell();
     this.syncViewportProfile();
     window.addEventListener('resize', () => this.syncViewportProfile());
@@ -479,6 +480,21 @@ export class GameApp {
     });
   }
 
+
+  private renderRoomCardArt(roomId: string, sceneAsset: string, completedTaskCount: number): string {
+    if (isLayeredRoom(roomId)) {
+      return getLayeredRoomSceneMarkup(roomId, completedTaskCount, 'card');
+    }
+    return `<img src="${sceneAsset}" alt="" draggable="false" />`;
+  }
+
+  private renderRoomSceneArt(roomId: string, sceneAsset: string, completedTaskCount: number): string {
+    if (isLayeredRoom(roomId)) {
+      return getLayeredRoomSceneMarkup(roomId, completedTaskCount, 'detail');
+    }
+    return `<img class="room-visual-image" src="${sceneAsset}" alt="" draggable="false" />`;
+  }
+
   private showManor(): void {
     const cards = rooms.map((room) => {
       const unlockState = getRoomUnlockState(
@@ -509,7 +525,7 @@ export class GameApp {
           aria-label="${locked ? `${room.title}. ${lockedLabel}` : `Открыть комнату ${room.title}`}"
         >
           <div class="room-card-art" aria-hidden="true">
-            <img src="${sceneAsset}" alt="" draggable="false" />
+            ${this.renderRoomCardArt(room.id, sceneAsset, visualState.completedTaskCount)}
             <div class="room-card-art-shade"></div>
             ${locked ? '<div class="room-card-lock"><span></span></div>' : ''}
             <div class="room-stage-badge">${visualState.completedTaskCount}/${visualState.totalTaskCount}</div>
@@ -738,7 +754,7 @@ export class GameApp {
         aria-label="${roomTitle}: ${state.stage.title}"
       >
         <div class="room-visual-scene">
-          <img class="room-visual-image" src="${sceneAsset}" alt="" draggable="false" />
+          ${this.renderRoomSceneArt(roomId, sceneAsset, state.completedTaskCount)}
           <div class="room-visual-vignette" aria-hidden="true"></div>
           ${reveal ? `
             <div class="room-restoration-reveal" data-restoration-reveal role="status" aria-live="polite">

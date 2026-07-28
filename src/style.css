@@ -993,13 +993,52 @@ body {
   object-fit: cover;
   transform: scale(1.01);
 }
+.layered-room-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: #09070d;
+}
+.layered-room-scene--card { transform: scale(1.01); }
+.layered-room-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transform: translateZ(0);
+  transition: opacity var(--motion-slow), transform var(--motion-slow), filter var(--motion-slow);
+}
+.layered-room-layer--glow {
+  mix-blend-mode: screen;
+  opacity: .92;
+}
+.layered-room-layer--debris {
+  opacity: .92;
+}
+.layered-room-scene.stage-0 .layered-room-layer--base {
+  filter: saturate(.92) brightness(.94);
+}
+.layered-room-scene.stage-2 .layered-room-layer--chandelier,
+.layered-room-scene.stage-3 .layered-room-layer--chandelier {
+  animation: roomLightBloom 780ms ease-out both;
+}
+.layered-room-scene.stage-3 .layered-room-layer--decor {
+  animation: roomLayerReveal 820ms ease-out both;
+}
+.layered-room-scene.stage-3 .layered-room-layer--glow {
+  animation: roomGlowReveal 900ms ease-out both;
+}
 .room-card-art-shade {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, transparent 48%, rgba(8,6,11,.92) 100%);
   pointer-events: none;
 }
-.room-card--visual.locked .room-card-art img {
+.room-card--visual.locked .room-card-art img,
+.room-card--visual.locked .room-card-art .layered-room-scene {
   filter: grayscale(.72) brightness(.48) contrast(.92);
 }
 .room-card--visual.locked .room-card-art-shade {
@@ -1093,6 +1132,10 @@ body {
   height: 100%;
   display: block;
   object-fit: cover;
+}
+.room-visual-scene > .layered-room-scene {
+  position: absolute;
+  inset: 0;
 }
 .room-visual-vignette {
   position: absolute;
@@ -2664,4 +2707,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .journal-home-button--new { animation: none; }
   .settings-gear-button:active img { transform: none; }
+}
+
+
+@keyframes roomLayerReveal {
+  0% { opacity: 0; transform: scale(1.01); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes roomGlowReveal {
+  0% { opacity: 0; filter: blur(18px); }
+  100% { opacity: .92; filter: blur(0); }
+}
+
+@keyframes roomLightBloom {
+  0% { opacity: 0; filter: blur(12px) brightness(1.3); }
+  100% { opacity: 1; filter: blur(0) brightness(1); }
 }
