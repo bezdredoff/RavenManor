@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "direction": "romantic-gothic-restoration",
   "statusValues": [
     "planned",
@@ -321,28 +321,63 @@
       "type": "room-stage",
       "priority": "P1",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the library layer kit"
     },
     {
       "key": "rooms/library/stage-1-moonlit",
       "type": "room-stage",
       "priority": "P1",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the library layer kit"
     },
     {
       "key": "rooms/library/stage-2-shelves",
       "type": "room-stage",
       "priority": "P1",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the library layer kit"
     },
     {
       "key": "rooms/library/stage-3-desk",
       "type": "room-stage",
       "priority": "P1",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the library layer kit"
+    },
+    {
+      "key": "rooms/library/layered/base",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 PNG; sealed and dark library architectural base"
+    },
+    {
+      "key": "rooms/library/layered/task1-shutters-open",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; opened shutters and moonlight"
+    },
+    {
+      "key": "rooms/library/layered/task2-shelves-restored",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; repaired and restocked shelves"
+    },
+    {
+      "key": "rooms/library/layered/task3-desk-open",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; restored writing desk and study corner"
+    },
+    {
+      "key": "rooms/library/layered/ambient-restored-glow",
+      "type": "room-layer",
+      "priority": "P1",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; final warm/cool library ambience"
     },
     {
       "key": "rooms/garden/stage-0-overgrown",
