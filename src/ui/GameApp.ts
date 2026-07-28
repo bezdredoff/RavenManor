@@ -61,6 +61,7 @@ import { ObjectiveTracker } from '../objectives/ObjectiveTracker';
 import { getObstacleLabel, type ObstacleKind } from '../engine/ObstacleTypes';
 import { getScreenClassName, type ScreenMode } from './layoutPolicy';
 import { resolveSettingsCallerMode } from './settingsNavigation';
+import { getLevelMapFocusGroupId } from './levelMapFocus';
 import { getViewportProfile } from './responsivePolicy';
 import {
   createParticleIndexes,
@@ -582,7 +583,25 @@ export class GameApp {
     });
   }
 
-  private showLevelMap(): void {
+  private getLevelMapFocusTarget(): string | null {
+    const states = levelGroups.map((group) => {
+      const state = getLevelGroupState(
+        group,
+        levelGroups,
+        this.progress.state.completed,
+        this.progress.state.completedRestorationTasks,
+      );
+      return {
+        id: group.id,
+        unlocked: state.unlocked,
+        completedCount: state.completedCount,
+        totalCount: state.totalCount,
+      };
+    });
+    return getLevelMapFocusGroupId(states);
+  }
+
+  private showLevelMap(focusGroupId: string | null = null): void {
     const groupCards = levelGroups.map((group) => {
       const state = getLevelGroupState(
         group,
@@ -604,7 +623,7 @@ export class GameApp {
       }).join('');
 
       return `
-        <section class="level-group ${state.unlocked ? '' : 'locked'}">
+        <section class="level-group ${state.unlocked ? '' : 'locked'}" data-level-group-id="${group.id}" tabindex="-1">
           <div class="level-group-heading">
             <div>
               <div class="chapter">${state.unlocked ? 'Доступно' : 'Закрыто ремонтом'}</div>
@@ -627,6 +646,16 @@ export class GameApp {
       <button class="secondary wide-action" data-action="manor">Открыть поместье</button>
       <div class="level-group-list">${groupCards}</div>
     `);
+
+    if (focusGroupId) {
+      window.requestAnimationFrame(() => {
+        const target = this.screen.querySelector<HTMLElement>(
+          `[data-level-group-id="${focusGroupId}"]`,
+        );
+        target?.scrollIntoView({ block: 'start', inline: 'nearest' });
+        target?.focus({ preventScroll: true });
+      });
+    }
 
     this.bind('back', () => this.showHome());
     this.bind('manor', () => this.showManor());
@@ -709,7 +738,7 @@ export class GameApp {
     `);
 
     this.bind('back', () => this.showManor());
-    this.bind('levels', () => this.showLevelMap());
+    this.bind('levels', () => this.showLevelMap(this.getLevelMapFocusTarget()));
     this.screen.querySelectorAll<HTMLButtonElement>('[data-restoration-task]').forEach((button) => {
       button.addEventListener('click', () => {
         if (button.dataset.actionPending === 'true') return;
