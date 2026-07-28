@@ -269,3 +269,13 @@ _Status: implemented, pending project/device verification._
 - render layered hall art on Manor cards and the room-detail hero;
 - preserve flat composite stage assets for restoration reveal transitions;
 - establish the production template for layered Library/Garden/Crypt/Tower work.
+
+## FEATURE-055 — layered Library art integration
+
+_Status: implemented, pending project/device verification._
+
+- convert the Library to the reusable layered-room pipeline;
+- map shutters, shelves and writing desk restoration tasks to visible overlays;
+- preserve stable Library stage keys and flat reveal composites;
+- keep Hall layered and later rooms unchanged;
+- establish two-room evidence before producing Garden, Crypt and Tower kits.
