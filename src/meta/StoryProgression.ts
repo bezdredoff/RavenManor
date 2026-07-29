@@ -41,6 +41,17 @@ export function getNextUnviewedStoryScene(
     .find((scene) => getStorySceneStatus(scene, completedLevels, viewedScenes) === 'new') ?? null;
 }
 
+export function getLatestUnlockedStoryScene(
+  scenes: readonly StorySceneDefinition[],
+  completedLevels: Readonly<Record<number, boolean>>,
+): StorySceneDefinition | null {
+  return scenes.reduce<StorySceneDefinition | null>((latest, scene) => {
+    if (!completedLevels[scene.afterLevelId]) return latest;
+    if (!latest || scene.afterLevelId > latest.afterLevelId) return scene;
+    return latest;
+  }, null);
+}
+
 export function getStoryJournalGroups(
   scenes: readonly StorySceneDefinition[],
   roomDefinitions: readonly RoomDefinition[],

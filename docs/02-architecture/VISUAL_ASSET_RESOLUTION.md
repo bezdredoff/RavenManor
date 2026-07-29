@@ -8,8 +8,11 @@ a descriptive error instead of silently displaying the wrong room.
 
 ## Story assets
 
-Story definitions use typed portrait and background keys. The presentation
-resolver returns the two concrete assets used by the visual-novel component.
+Story definitions use typed portrait and fallback background keys. For the
+five Chapter-One rooms, the presentation resolver derives the current room
+visual state and resolves its flat stage PNG through `roomPresentation.ts`.
+The authored background key is used only when a scene has no registered room
+visual definition.
 
 ## Extension rules
 

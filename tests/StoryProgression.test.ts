@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { rooms } from '../src/data/gameData';
 import { storyScenes } from '../src/data/storyScenes';
 import {
+  getLatestUnlockedStoryScene,
   getNextUnviewedStoryScene,
   getStoryJournalGroups,
   getStoryJournalProgress,
@@ -50,5 +51,12 @@ describe('story progression and journal', () => {
       total: 30,
       newCount: 2,
     });
+  });
+
+  it('selects the newest unlocked scene as the journal background context', () => {
+    expect(getLatestUnlockedStoryScene(storyScenes, {})).toBeNull();
+    expect(getLatestUnlockedStoryScene(storyScenes, { 1: true, 2: true })?.afterLevelId).toBe(2);
+    expect(getLatestUnlockedStoryScene(storyScenes, { 1: true, 7: true, 12: true })?.roomId)
+      .toBe('library');
   });
 });

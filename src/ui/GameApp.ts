@@ -44,6 +44,7 @@ import {
 } from '../meta/RoomRestoration';
 import { getRoomUnlockState } from '../meta/RoomProgression';
 import {
+  getLatestUnlockedStoryScene,
   getNextUnviewedStoryScene,
   getStoryJournalGroups,
   getStoryJournalProgress,
@@ -76,7 +77,11 @@ import { getObstaclePresentation, obstacleAssets } from './obstaclePresentation'
 import { getBoosterPresentation, boosterAssets } from './boosterPresentation';
 import { getRoomSceneAsset } from './roomPresentation';
 import { getLayeredRoomSceneMarkup, isLayeredRoom, layeredRoomAssets } from './roomLayeredPresentation';
-import { getStoryScenePresentation, storyAssets } from './storyPresentation';
+import {
+  getStoryBackgroundAsset,
+  getStoryScenePresentation,
+  storyAssets,
+} from './storyPresentation';
 import { getRestorationBlockedMessage } from './restorationFeedback';
 import {
   getStoryContinueLabel,
@@ -187,12 +192,16 @@ export class GameApp {
     return this.root.querySelector('#toast') as HTMLElement;
   }
 
-  private renderScreen(mode: ScreenMode, content: string): void {
+  private renderScreen(mode: ScreenMode, content: string, backgroundAsset?: string): void {
     const isNavigation = this.currentScreenMode !== mode;
     if (isNavigation) this.starWalletExpanded = false;
     this.currentScreenMode = mode;
     if (isNavigation) this.analytics.recordScreen(mode);
     this.screen.className = `${getScreenClassName(mode)}${isNavigation ? ' screen-enter' : ''}`;
+    this.screen.style.removeProperty('--screen-context-background');
+    if (backgroundAsset) {
+      this.screen.style.setProperty('--screen-context-background', `url("${backgroundAsset}")`);
+    }
     this.screen.innerHTML = content;
     this.bindImageStates(this.screen);
     this.localization.translateElement(this.screen);
@@ -404,6 +413,14 @@ export class GameApp {
       this.progress.state.completed,
       this.progress.state.viewedStoryScenes,
     );
+    const journalBackgroundScene = getLatestUnlockedStoryScene(
+      storyScenes,
+      this.progress.state.completed,
+    ) ?? storyScenes[0];
+    const journalBackgroundAsset = getStoryBackgroundAsset(
+      journalBackgroundScene,
+      this.progress.state.completedRestorationTasks,
+    );
 
     const groupCards = groups.map((group) => {
       const entries = group.entries.map((entry) => {
@@ -467,7 +484,7 @@ export class GameApp {
         ? `<button class="primary wide-action" data-action="journal-continue">Продолжить: ${nextStoryScene.title}</button>`
         : '<div class="journal-complete-note">Все открытые сцены просмотрены.</div>'}
       <div class="journal-group-list">${groupCards}</div>
-    `);
+    `, journalBackgroundAsset);
 
     this.bind('back', () => this.showHome());
     if (nextStoryScene) {
@@ -2287,7 +2304,11 @@ export class GameApp {
     returnTarget: StoryReturnTarget = 'home',
   ): void {
     const beat = scene.beats[beatIndex];
-    const presentation = getStoryScenePresentation(scene, beat);
+    const presentation = getStoryScenePresentation(
+      scene,
+      beat,
+      this.progress.state.completedRestorationTasks,
+    );
     const isFinalBeat = beatIndex === scene.beats.length - 1;
     const continueLabel = isFinalBeat
       ? getStoryContinueLabel(nextLevelId, returnTarget)
@@ -2299,7 +2320,13 @@ export class GameApp {
     this.openModal(`
       <article class="story-scene story-scene--${beat.portraitSide}" aria-label="Сюжетная сцена: ${beat.speaker}">
         <div class="story-scene-art">
-          <img class="story-background" src="${presentation.backgroundAsset}" alt="" draggable="false" />
+          <img
+            class="story-background story-background--room"
+            src="${presentation.backgroundAsset}"
+            style="object-position: ${presentation.backgroundPosition}"
+            alt=""
+            draggable="false"
+          />
           <div class="story-atmosphere" aria-hidden="true"></div>
           <img class="story-portrait" src="${presentation.portraitAsset}" alt="" draggable="false" />
           <div class="story-scene-heading">

@@ -38,3 +38,10 @@ Replay does not change stars, levels, restoration, boosters, or story unlocks.
 
 First completion uses the existing `story_viewed` event. Replays record
 `story_replayed` and do not duplicate first-view progress.
+
+## Contextual room backgrounds
+
+Story scenes resolve the current flat room-stage PNG from `scene.roomId` and
+saved restoration progress. The authored `backgroundKey` remains a fallback for
+future scenes outside Chapter-One rooms. The journal uses the newest unlocked
+story scene as its room context and falls back to Hall stage 0 on a fresh save.
