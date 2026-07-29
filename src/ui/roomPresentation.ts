@@ -6,18 +6,18 @@ import libraryStage0 from '../assets/rooms/library/stage-0.png?url';
 import libraryStage1 from '../assets/rooms/library/stage-1.png?url';
 import libraryStage2 from '../assets/rooms/library/stage-2.png?url';
 import libraryStage3 from '../assets/rooms/library/stage-3.png?url';
-import gardenStage0 from '../assets/rooms/garden/stage-0.svg?url';
-import gardenStage1 from '../assets/rooms/garden/stage-1.svg?url';
-import gardenStage2 from '../assets/rooms/garden/stage-2.svg?url';
-import gardenStage3 from '../assets/rooms/garden/stage-3.svg?url';
-import cryptStage0 from '../assets/rooms/crypt/stage-0.svg?url';
-import cryptStage1 from '../assets/rooms/crypt/stage-1.svg?url';
-import cryptStage2 from '../assets/rooms/crypt/stage-2.svg?url';
-import cryptStage3 from '../assets/rooms/crypt/stage-3.svg?url';
-import towerStage0 from '../assets/rooms/tower/stage-0.svg?url';
-import towerStage1 from '../assets/rooms/tower/stage-1.svg?url';
-import towerStage2 from '../assets/rooms/tower/stage-2.svg?url';
-import towerStage3 from '../assets/rooms/tower/stage-3.svg?url';
+import gardenStage0 from '../assets/rooms/garden/stage-0.png?url';
+import gardenStage1 from '../assets/rooms/garden/stage-1.png?url';
+import gardenStage2 from '../assets/rooms/garden/stage-2.png?url';
+import gardenStage3 from '../assets/rooms/garden/stage-3.png?url';
+import cryptStage0 from '../assets/rooms/crypt/stage-0.png?url';
+import cryptStage1 from '../assets/rooms/crypt/stage-1.png?url';
+import cryptStage2 from '../assets/rooms/crypt/stage-2.png?url';
+import cryptStage3 from '../assets/rooms/crypt/stage-3.png?url';
+import towerStage0 from '../assets/rooms/tower/stage-0.png?url';
+import towerStage1 from '../assets/rooms/tower/stage-1.png?url';
+import towerStage2 from '../assets/rooms/tower/stage-2.png?url';
+import towerStage3 from '../assets/rooms/tower/stage-3.png?url';
 
 export const roomSceneAssets = {
   'rooms/hall/stage-0-ruined': hallStage0,
