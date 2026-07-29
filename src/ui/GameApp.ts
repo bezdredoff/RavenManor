@@ -1,6 +1,7 @@
 import ravenMark from '../assets/ui/raven-mark.svg?url';
 import storyJournalIcon from '../assets/ui/story-journal.svg?url';
 import settingsGearIcon from '../assets/ui/settings-gear.svg?url';
+import roomLockIcon from '../assets/ui/room-lock.svg?url';
 import { APP_VERSION, BUILD_LABEL } from '../appVersion';
 import { PlaytestAnalytics } from '../analytics/PlaytestAnalytics';
 import { formatBoosterReward, type BoosterKind } from '../boosters/BoosterTypes';
@@ -145,7 +146,7 @@ export class GameApp {
     this.errors = errors;
     this.audio.arm();
     void this.pwa.register();
-    preloadImageAssets([ravenMark, storyJournalIcon, settingsGearIcon, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets, ...boosterAssets, ...storyAssets, ...layeredRoomAssets]);
+    preloadImageAssets([ravenMark, storyJournalIcon, settingsGearIcon, roomLockIcon, ...tileTypes.map((tile) => tile.assetPath), ...specialAssets, ...obstacleAssets, ...boosterAssets, ...storyAssets, ...layeredRoomAssets]);
     this.renderShell();
     this.syncViewportProfile();
     window.addEventListener('resize', () => this.syncViewportProfile());
@@ -528,7 +529,7 @@ export class GameApp {
           <div class="room-card-art" aria-hidden="true">
             ${this.renderRoomCardArt(room.id, sceneAsset, visualState.completedTaskCount)}
             <div class="room-card-art-shade"></div>
-            ${locked ? '<div class="room-card-lock"><span></span></div>' : ''}
+            ${locked ? `<div class="room-card-lock"><img class="room-card-lock-icon" src="${roomLockIcon}" alt="" draggable="false" /></div>` : ''}
             <div class="room-stage-badge">${visualState.completedTaskCount}/${visualState.totalTaskCount}</div>
           </div>
           <div class="room-card-copy">

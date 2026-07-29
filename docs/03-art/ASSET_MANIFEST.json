@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 10,
   "direction": "romantic-gothic-restoration",
   "statusValues": [
     "planned",
@@ -222,8 +222,8 @@
       "key": "ui/icons/lock",
       "type": "icon",
       "priority": "P0",
-      "status": "planned",
-      "master": "24px SVG"
+      "status": "integrated",
+      "master": "64x64 scalable SVG; complete closed padlock for locked room cards"
     },
     {
       "key": "ui/icons/star",
@@ -384,84 +384,189 @@
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the garden layer kit"
     },
     {
       "key": "rooms/garden/stage-1-cleared",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the garden layer kit"
     },
     {
       "key": "rooms/garden/stage-2-fountain",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the garden layer kit"
     },
     {
       "key": "rooms/garden/stage-3-roses",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the garden layer kit"
+    },
+    {
+      "key": "rooms/garden/layered/base",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 PNG; cold conservatory architectural base"
+    },
+    {
+      "key": "rooms/garden/layered/task1-vines-overgrown",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; overgrown vines and plants removed by the first task"
+    },
+    {
+      "key": "rooms/garden/layered/task2-fountain-on",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; restored fountain and water-light pass"
+    },
+    {
+      "key": "rooms/garden/layered/task3-roses-bloom",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; revived rose beds and floral colour pass"
+    },
+    {
+      "key": "rooms/garden/layered/ambient-restored-glow",
+      "type": "room-layer",
+      "priority": "P1",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; final moonlit and warm garden ambience"
     },
     {
       "key": "rooms/crypt/stage-0-buried",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the crypt layer kit"
     },
     {
       "key": "rooms/crypt/stage-1-stairs",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the crypt layer kit"
     },
     {
       "key": "rooms/crypt/stage-2-seals",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the crypt layer kit"
     },
     {
       "key": "rooms/crypt/stage-3-braziers",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the crypt layer kit"
+    },
+    {
+      "key": "rooms/crypt/layered/base",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 PNG; cold memorial chamber architectural base"
+    },
+    {
+      "key": "rooms/crypt/layered/task1-stair-rubble",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; stone rubble blocking the crypt passage"
+    },
+    {
+      "key": "rooms/crypt/layered/task2-seals-restored",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; restored family seals and memorial details"
+    },
+    {
+      "key": "rooms/crypt/layered/task3-braziers-on",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; lit braziers, candles, and warm memorial light"
+    },
+    {
+      "key": "rooms/crypt/layered/ambient-restored-glow",
+      "type": "room-layer",
+      "priority": "P1",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; final dignified crypt ambience"
     },
     {
       "key": "rooms/tower/stage-0-broken",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the tower layer kit"
     },
     {
       "key": "rooms/tower/stage-1-steps",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the tower layer kit"
     },
     {
       "key": "rooms/tower/stage-2-observatory",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the tower layer kit"
     },
     {
       "key": "rooms/tower/stage-3-clock",
       "type": "room-stage",
       "priority": "P2",
       "status": "integrated",
-      "master": "480x270 SVG prototype; replaceable production art"
+      "master": "768x1365 layered PNG composite; derived from the tower layer kit"
+    },
+    {
+      "key": "rooms/tower/layered/base",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 PNG; cold Raven Tower architectural base"
+    },
+    {
+      "key": "rooms/tower/layered/task1-broken-steps",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; broken stair and debris obstruction removed by the first task"
+    },
+    {
+      "key": "rooms/tower/layered/task2-observatory-open",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; opened observatory, telescope, and night-sky pass"
+    },
+    {
+      "key": "rooms/tower/layered/task3-raven-clock-on",
+      "type": "room-layer",
+      "priority": "P0",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; restored celestial clockwork and study details"
+    },
+    {
+      "key": "rooms/tower/layered/ambient-restored-glow",
+      "type": "room-layer",
+      "priority": "P1",
+      "status": "integrated",
+      "master": "768x1365 transparent PNG overlay; final starry and antique-gold tower ambience"
     },
     {
       "key": "characters/evelyn/neutral",

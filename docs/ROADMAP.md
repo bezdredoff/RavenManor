@@ -279,3 +279,22 @@ _Status: implemented, pending project/device verification._
 - preserve stable Library stage keys and flat reveal composites;
 - keep Hall layered and later rooms unchanged;
 - establish two-room evidence before producing Garden, Crypt and Tower kits.
+
+## FEATURE-056 — complete layered room art for Chapter One
+
+_Status: implemented, pending project/device verification._
+
+- add layered Winter Garden, Family Crypt, and Raven Tower art kits;
+- replace the remaining twelve prototype SVG room stages with PNG composites;
+- enable layered rendering for all five Chapter-One rooms;
+- preserve existing room keys, progress saves, and restoration reveal flow;
+- establish one reusable room-art contract for future chapters.
+
+## FEATURE-056A — locked-room icon hotfix
+
+_Status: implemented, pending project/device verification._
+
+- replace the two-piece CSS padlock with one authored SVG icon;
+- keep the lock centred and readable on every closed room card;
+- remove pseudo-element geometry that could split or invert in WebKit/WebContainer;
+- add a regression test that prevents the broken CSS construction from returning.

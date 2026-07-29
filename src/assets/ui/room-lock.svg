@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Closed room lock</title>
+  <desc id="desc">A complete closed padlock for locked room cards.</desc>
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="100%">
+      <stop offset="0" stop-color="#221827"/>
+      <stop offset="1" stop-color="#0e0a11"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#e9dfc8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 29V21c0-8 5-13 12-13s12 5 12 13v8" fill="none" stroke-width="4.5"/>
+    <rect x="13" y="27" width="38" height="30" rx="7" fill="url(#body)" stroke-width="3.5"/>
+    <path d="M32 38a4.5 4.5 0 0 0-2.4 8.3V50a2.4 2.4 0 0 0 4.8 0v-3.7A4.5 4.5 0 0 0 32 38Z" fill="#d6b56d" stroke="#d6b56d" stroke-width="1.5"/>
+    <path d="M19 33h26" opacity="0.18" stroke-width="1.5"/>
+  </g>
+</svg>

@@ -986,7 +986,7 @@ body {
   overflow: hidden;
   background: #09070d;
 }
-.room-card-art img {
+.room-card-art > .room-visual-image {
   width: 100%;
   height: 100%;
   display: block;
@@ -1037,7 +1037,7 @@ body {
   background: linear-gradient(180deg, transparent 48%, rgba(8,6,11,.92) 100%);
   pointer-events: none;
 }
-.room-card--visual.locked .room-card-art img,
+.room-card--visual.locked .room-card-art > img,
 .room-card--visual.locked .room-card-art .layered-room-scene {
   filter: grayscale(.72) brightness(.48) contrast(.92);
 }
@@ -1064,28 +1064,16 @@ body {
 .room-card-lock {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: grid;
   place-items: center;
+  pointer-events: none;
 }
-.room-card-lock::before {
-  content: '';
-  width: 27px;
-  height: 22px;
-  margin-top: 14px;
-  border: 2px solid rgba(233,223,200,.72);
-  border-radius: 5px;
-  background: rgba(14,10,17,.82);
-  box-shadow: 0 5px 16px rgba(0,0,0,.55);
-}
-.room-card-lock::after {
-  content: '';
-  position: absolute;
-  width: 17px;
-  height: 17px;
-  margin-top: -15px;
-  border: 3px solid rgba(233,223,200,.72);
-  border-bottom: 0;
-  border-radius: 12px 12px 0 0;
+.room-card-lock-icon {
+  width: 48px;
+  height: 48px;
+  display: block;
+  filter: drop-shadow(0 5px 12px rgba(0,0,0,.55));
 }
 .room-card-copy {
   display: grid;
