@@ -2378,6 +2378,22 @@ body {
 }
 .tile.booster-target { position: relative; }
 
+/* FEATURE-057: room-stage backgrounds for story and journal surfaces. */
+.screen-journal {
+  background-color: #0b0810;
+  background-image:
+    radial-gradient(circle at 50% 14%, rgba(110,35,62,.18), transparent 38%),
+    linear-gradient(180deg, rgba(8,6,11,.62), rgba(8,6,11,.9)),
+    var(--screen-context-background, none);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.story-background--room {
+  filter: saturate(.92) contrast(1.04) brightness(.94);
+}
+
 /* FEATURE-052: replayable story journal */
 .wide-action-grid {
   display: grid;

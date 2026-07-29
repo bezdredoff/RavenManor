@@ -32,3 +32,10 @@ and Blackwood wine/gold visual language without adding final emoji assets.
 Final art may replace any semantic asset without editing scene data. Keep the
 same `StoryPortraitKey` and `StoryBackgroundKey` values, or add a resolver entry
 before authoring a new key.
+
+## FEATURE-057 room-stage reuse
+
+Dialogue backgrounds now reuse the four flat PNG restoration stages exported
+for each room. Replaying a scene shows the room's current saved stage. The
+journal background follows the newest unlocked story entry. Legacy story SVG
+backdrops remain only as fallbacks for future non-room scenes.
