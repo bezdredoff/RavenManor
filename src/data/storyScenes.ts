@@ -1,4 +1,5 @@
 export type StoryPortraitKey = 'evelyn' | 'raven' | 'adrian' | 'silhouette' | 'lucian';
+export type StoryPortraitExpression = 'neutral' | 'smile' | 'speaking' | 'surprised';
 export type StoryBackgroundKey =
   | 'gates'
   | 'raven-window'
@@ -14,6 +15,7 @@ export type StoryDialogueBeat = Readonly<{
   text: string;
   portraitKey: StoryPortraitKey;
   portraitSide: 'left' | 'right';
+  portraitExpression?: StoryPortraitExpression;
 }>;
 
 export type StorySceneDefinition = Readonly<{
