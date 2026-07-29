@@ -82,6 +82,10 @@ import {
   getStoryScenePresentation,
   storyAssets,
 } from './storyPresentation';
+import {
+  renderStoryPortraitMarkup,
+  transitionStoryPortrait,
+} from './storyPortraitPresentation';
 import { getRestorationBlockedMessage } from './restorationFeedback';
 import {
   getStoryContinueLabel,
@@ -2317,8 +2321,73 @@ export class GameApp {
       `<span class="${index <= beatIndex ? 'active' : ''}"></span>`
     )).join('');
 
+    const bindContinue = (): void => {
+      this.bindModal('continue', () => {
+        if (!isFinalBeat) {
+          this.showStoryBeat(scene, beatIndex + 1, nextLevelId, returnTarget);
+          return;
+        }
+
+        const wasViewed = this.progress.isStoryViewed(scene.afterLevelId);
+        this.progress.markStoryViewed(scene.afterLevelId);
+        if (wasViewed) {
+          this.analytics.recordAction('story_replayed', { levelId: scene.afterLevelId });
+        } else {
+          this.analytics.recordStory(scene.afterLevelId);
+        }
+        const continuation = resolveStoryContinuation(nextLevelId, returnTarget);
+        this.closeModal();
+        if (continuation.kind === 'level') {
+          this.startLevel(continuation.levelId);
+        } else if (continuation.kind === 'level-map') {
+          this.showLevelMap();
+        } else if (continuation.kind === 'journal') {
+          this.showStoryJournal();
+        } else {
+          this.showHome();
+        }
+      });
+    };
+
+    const existingScene = this.modal.querySelector<HTMLElement>(
+      `.story-scene[data-story-scene-id="${scene.id}"]`,
+    );
+    if (existingScene) {
+      existingScene.classList.toggle('story-scene--left', beat.portraitSide === 'left');
+      existingScene.classList.toggle('story-scene--right', beat.portraitSide === 'right');
+      const portraitRoot = existingScene.querySelector<HTMLElement>('[data-story-portrait]');
+      if (portraitRoot) {
+        transitionStoryPortrait(
+          portraitRoot,
+          presentation.portrait,
+          this.prefersReducedMotion(),
+        );
+      }
+      const chapter = existingScene.querySelector<HTMLElement>('[data-story-chapter]');
+      const title = existingScene.querySelector<HTMLElement>('[data-story-title]');
+      const speaker = existingScene.querySelector<HTMLElement>('[data-story-speaker]');
+      if (chapter) chapter.textContent = scene.chapter;
+      if (title) title.textContent = scene.title;
+      if (speaker) speaker.textContent = beat.speaker;
+      const dialogue = existingScene.querySelector<HTMLElement>('[data-story-dialogue]');
+      if (dialogue) {
+        dialogue.innerHTML = `
+          <div class="story-beat-progress" aria-label="Реплика ${beatIndex + 1} из ${scene.beats.length}">${progressDots}</div>
+          <p>${beat.text}</p>
+          <button class="primary" data-action="continue">${continueLabel}</button>
+        `;
+      }
+      this.localization.translateElement(existingScene);
+      bindContinue();
+      return;
+    }
+
     this.openModal(`
-      <article class="story-scene story-scene--${beat.portraitSide}" aria-label="Сюжетная сцена: ${beat.speaker}">
+      <article
+        class="story-scene story-scene--${beat.portraitSide}"
+        data-story-scene-id="${scene.id}"
+        aria-label="Сюжетная сцена: ${beat.speaker}"
+      >
         <div class="story-scene-art">
           <img
             class="story-background story-background--room"
@@ -2328,14 +2397,14 @@ export class GameApp {
             draggable="false"
           />
           <div class="story-atmosphere" aria-hidden="true"></div>
-          <img class="story-portrait" src="${presentation.portraitAsset}" alt="" draggable="false" />
+          ${renderStoryPortraitMarkup(presentation.portrait)}
           <div class="story-scene-heading">
-            <div class="chapter">${scene.chapter}</div>
-            <small>${scene.title}</small>
-            <strong>${beat.speaker}</strong>
+            <div class="chapter" data-story-chapter>${scene.chapter}</div>
+            <small data-story-title>${scene.title}</small>
+            <strong data-story-speaker>${beat.speaker}</strong>
           </div>
         </div>
-        <div class="story-dialogue">
+        <div class="story-dialogue" data-story-dialogue>
           <div class="story-beat-progress" aria-label="Реплика ${beatIndex + 1} из ${scene.beats.length}">${progressDots}</div>
           <p>${beat.text}</p>
           <button class="primary" data-action="continue">${continueLabel}</button>
@@ -2343,31 +2412,7 @@ export class GameApp {
       </article>
     `, 'modal-card--story modal-card--cinematic');
 
-    this.bindModal('continue', () => {
-      if (!isFinalBeat) {
-        this.showStoryBeat(scene, beatIndex + 1, nextLevelId, returnTarget);
-        return;
-      }
-
-      const wasViewed = this.progress.isStoryViewed(scene.afterLevelId);
-      this.progress.markStoryViewed(scene.afterLevelId);
-      if (wasViewed) {
-        this.analytics.recordAction('story_replayed', { levelId: scene.afterLevelId });
-      } else {
-        this.analytics.recordStory(scene.afterLevelId);
-      }
-      const continuation = resolveStoryContinuation(nextLevelId, returnTarget);
-      this.closeModal();
-      if (continuation.kind === 'level') {
-        this.startLevel(continuation.levelId);
-      } else if (continuation.kind === 'level-map') {
-        this.showLevelMap();
-      } else if (continuation.kind === 'journal') {
-        this.showStoryJournal();
-      } else {
-        this.showHome();
-      }
-    });
+    bindContinue();
   }
 
   private showHint(): void {

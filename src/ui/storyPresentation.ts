@@ -1,8 +1,3 @@
-import evelynPortrait from '../assets/story/portraits/evelyn.svg?url';
-import ravenPortrait from '../assets/story/portraits/raven.svg?url';
-import adrianPortrait from '../assets/story/portraits/adrian.svg?url';
-import silhouettePortrait from '../assets/story/portraits/silhouette.svg?url';
-import lucianPortrait from '../assets/story/portraits/lucian.svg?url';
 import gatesBackground from '../assets/story/backgrounds/gates.svg?url';
 import ravenWindowBackground from '../assets/story/backgrounds/raven-window.svg?url';
 import hallBackground from '../assets/story/backgrounds/hall.svg?url';
@@ -15,25 +10,17 @@ import { roomVisuals } from '../data/roomVisuals';
 import type {
   StoryBackgroundKey,
   StoryDialogueBeat,
-  StoryPortraitKey,
   StorySceneDefinition,
 } from '../data/storyScenes';
 import type { CompletedRestorationTasks } from '../meta/RoomRestoration';
 import { getRoomVisualState } from '../meta/RoomVisualState';
 import { getRoomSceneAsset } from './roomPresentation';
+import {
+  resolveStoryPortrait,
+  storyPortraitAssets,
+  type ResolvedStoryPortrait,
+} from './storyPortraitPresentation';
 
-const portraitAssets: Record<StoryPortraitKey, string> = {
-  evelyn: evelynPortrait,
-  raven: ravenPortrait,
-  adrian: adrianPortrait,
-  silhouette: silhouettePortrait,
-  lucian: lucianPortrait,
-};
-
-/**
- * Legacy authored backdrops remain as a defensive fallback for future scenes
- * that are not attached to one of the five chapter-one rooms.
- */
 const fallbackBackgroundAssets: Record<StoryBackgroundKey, string> = {
   gates: gatesBackground,
   'raven-window': ravenWindowBackground,
@@ -53,12 +40,13 @@ const roomBackgroundPositions: Readonly<Record<string, string>> = {
 };
 
 export const storyAssets = [
-  ...Object.values(portraitAssets),
+  ...storyPortraitAssets,
   ...Object.values(fallbackBackgroundAssets),
 ];
 
 export type StoryScenePresentation = {
   portraitAsset: string;
+  portrait: ResolvedStoryPortrait;
   backgroundAsset: string;
   backgroundPosition: string;
 };
@@ -88,13 +76,12 @@ export function getStoryScenePresentation(
   beat: StoryDialogueBeat,
   completedRestorationTasks: CompletedRestorationTasks = {},
 ): StoryScenePresentation {
-  const portraitAsset = portraitAssets[beat.portraitKey];
+  const portrait = resolveStoryPortrait(beat);
   const backgroundAsset = getStoryBackgroundAsset(scene, completedRestorationTasks);
 
-  if (!portraitAsset) throw new Error(`Missing story portrait: ${beat.portraitKey}`);
-
   return {
-    portraitAsset,
+    portraitAsset: portrait.layers[0]?.asset ?? '',
+    portrait,
     backgroundAsset,
     backgroundPosition: roomBackgroundPositions[scene.roomId] ?? '50% 40%',
   };

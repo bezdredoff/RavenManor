@@ -1,0 +1,267 @@
+import evelynBase from '../assets/story/portraits/evelyn/base-neutral.png?url';
+import evelynFaceSmile from '../assets/story/portraits/evelyn/face-smile.png?url';
+import evelynFaceSpeaking from '../assets/story/portraits/evelyn/face-speaking.png?url';
+import evelynFaceSurprised from '../assets/story/portraits/evelyn/face-surprised.png?url';
+import ravenPortrait from '../assets/story/portraits/raven.svg?url';
+import adrianPortrait from '../assets/story/portraits/adrian.svg?url';
+import silhouettePortrait from '../assets/story/portraits/silhouette.svg?url';
+import lucianPortrait from '../assets/story/portraits/lucian.svg?url';
+import type {
+  StoryDialogueBeat,
+  StoryPortraitExpression,
+  StoryPortraitKey,
+} from '../data/storyScenes';
+
+export type StoryPortraitLayerSlot =
+  | 'base'
+  | 'face'
+  | 'eyes'
+  | 'mouth'
+  | 'brows'
+  | 'accessory'
+  | 'fx';
+
+export type StoryPortraitLayerTransition = 'instant' | 'fade' | 'crossfade';
+
+export type StoryPortraitLayerPlacement = Readonly<{
+  left: number;
+  top: number;
+  width: number;
+}>;
+
+export type ResolvedStoryPortraitLayer = Readonly<{
+  slot: StoryPortraitLayerSlot;
+  asset: string;
+  placement?: StoryPortraitLayerPlacement;
+  transition: StoryPortraitLayerTransition;
+}>;
+
+export type ResolvedStoryPortrait = Readonly<{
+  characterKey: StoryPortraitKey;
+  expression: StoryPortraitExpression;
+  aspectRatio: number;
+  layers: readonly ResolvedStoryPortraitLayer[];
+}>;
+
+type LayeredPortraitDefinition = Readonly<{
+  kind: 'layered';
+  aspectRatio: number;
+  base: string;
+  expressions: Readonly<Partial<Record<StoryPortraitExpression, readonly ResolvedStoryPortraitLayer[]>>>;
+}>;
+
+type SinglePortraitDefinition = Readonly<{
+  kind: 'single';
+  aspectRatio: number;
+  asset: string;
+}>;
+
+type PortraitDefinition = LayeredPortraitDefinition | SinglePortraitDefinition;
+
+const EVELYN_FACE_PLACEMENT: StoryPortraitLayerPlacement = {
+  left: 30.371,
+  top: 17.383,
+  width: 39.941,
+};
+
+const portraitDefinitions: Readonly<Record<StoryPortraitKey, PortraitDefinition>> = {
+  evelyn: {
+    kind: 'layered',
+    aspectRatio: 2 / 3,
+    base: evelynBase,
+    expressions: {
+      neutral: [],
+      smile: [{
+        slot: 'face',
+        asset: evelynFaceSmile,
+        placement: EVELYN_FACE_PLACEMENT,
+        transition: 'crossfade',
+      }],
+      speaking: [{
+        slot: 'face',
+        asset: evelynFaceSpeaking,
+        placement: EVELYN_FACE_PLACEMENT,
+        transition: 'crossfade',
+      }],
+      surprised: [{
+        slot: 'face',
+        asset: evelynFaceSurprised,
+        placement: EVELYN_FACE_PLACEMENT,
+        transition: 'crossfade',
+      }],
+    },
+  },
+  raven: { kind: 'single', aspectRatio: 5 / 7, asset: ravenPortrait },
+  adrian: { kind: 'single', aspectRatio: 5 / 7, asset: adrianPortrait },
+  silhouette: { kind: 'single', aspectRatio: 5 / 7, asset: silhouettePortrait },
+  lucian: { kind: 'single', aspectRatio: 5 / 7, asset: lucianPortrait },
+};
+
+export const storyPortraitAssets = [
+  evelynBase,
+  evelynFaceSmile,
+  evelynFaceSpeaking,
+  evelynFaceSurprised,
+  ravenPortrait,
+  adrianPortrait,
+  silhouettePortrait,
+  lucianPortrait,
+];
+
+function inferEvelynExpression(beat: StoryDialogueBeat): StoryPortraitExpression {
+  if (beat.portraitExpression) return beat.portraitExpression;
+  const text = beat.text.toLowerCase();
+  if (/[?!]/.test(beat.text)) return 'surprised';
+  if (
+    text.includes('спасибо')
+    || text.includes('успоко')
+    || text.includes('восстановлю')
+    || text.includes('я почти помню')
+  ) return 'smile';
+  if (
+    text.includes('не помнила')
+    || text.includes('не могла')
+    || text.includes('никогда прежде')
+    || text.includes('страшно')
+  ) return 'neutral';
+  return 'speaking';
+}
+
+export function resolveStoryPortrait(beat: StoryDialogueBeat): ResolvedStoryPortrait {
+  const definition = portraitDefinitions[beat.portraitKey];
+  const expression = beat.portraitKey === 'evelyn'
+    ? inferEvelynExpression(beat)
+    : beat.portraitExpression ?? 'neutral';
+
+  if (definition.kind === 'single') {
+    return {
+      characterKey: beat.portraitKey,
+      expression,
+      aspectRatio: definition.aspectRatio,
+      layers: [{
+        slot: 'base',
+        asset: definition.asset,
+        transition: 'crossfade',
+      }],
+    };
+  }
+
+  return {
+    characterKey: beat.portraitKey,
+    expression,
+    aspectRatio: definition.aspectRatio,
+    layers: [
+      { slot: 'base', asset: definition.base, transition: 'instant' },
+      ...(definition.expressions[expression] ?? definition.expressions.neutral ?? []),
+    ],
+  };
+}
+
+function getLayerStyle(layer: ResolvedStoryPortraitLayer): string {
+  if (!layer.placement) return '';
+  return [
+    `--portrait-layer-left:${layer.placement.left}%`,
+    `--portrait-layer-top:${layer.placement.top}%`,
+    `--portrait-layer-width:${layer.placement.width}%`,
+  ].join(';');
+}
+
+function renderLayer(layer: ResolvedStoryPortraitLayer): string {
+  const placementClass = layer.placement ? ' story-portrait-layer--placed' : '';
+  return `<img
+    class="story-portrait-layer story-portrait-layer--${layer.slot}${placementClass}"
+    data-portrait-layer="${layer.slot}"
+    data-portrait-asset="${layer.asset}"
+    data-portrait-transition="${layer.transition}"
+    src="${layer.asset}"
+    style="${getLayerStyle(layer)}"
+    alt=""
+    draggable="false"
+  />`;
+}
+
+function renderCanvas(portrait: ResolvedStoryPortrait): string {
+  return `<div
+    class="story-portrait-canvas"
+    data-portrait-canvas
+    data-character-key="${portrait.characterKey}"
+    data-expression="${portrait.expression}"
+    style="--story-portrait-aspect:${portrait.aspectRatio}"
+  >${portrait.layers.map(renderLayer).join('')}</div>`;
+}
+
+export function renderStoryPortraitMarkup(portrait: ResolvedStoryPortrait): string {
+  return `<div class="story-portrait" data-story-portrait>${renderCanvas(portrait)}</div>`;
+}
+
+function createCanvasElement(portrait: ResolvedStoryPortrait): HTMLElement {
+  const template = document.createElement('template');
+  template.innerHTML = renderCanvas(portrait).trim();
+  const canvas = template.content.firstElementChild;
+  if (!(canvas instanceof HTMLElement)) throw new Error('Failed to create story portrait canvas.');
+  return canvas;
+}
+
+function createLayerElement(layer: ResolvedStoryPortraitLayer): HTMLImageElement {
+  const template = document.createElement('template');
+  template.innerHTML = renderLayer(layer).trim();
+  const image = template.content.firstElementChild;
+  if (!(image instanceof HTMLImageElement)) throw new Error('Failed to create story portrait layer.');
+  return image;
+}
+
+function finishTransition(element: Element, duration: number, remove: boolean): void {
+  window.setTimeout(() => {
+    if (remove) element.remove();
+    else element.classList.remove('is-entering', 'is-visible');
+  }, duration);
+}
+
+export function transitionStoryPortrait(
+  root: HTMLElement,
+  next: ResolvedStoryPortrait,
+  reducedMotion: boolean,
+): void {
+  const currentCanvas = root.querySelector<HTMLElement>('[data-portrait-canvas]');
+  const duration = 190;
+
+  if (reducedMotion) {
+    root.innerHTML = renderCanvas(next);
+    return;
+  }
+
+  if (!currentCanvas || currentCanvas.dataset.characterKey !== next.characterKey) {
+    const incoming = createCanvasElement(next);
+    incoming.classList.add('is-entering');
+    root.append(incoming);
+    requestAnimationFrame(() => incoming.classList.add('is-visible'));
+    if (currentCanvas) {
+      currentCanvas.classList.add('is-leaving');
+      finishTransition(currentCanvas, duration, true);
+    }
+    finishTransition(incoming, duration, false);
+    return;
+  }
+
+  currentCanvas.dataset.expression = next.expression;
+  const nextBySlot = new Map(next.layers.map((layer) => [layer.slot, layer]));
+  currentCanvas.querySelectorAll<HTMLImageElement>('[data-portrait-layer]').forEach((current) => {
+    const slot = current.dataset.portraitLayer as StoryPortraitLayerSlot | undefined;
+    if (!slot) return;
+    const replacement = nextBySlot.get(slot);
+    if (replacement && current.dataset.portraitAsset === replacement.asset) {
+      nextBySlot.delete(slot);
+      return;
+    }
+    current.classList.add('is-leaving');
+    finishTransition(current, duration, true);
+  });
+
+  nextBySlot.forEach((layer) => {
+    const incoming = createLayerElement(layer);
+    incoming.classList.add('is-entering');
+    currentCanvas.append(incoming);
+    requestAnimationFrame(() => incoming.classList.add('is-visible'));
+    finishTransition(incoming, duration, false);
+  });
+}
