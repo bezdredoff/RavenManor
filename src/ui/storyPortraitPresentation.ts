@@ -3,7 +3,12 @@ import evelynFaceSmile from '../assets/story/portraits/evelyn/face-smile.png?url
 import evelynFaceSpeaking from '../assets/story/portraits/evelyn/face-speaking.png?url';
 import evelynFaceSurprised from '../assets/story/portraits/evelyn/face-surprised.png?url';
 import ravenPortrait from '../assets/story/portraits/raven.svg?url';
-import adrianPortrait from '../assets/story/portraits/adrian.svg?url';
+import adrianBase from '../assets/story/portraits/adrian/base-neutral.png?url';
+import adrianFaceNeutral from '../assets/story/portraits/adrian/face-neutral.png?url';
+import adrianFaceSmile from '../assets/story/portraits/adrian/face-smile.png?url';
+import adrianFaceSpeaking from '../assets/story/portraits/adrian/face-speaking.png?url';
+import adrianFaceStern from '../assets/story/portraits/adrian/face-stern.png?url';
+import adrianFaceSurprised from '../assets/story/portraits/adrian/face-surprised.png?url';
 import silhouettePortrait from '../assets/story/portraits/silhouette.svg?url';
 import lucianPortrait from '../assets/story/portraits/lucian.svg?url';
 import type {
@@ -64,6 +69,14 @@ const EVELYN_FACE_PLACEMENT: StoryPortraitLayerPlacement = {
   width: 39.941,
 };
 
+const ADRIAN_FACE_PLACEMENTS = {
+  neutral: { left: 33.627, top: 16.168, width: 26.641 },
+  smile: { left: 33.627, top: 16.168, width: 26.641 },
+  speaking: { left: 33.627, top: 16.168, width: 26.641 },
+  stern: { left: 33.627, top: 16.168, width: 26.641 },
+  surprised: { left: 33.627, top: 16.168, width: 26.641 },
+} satisfies Record<'neutral' | 'smile' | 'speaking' | 'stern' | 'surprised', StoryPortraitLayerPlacement>;
+
 const portraitDefinitions: Readonly<Record<StoryPortraitKey, PortraitDefinition>> = {
   evelyn: {
     kind: 'layered',
@@ -92,7 +105,18 @@ const portraitDefinitions: Readonly<Record<StoryPortraitKey, PortraitDefinition>
     },
   },
   raven: { kind: 'single', aspectRatio: 5 / 7, asset: ravenPortrait },
-  adrian: { kind: 'single', aspectRatio: 5 / 7, asset: adrianPortrait },
+  adrian: {
+    kind: 'layered',
+    aspectRatio: 2 / 3,
+    base: adrianBase,
+    expressions: {
+      neutral: [{ slot: 'face', asset: adrianFaceNeutral, placement: ADRIAN_FACE_PLACEMENTS.neutral, transition: 'crossfade' }],
+      smile: [{ slot: 'face', asset: adrianFaceSmile, placement: ADRIAN_FACE_PLACEMENTS.smile, transition: 'crossfade' }],
+      speaking: [{ slot: 'face', asset: adrianFaceSpeaking, placement: ADRIAN_FACE_PLACEMENTS.speaking, transition: 'crossfade' }],
+      stern: [{ slot: 'face', asset: adrianFaceStern, placement: ADRIAN_FACE_PLACEMENTS.stern, transition: 'crossfade' }],
+      surprised: [{ slot: 'face', asset: adrianFaceSurprised, placement: ADRIAN_FACE_PLACEMENTS.surprised, transition: 'crossfade' }],
+    },
+  },
   silhouette: { kind: 'single', aspectRatio: 5 / 7, asset: silhouettePortrait },
   lucian: { kind: 'single', aspectRatio: 5 / 7, asset: lucianPortrait },
 };
@@ -103,7 +127,12 @@ export const storyPortraitAssets = [
   evelynFaceSpeaking,
   evelynFaceSurprised,
   ravenPortrait,
-  adrianPortrait,
+  adrianBase,
+  adrianFaceNeutral,
+  adrianFaceSmile,
+  adrianFaceSpeaking,
+  adrianFaceStern,
+  adrianFaceSurprised,
   silhouettePortrait,
   lucianPortrait,
 ];
@@ -127,11 +156,37 @@ function inferEvelynExpression(beat: StoryDialogueBeat): StoryPortraitExpression
   return 'speaking';
 }
 
+function inferAdrianExpression(beat: StoryDialogueBeat): StoryPortraitExpression {
+  if (beat.portraitExpression) return beat.portraitExpression;
+  const text = beat.text.toLowerCase();
+  if (text.includes('невозможно') || /\?!|!\?/.test(beat.text)) return 'surprised';
+  if (
+    text.includes('не открывайте')
+    || text.includes('опас')
+    || text.includes('контракт')
+    || text.includes('печать')
+    || text.includes('наблюдал')
+    || text.includes('защищал')
+    || text.includes('признаюсь')
+    || text.includes('башн')
+  ) return 'stern';
+  if (
+    text.includes('утро здесь редко')
+    || text.includes('разумеется')
+    || text.includes('любопыт')
+    || text.includes('рад')
+    || text.includes('полагаю')
+  ) return 'smile';
+  return 'speaking';
+}
+
 export function resolveStoryPortrait(beat: StoryDialogueBeat): ResolvedStoryPortrait {
   const definition = portraitDefinitions[beat.portraitKey];
   const expression = beat.portraitKey === 'evelyn'
     ? inferEvelynExpression(beat)
-    : beat.portraitExpression ?? 'neutral';
+    : beat.portraitKey === 'adrian'
+      ? inferAdrianExpression(beat)
+      : beat.portraitExpression ?? 'neutral';
 
   if (definition.kind === 'single') {
     return {

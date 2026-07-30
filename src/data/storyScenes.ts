@@ -1,5 +1,5 @@
 export type StoryPortraitKey = 'evelyn' | 'raven' | 'adrian' | 'silhouette' | 'lucian';
-export type StoryPortraitExpression = 'neutral' | 'smile' | 'speaking' | 'surprised';
+export type StoryPortraitExpression = 'neutral' | 'smile' | 'speaking' | 'surprised' | 'stern';
 export type StoryBackgroundKey =
   | 'gates'
   | 'raven-window'

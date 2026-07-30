@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 840">
+<defs>
+  <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f6ded9"/><stop offset=".55" stop-color="#d7b4b4"/><stop offset="1" stop-color="#9b6f7a"/></linearGradient>
+  <linearGradient id="skinShadow" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#bd8f98"/><stop offset="1" stop-color="#724f61"/></linearGradient>
+  <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#17131f"/><stop offset=".48" stop-color="#2c1c35"/><stop offset="1" stop-color="#09080e"/></linearGradient>
+  <linearGradient id="hairHi" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#80607f" stop-opacity=".6"/><stop offset="1" stop-color="#3b243f" stop-opacity="0"/></linearGradient>
+  <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#21172a"/><stop offset=".55" stop-color="#100e17"/><stop offset="1" stop-color="#06070b"/></linearGradient>
+  <linearGradient id="wine" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#692139"/><stop offset="1" stop-color="#2c1224"/></linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f0d78d"/><stop offset=".5" stop-color="#b78b3e"/><stop offset="1" stop-color="#72501f"/></linearGradient>
+  <filter id="soft"><feGaussianBlur stdDeviation="8"/></filter>
+</defs>
+<ellipse cx="300" cy="802" rx="205" ry="25" fill="#05050a" opacity=".5" filter="url(#soft)"/>
+<!-- back hair -->
+<path d="M153 344C135 185 198 79 304 70c112-10 179 91 157 275l-31 172H171Z" fill="url(#hair)"/>
+<path d="M174 351c-12-139 35-230 131-249 91 3 138 89 126 245l-20 134H189Z" fill="url(#hairHi)" opacity=".35"/>
+<!-- shoulders / coat -->
+<path d="M55 840c8-168 51-275 157-319l88 52 88-52c106 44 149 151 157 319Z" fill="url(#coat)" stroke="#4c334e" stroke-width="4"/>
+<path d="M164 550c28 18 76 33 136 34 60-1 108-16 136-34l-47 290H211Z" fill="url(#wine)" stroke="#7b354d" stroke-width="3"/>
+<!-- neck -->
+<path d="M247 428c4 45-10 84-42 107 22 35 56 54 95 54s73-19 95-54c-32-23-46-62-42-107Z" fill="url(#skin)" stroke="#7e5361" stroke-width="3"/>
+<path d="M245 459c21 24 89 24 110 0-7 39-27 62-55 63-28-1-48-24-55-63Z" fill="url(#skinShadow)" opacity=".35"/>
+<!-- shirt -->
+<path d="M207 526c22 38 55 59 93 60 38-1 71-22 93-60l35 31-56 92H228l-56-92Z" fill="#e8dfd6" stroke="#8f7d79" stroke-width="3"/>
+<path d="M248 552l52 42 52-42-18 88h-68Z" fill="#b7a99d" opacity=".65"/>
+<!-- cravat -->
+<path d="M273 585h54l-9 52 22 103-40 46-40-46 22-103Z" fill="#17121d" stroke="#70506f" stroke-width="3"/>
+<ellipse cx="300" cy="621" rx="20" ry="16" fill="url(#gold)" stroke="#382712" stroke-width="3"/>
+<path d="M291 621l9-9 9 9-9 9Z" fill="#6d1c35"/>
+<!-- lapels -->
+<path d="M207 526l67 60-46 145-72-168Z" fill="#16111d" stroke="#57405b" stroke-width="3"/>
+<path d="M393 526l-67 60 46 145 72-168Z" fill="#16111d" stroke="#57405b" stroke-width="3"/>
+<path d="M197 548l77 38-25 26-70-47Z" fill="none" stroke="url(#gold)" stroke-width="5"/>
+<path d="M403 548l-77 38 25 26 70-47Z" fill="none" stroke="url(#gold)" stroke-width="5"/>
+<!-- ears -->
+<path d="M190 286c-24-10-29 29-14 57 9 18 27 14 34-5Z" fill="url(#skin)" stroke="#7e5361" stroke-width="3"/>
+<path d="M410 286c24-10 29 29 14 57-9 18-27 14-34-5Z" fill="url(#skin)" stroke="#7e5361" stroke-width="3"/>
+<path d="M192 307c-8 2-7 19 2 24" fill="none" stroke="#a87781" stroke-width="3" stroke-linecap="round"/>
+<path d="M408 307c8 2 7 19-2 24" fill="none" stroke="#a87781" stroke-width="3" stroke-linecap="round"/>
+<!-- face -->
+<path d="M195 238c11-83 53-130 105-130s94 47 105 130l-7 111c-5 61-50 112-98 125-48-13-93-64-98-125Z" fill="url(#skin)" stroke="#704955" stroke-width="4"/>
+<path d="M300 130c-56 0-94 42-103 112l-10 102c-8-108-18-215 86-250 90-29 154 33 149 170-17-91-57-126-122-134Z" fill="url(#hair)"/>
+<!-- fringe -->
+<path d="M178 259c-1-100 32-172 116-181 76-8 132 45 137 147-27-48-62-74-109-87-25 53-70 92-144 121Z" fill="url(#hair)"/>
+<path d="M213 212c23-60 58-96 105-113-18 52-53 89-105 113Z" fill="url(#hairHi)" opacity=".72"/>
+<path d="M285 88c-18 55-55 99-107 126" fill="none" stroke="#715272" stroke-width="7" stroke-linecap="round" opacity=".66"/>
+<path d="M332 96c31 27 59 65 84 117" fill="none" stroke="#5c405f" stroke-width="6" stroke-linecap="round" opacity=".46"/>
+<path d="M188 247c-3 46-1 91 10 134" fill="none" stroke="#4d344f" stroke-width="9" stroke-linecap="round" opacity=".5"/>
+<path d="M412 241c4 51 0 97-10 139" fill="none" stroke="#4d344f" stroke-width="9" stroke-linecap="round" opacity=".5"/>
+<!-- subtle nose / face shading retained in base -->
+<path d="M300 307c-8 22-11 41-2 49 5 4 12 3 18 0" fill="none" stroke="#a77480" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+<path d="M218 398c26 44 139 57 168 0-25 52-55 75-86 75-32 0-61-23-82-75Z" fill="#7b4d5d" opacity=".08"/>
+</svg>
