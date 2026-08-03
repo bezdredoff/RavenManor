@@ -293,16 +293,15 @@ export function transitionStoryPortrait(
     return;
   }
 
-  if (!currentCanvas || currentCanvas.dataset.characterKey !== next.characterKey) {
-    const incoming = createCanvasElement(next);
-    incoming.classList.add('is-entering');
-    root.append(incoming);
-    requestAnimationFrame(() => incoming.classList.add('is-visible'));
-    if (currentCanvas) {
-      currentCanvas.classList.add('is-leaving');
-      finishTransition(currentCanvas, duration, true);
-    }
-    finishTransition(incoming, duration, false);
+  if (!currentCanvas) {
+    root.replaceChildren(createCanvasElement(next));
+    return;
+  }
+
+  if (currentCanvas.dataset.characterKey !== next.characterKey) {
+    // Never crossfade different characters: the outgoing portrait would remain
+    // visible for a fraction of a second and look like the wrong speaker.
+    root.replaceChildren(createCanvasElement(next));
     return;
   }
 
