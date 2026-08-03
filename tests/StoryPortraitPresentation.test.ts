@@ -22,7 +22,7 @@ describe('layered story portrait presentation', () => {
     const speaking = resolveStoryPortrait(beat({ portraitExpression: 'speaking' }));
     const surprised = resolveStoryPortrait(beat({ portraitExpression: 'surprised' }));
 
-    expect(neutral.layers.map((layer) => layer.slot)).toEqual(['base', 'face']);
+    expect(neutral.layers.map((layer) => layer.slot)).toEqual(['base']);
     expect(smile.layers.map((layer) => layer.slot)).toEqual(['base', 'face']);
     expect(speaking.layers.map((layer) => layer.slot)).toEqual(['base', 'face']);
     expect(surprised.layers.map((layer) => layer.slot)).toEqual(['base', 'face']);
@@ -63,17 +63,50 @@ describe('layered story portrait presentation', () => {
     expect(stern.layers[1]?.placement).toBeDefined();
   });
 
-  it('keeps the remaining legacy characters on the generic single-layer contract', () => {
-    const raven = resolveStoryPortrait(beat({
+  it('always uses the one neutral Raven portrait', () => {
+    const neutral = resolveStoryPortrait(beat({
       speaker: 'Ворон',
+      text: 'Я наблюдаю.',
+      portraitKey: 'raven',
+      portraitSide: 'right',
+      portraitExpression: 'neutral',
+    }));
+    const speakingText = resolveStoryPortrait(beat({
+      speaker: 'Ворон',
+      text: 'Кар-р… Ты опоздала на двенадцать лет, наследница.',
       portraitKey: 'raven',
       portraitSide: 'right',
     }));
-    expect(raven.layers).toHaveLength(1);
-    expect(raven.layers[0]?.slot).toBe('base');
+    const surprisedText = resolveStoryPortrait(beat({
+      speaker: 'Ворон',
+      text: 'Что?!',
+      portraitKey: 'raven',
+      portraitSide: 'right',
+      portraitExpression: 'surprised',
+    }));
+
+    expect(neutral.expression).toBe('neutral');
+    expect(speakingText.expression).toBe('neutral');
+    expect(surprisedText.expression).toBe('neutral');
+    expect(neutral.layers).toHaveLength(1);
+    expect(speakingText.layers).toHaveLength(1);
+    expect(surprisedText.layers).toHaveLength(1);
+    expect(neutral.layers[0]?.slot).toBe('base');
+    expect(neutral.layers[0]?.asset).toBe(speakingText.layers[0]?.asset);
+    expect(neutral.layers[0]?.asset).toBe(surprisedText.layers[0]?.asset);
+  });
+
+  it('keeps the remaining legacy characters on the generic single-layer contract', () => {
+    const silhouette = resolveStoryPortrait(beat({
+      speaker: 'Тень',
+      portraitKey: 'silhouette',
+      portraitSide: 'right',
+    }));
+    expect(silhouette.layers).toHaveLength(1);
+    expect(silhouette.layers[0]?.slot).toBe('base');
   });
 
   it('preloads the base, expression layers, and legacy portraits', () => {
-    expect(storyPortraitAssets.length).toBeGreaterThanOrEqual(12);
+    expect(storyPortraitAssets.length).toBeGreaterThanOrEqual(13);
   });
 });

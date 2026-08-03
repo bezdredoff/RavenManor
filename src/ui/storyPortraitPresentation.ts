@@ -2,7 +2,7 @@ import evelynBase from '../assets/story/portraits/evelyn/base-neutral.png?url';
 import evelynFaceSmile from '../assets/story/portraits/evelyn/face-smile.png?url';
 import evelynFaceSpeaking from '../assets/story/portraits/evelyn/face-speaking.png?url';
 import evelynFaceSurprised from '../assets/story/portraits/evelyn/face-surprised.png?url';
-import ravenPortrait from '../assets/story/portraits/raven.svg?url';
+import ravenNeutral from '../assets/story/portraits/raven/neutral.png?url';
 import adrianBase from '../assets/story/portraits/adrian/base-neutral.png?url';
 import adrianFaceNeutral from '../assets/story/portraits/adrian/face-neutral.png?url';
 import adrianFaceSmile from '../assets/story/portraits/adrian/face-smile.png?url';
@@ -59,6 +59,7 @@ type SinglePortraitDefinition = Readonly<{
   kind: 'single';
   aspectRatio: number;
   asset: string;
+  expressions?: Readonly<Partial<Record<StoryPortraitExpression, string>>>;
 }>;
 
 type PortraitDefinition = LayeredPortraitDefinition | SinglePortraitDefinition;
@@ -70,11 +71,11 @@ const EVELYN_FACE_PLACEMENT: StoryPortraitLayerPlacement = {
 };
 
 const ADRIAN_FACE_PLACEMENTS = {
-  neutral: { left: 33.627, top: 16.168, width: 26.641 },
-  smile: { left: 33.627, top: 16.168, width: 26.641 },
-  speaking: { left: 33.627, top: 16.168, width: 26.641 },
-  stern: { left: 33.627, top: 16.168, width: 26.641 },
-  surprised: { left: 33.627, top: 16.168, width: 26.641 },
+  neutral: { left: 29.297, top: 15.625, width: 28.613 },
+  smile: { left: 29.297, top: 15.625, width: 29.590 },
+  speaking: { left: 29.297, top: 15.299, width: 33.301 },
+  stern: { left: 29.297, top: 15.625, width: 32.520 },
+  surprised: { left: 31.250, top: 14.323, width: 39.648 },
 } satisfies Record<'neutral' | 'smile' | 'speaking' | 'stern' | 'surprised', StoryPortraitLayerPlacement>;
 
 const portraitDefinitions: Readonly<Record<StoryPortraitKey, PortraitDefinition>> = {
@@ -104,7 +105,7 @@ const portraitDefinitions: Readonly<Record<StoryPortraitKey, PortraitDefinition>
       }],
     },
   },
-  raven: { kind: 'single', aspectRatio: 5 / 7, asset: ravenPortrait },
+  raven: { kind: 'single', aspectRatio: 2 / 3, asset: ravenNeutral },
   adrian: {
     kind: 'layered',
     aspectRatio: 2 / 3,
@@ -126,7 +127,7 @@ export const storyPortraitAssets = [
   evelynFaceSmile,
   evelynFaceSpeaking,
   evelynFaceSurprised,
-  ravenPortrait,
+  ravenNeutral,
   adrianBase,
   adrianFaceNeutral,
   adrianFaceSmile,
@@ -154,6 +155,10 @@ function inferEvelynExpression(beat: StoryDialogueBeat): StoryPortraitExpression
     || text.includes('страшно')
   ) return 'neutral';
   return 'speaking';
+}
+
+function inferRavenExpression(): StoryPortraitExpression {
+  return 'neutral';
 }
 
 function inferAdrianExpression(beat: StoryDialogueBeat): StoryPortraitExpression {
@@ -186,16 +191,19 @@ export function resolveStoryPortrait(beat: StoryDialogueBeat): ResolvedStoryPort
     ? inferEvelynExpression(beat)
     : beat.portraitKey === 'adrian'
       ? inferAdrianExpression(beat)
-      : beat.portraitExpression ?? 'neutral';
+      : beat.portraitKey === 'raven'
+        ? inferRavenExpression()
+        : beat.portraitExpression ?? 'neutral';
 
   if (definition.kind === 'single') {
+    const asset = definition.expressions?.[expression] ?? definition.asset;
     return {
       characterKey: beat.portraitKey,
       expression,
       aspectRatio: definition.aspectRatio,
       layers: [{
         slot: 'base',
-        asset: definition.asset,
+        asset,
         transition: 'crossfade',
       }],
     };
