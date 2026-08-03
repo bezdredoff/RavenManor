@@ -86,6 +86,10 @@ import {
   renderStoryPortraitMarkup,
   transitionStoryPortrait,
 } from './storyPortraitPresentation';
+import {
+  getStoryUiMode,
+  renderStoryDialogueContent,
+} from './storyUiPresentation';
 import { getRestorationBlockedMessage } from './restorationFeedback';
 import {
   getStoryContinueLabel,
@@ -2317,36 +2321,45 @@ export class GameApp {
     const continueLabel = isFinalBeat
       ? getStoryContinueLabel(nextLevelId, returnTarget)
       : 'Далее';
-    const progressDots = scene.beats.map((_, index) => (
-      `<span class="${index <= beatIndex ? 'active' : ''}"></span>`
-    )).join('');
+    const storyUiMode = getStoryUiMode(beat);
+    const dialogueMarkup = renderStoryDialogueContent({
+      beat,
+      beatIndex,
+      beatCount: scene.beats.length,
+      continueLabel,
+    });
 
-    const bindContinue = (): void => {
+    const finishScene = (): void => {
+      const wasViewed = this.progress.isStoryViewed(scene.afterLevelId);
+      this.progress.markStoryViewed(scene.afterLevelId);
+      if (wasViewed) {
+        this.analytics.recordAction('story_replayed', { levelId: scene.afterLevelId });
+      } else {
+        this.analytics.recordStory(scene.afterLevelId);
+      }
+
+      const continuation = resolveStoryContinuation(nextLevelId, returnTarget);
+      this.closeModal();
+      if (continuation.kind === 'level') {
+        this.startLevel(continuation.levelId);
+      } else if (continuation.kind === 'level-map') {
+        this.showLevelMap();
+      } else if (continuation.kind === 'journal') {
+        this.showStoryJournal();
+      } else {
+        this.showHome();
+      }
+    };
+
+    const bindStoryControls = (): void => {
       this.bindModal('continue', () => {
         if (!isFinalBeat) {
           this.showStoryBeat(scene, beatIndex + 1, nextLevelId, returnTarget);
           return;
         }
-
-        const wasViewed = this.progress.isStoryViewed(scene.afterLevelId);
-        this.progress.markStoryViewed(scene.afterLevelId);
-        if (wasViewed) {
-          this.analytics.recordAction('story_replayed', { levelId: scene.afterLevelId });
-        } else {
-          this.analytics.recordStory(scene.afterLevelId);
-        }
-        const continuation = resolveStoryContinuation(nextLevelId, returnTarget);
-        this.closeModal();
-        if (continuation.kind === 'level') {
-          this.startLevel(continuation.levelId);
-        } else if (continuation.kind === 'level-map') {
-          this.showLevelMap();
-        } else if (continuation.kind === 'journal') {
-          this.showStoryJournal();
-        } else {
-          this.showHome();
-        }
+        finishScene();
       });
+      this.bindModal('story-skip', finishScene);
     };
 
     const existingScene = this.modal.querySelector<HTMLElement>(
@@ -2355,6 +2368,9 @@ export class GameApp {
     if (existingScene) {
       existingScene.classList.toggle('story-scene--left', beat.portraitSide === 'left');
       existingScene.classList.toggle('story-scene--right', beat.portraitSide === 'right');
+      existingScene.dataset.storyUiMode = storyUiMode;
+      existingScene.setAttribute('aria-label', `Сюжетная сцена: ${beat.speaker}`);
+
       const portraitRoot = existingScene.querySelector<HTMLElement>('[data-story-portrait]');
       if (portraitRoot) {
         transitionStoryPortrait(
@@ -2363,22 +2379,24 @@ export class GameApp {
           this.prefersReducedMotion(),
         );
       }
+
       const chapter = existingScene.querySelector<HTMLElement>('[data-story-chapter]');
       const title = existingScene.querySelector<HTMLElement>('[data-story-title]');
       const speaker = existingScene.querySelector<HTMLElement>('[data-story-speaker]');
       if (chapter) chapter.textContent = scene.chapter;
       if (title) title.textContent = scene.title;
       if (speaker) speaker.textContent = beat.speaker;
-      const dialogue = existingScene.querySelector<HTMLElement>('[data-story-dialogue]');
-      if (dialogue) {
-        dialogue.innerHTML = `
-          <div class="story-beat-progress" aria-label="Реплика ${beatIndex + 1} из ${scene.beats.length}">${progressDots}</div>
-          <p>${beat.text}</p>
-          <button class="primary" data-action="continue">${continueLabel}</button>
-        `;
+
+      const dialogueShell = existingScene.querySelector<HTMLElement>('[data-story-dialogue-shell]');
+      if (dialogueShell) {
+        dialogueShell.className = `story-dialogue-shell story-dialogue-shell--${storyUiMode}`;
       }
+
+      const dialogue = existingScene.querySelector<HTMLElement>('[data-story-dialogue]');
+      if (dialogue) dialogue.innerHTML = dialogueMarkup;
+
       this.localization.translateElement(existingScene);
-      bindContinue();
+      bindStoryControls();
       return;
     }
 
@@ -2386,6 +2404,7 @@ export class GameApp {
       <article
         class="story-scene story-scene--${beat.portraitSide}"
         data-story-scene-id="${scene.id}"
+        data-story-ui-mode="${storyUiMode}"
         aria-label="Сюжетная сцена: ${beat.speaker}"
       >
         <div class="story-scene-art">
@@ -2398,21 +2417,26 @@ export class GameApp {
           />
           <div class="story-atmosphere" aria-hidden="true"></div>
           ${renderStoryPortraitMarkup(presentation.portrait)}
-          <div class="story-scene-heading">
+          <header class="story-scene-heading">
             <div class="chapter" data-story-chapter>${scene.chapter}</div>
             <small data-story-title>${scene.title}</small>
-            <strong data-story-speaker>${beat.speaker}</strong>
-          </div>
-        </div>
-        <div class="story-dialogue" data-story-dialogue>
-          <div class="story-beat-progress" aria-label="Реплика ${beatIndex + 1} из ${scene.beats.length}">${progressDots}</div>
-          <p>${beat.text}</p>
-          <button class="primary" data-action="continue">${continueLabel}</button>
+          </header>
+          <section
+            class="story-dialogue-shell story-dialogue-shell--${storyUiMode}"
+            data-story-dialogue-shell
+          >
+            <div class="story-nameplate">
+              <span class="story-nameplate-ornament" aria-hidden="true">◆</span>
+              <strong data-story-speaker>${beat.speaker}</strong>
+              <span class="story-nameplate-ornament" aria-hidden="true">◆</span>
+            </div>
+            <div class="story-dialogue" data-story-dialogue>${dialogueMarkup}</div>
+          </section>
         </div>
       </article>
     `, 'modal-card--story modal-card--cinematic');
 
-    bindContinue();
+    bindStoryControls();
   }
 
   private showHint(): void {
