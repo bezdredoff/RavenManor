@@ -600,8 +600,8 @@
       "key": "characters/unknown/silhouette",
       "type": "character",
       "priority": "P1",
-      "status": "planned",
-      "master": "1024x1536 transparent"
+      "status": "integrated",
+      "master": "1024x1536 transparent PNG; FEATURE-067 neutral single asset"
     },
     {
       "key": "story/backgrounds/gates",
@@ -657,7 +657,7 @@
       "type": "character-portrait",
       "priority": "P0",
       "status": "integrated",
-      "master": "300x420 transparent SVG prototype"
+      "master": "1024x1536 transparent PNG; FEATURE-067 neutral single asset"
     },
     {
       "key": "ui/boosters/silver-hammer",

@@ -6,7 +6,7 @@ import ravenNeutral from '../assets/story/portraits/raven/neutral.png?url';
 import adrianNeutral from '../assets/story/portraits/adrian/portrait-neutral-v3.png?url';
 import adrianSpeaking from '../assets/story/portraits/adrian/portrait-speaking-v3.png?url';
 import adrianSurprised from '../assets/story/portraits/adrian/portrait-surprised-v3.png?url';
-import silhouettePortrait from '../assets/story/portraits/silhouette.svg?url';
+import silhouettePortrait from '../assets/story/portraits/silhouette/portrait-neutral-v1.png?url';
 import lucianNeutral from '../assets/story/portraits/lucian/portrait-neutral-v2.png?url';
 import lucianSpeaking from '../assets/story/portraits/lucian/portrait-speaking-v2.png?url';
 import lucianSurprised from '../assets/story/portraits/lucian/portrait-surprised-v2.png?url';
@@ -109,7 +109,7 @@ const portraitDefinitions: Readonly<Record<StoryPortraitKey, PortraitDefinition>
       surprised: adrianSurprised,
     },
   },
-  silhouette: { kind: 'single', aspectRatio: 5 / 7, asset: silhouettePortrait },
+  silhouette: { kind: 'single', aspectRatio: 2 / 3, asset: silhouettePortrait },
   lucian: {
     kind: 'single',
     aspectRatio: 2 / 3,
