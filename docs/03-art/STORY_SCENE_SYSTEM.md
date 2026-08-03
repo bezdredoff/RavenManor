@@ -12,7 +12,7 @@ The first chapter contains 30 authored scenes: one after every level.
 
 ## Portraits
 
-Integrated prototype portraits:
+Integrated portraits:
 
 - Evelyn;
 - Adrian;
@@ -21,6 +21,8 @@ Integrated prototype portraits:
 - revealed Lucian.
 
 The revealed Lucian asset is intentionally restricted to the level-30 scene.
+The unknown silhouette uses one neutral 1024×1536 transparent PNG through
+level 29. Its face and identity remain intentionally unreadable.
 
 ## Journal art
 

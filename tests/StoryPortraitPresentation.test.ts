@@ -111,14 +111,23 @@ describe('story portrait presentation', () => {
     expect(neutral.layers[0]?.asset).toBe(surprisedText.layers[0]?.asset);
   });
 
-  it('keeps the remaining legacy characters on the generic single-layer contract', () => {
-    const silhouette = resolveStoryPortrait(beat({
+  it('uses the refreshed neutral Silhouette portrait on the single-layer contract', () => {
+    const neutral = resolveStoryPortrait(beat({
       speaker: 'Тень',
       portraitKey: 'silhouette',
       portraitSide: 'right',
     }));
-    expect(silhouette.layers).toHaveLength(1);
-    expect(silhouette.layers[0]?.slot).toBe('base');
+    const explicitExpression = resolveStoryPortrait(beat({
+      speaker: 'Тень',
+      portraitKey: 'silhouette',
+      portraitSide: 'right',
+      portraitExpression: 'surprised',
+    }));
+
+    expect(neutral.aspectRatio).toBe(2 / 3);
+    expect(neutral.layers).toHaveLength(1);
+    expect(neutral.layers[0]?.slot).toBe('base');
+    expect(neutral.layers[0]?.asset).toBe(explicitExpression.layers[0]?.asset);
   });
 
   it('uses refreshed single-asset expressions for Lucian', () => {
