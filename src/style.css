@@ -3302,3 +3302,43 @@ body {
   padding-right: .7rem;
   padding-left: .7rem;
 }
+
+/* HOTFIX-066A — smaller story portraits */
+
+.story-portrait {
+  bottom: 10%;
+  width: 46%;
+  height: 52%;
+}
+
+.story-scene--left .story-portrait {
+  left: 1%;
+}
+
+.story-scene--right .story-portrait {
+  right: 1%;
+}
+
+@media (max-width: 360px) {
+  .story-portrait {
+    bottom: 11%;
+    width: 50%;
+    height: 54%;
+  }
+
+  .story-scene--left .story-portrait {
+    left: 0;
+  }
+
+  .story-scene--right .story-portrait {
+    right: 0;
+  }
+}
+
+@media (max-height: 650px) {
+  .story-portrait {
+    bottom: 12%;
+    width: 48%;
+    height: 50%;
+  }
+}
