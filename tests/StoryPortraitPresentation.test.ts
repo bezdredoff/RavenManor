@@ -15,7 +15,7 @@ function beat(overrides: Partial<StoryDialogueBeat> = {}): StoryDialogueBeat {
   };
 }
 
-describe('layered story portrait presentation', () => {
+describe('story portrait presentation', () => {
   it('keeps one shared Evelyn base and adds only the selected expression layer', () => {
     const neutral = resolveStoryPortrait(beat({ portraitExpression: 'neutral' }));
     const smile = resolveStoryPortrait(beat({ portraitExpression: 'smile' }));
@@ -39,7 +39,7 @@ describe('layered story portrait presentation', () => {
     expect(resolveStoryPortrait(beat({ text: 'Я продолжу искать ответ.' })).expression).toBe('speaking');
   });
 
-  it('uses one Adrian base and crossfading placed expression overlays', () => {
+  it('uses refreshed full-body single-asset expressions for Adrian', () => {
     const neutral = resolveStoryPortrait(beat({
       speaker: 'Лорд Адриан',
       text: 'Я присматривал за поместьем, пока оно ждало свою хозяйку.',
@@ -53,14 +53,29 @@ describe('layered story portrait presentation', () => {
       portraitKey: 'adrian',
       portraitSide: 'right',
     }));
+    const speaking = resolveStoryPortrait(beat({
+      speaker: 'Лорд Адриан',
+      text: 'Я произнесу это вслух.',
+      portraitKey: 'adrian',
+      portraitSide: 'right',
+      portraitExpression: 'speaking',
+    }));
+    const surprised = resolveStoryPortrait(beat({
+      speaker: 'Лорд Адриан',
+      text: 'Невозможно?!',
+      portraitKey: 'adrian',
+      portraitSide: 'right',
+    }));
 
-    expect(neutral.layers.map((layer) => layer.slot)).toEqual(['base', 'face']);
+    expect(neutral.layers).toHaveLength(1);
     expect(stern.expression).toBe('stern');
-    expect(stern.layers.map((layer) => layer.slot)).toEqual(['base', 'face']);
-    expect(neutral.layers[0]?.asset).toBe(stern.layers[0]?.asset);
-    expect(stern.layers[1]?.asset).toBeDefined();
-    expect(stern.layers[1]?.transition).toBe('crossfade');
-    expect(stern.layers[1]?.placement).toBeDefined();
+    expect(stern.layers).toHaveLength(1);
+    expect(speaking.layers).toHaveLength(1);
+    expect(surprised.layers).toHaveLength(1);
+    expect(neutral.layers[0]?.slot).toBe('base');
+    expect(stern.layers[0]?.slot).toBe('base');
+    expect(speaking.layers[0]?.asset).not.toBe(neutral.layers[0]?.asset);
+    expect(surprised.layers[0]?.asset).not.toBe(neutral.layers[0]?.asset);
   });
 
   it('always uses the one neutral Raven portrait', () => {
@@ -106,7 +121,38 @@ describe('layered story portrait presentation', () => {
     expect(silhouette.layers[0]?.slot).toBe('base');
   });
 
+  it('uses refreshed single-asset expressions for Lucian', () => {
+    const neutral = resolveStoryPortrait(beat({
+      speaker: 'Люциан',
+      text: 'Я ждал достаточно долго.',
+      portraitKey: 'lucian',
+      portraitSide: 'right',
+      portraitExpression: 'neutral',
+    }));
+    const speaking = resolveStoryPortrait(beat({
+      speaker: 'Люциан',
+      text: 'Нам нужно поговорить до того, как дом проснётся.',
+      portraitKey: 'lucian',
+      portraitSide: 'right',
+      portraitExpression: 'speaking',
+    }));
+    const surprised = resolveStoryPortrait(beat({
+      speaker: 'Люциан',
+      text: 'Что?!',
+      portraitKey: 'lucian',
+      portraitSide: 'right',
+    }));
+
+    expect(neutral.layers).toHaveLength(1);
+    expect(speaking.layers).toHaveLength(1);
+    expect(surprised.layers).toHaveLength(1);
+    expect(neutral.layers[0]?.slot).toBe('base');
+    expect(speaking.expression).toBe('speaking');
+    expect(speaking.layers[0]?.asset).not.toBe(neutral.layers[0]?.asset);
+    expect(surprised.expression).toBe('surprised');
+  });
+
   it('preloads the base, expression layers, and legacy portraits', () => {
-    expect(storyPortraitAssets.length).toBeGreaterThanOrEqual(13);
+    expect(storyPortraitAssets.length).toBeGreaterThanOrEqual(12);
   });
 });
