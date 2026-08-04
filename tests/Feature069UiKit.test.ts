@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const designSystem = readFileSync(new URL('../src/ui/design-system.css', import.meta.url), 'utf8');
 const styles = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
-  const version = readFileSync(new URL('../src/appVersion.ts', import.meta.url), 'utf8');
+const version = readFileSync(new URL('../src/appVersion.ts', import.meta.url), 'utf8');
 const app = readFileSync(new URL('../src/ui/GameApp.ts', import.meta.url), 'utf8');
 
 describe('FEATURE-069 unified UI kit', () => {
@@ -33,8 +33,8 @@ describe('FEATURE-069 unified UI kit', () => {
     expect(app).toContain('role="tabpanel"');
   });
 
-  it('publishes FEATURE-069 or its verified meta-screen successor', () => {
-    expect(version).toMatch(/0\.10\.(?:4-playtest\.069-unified-ui-kit|5-playtest\.070-meta-screens-refresh)/);
-    expect(version).toMatch(/FEATURE-(?:069 · Unified UI kit|070 · Meta screens refresh)/);
+  it('keeps the FEATURE-069 UI kit contract in successor builds', () => {
+    expect(version).toContain("export const APP_VERSION = '0.10.");
+    expect(styles).toContain('FEATURE-069');
   });
 });

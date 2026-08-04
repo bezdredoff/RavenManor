@@ -34,9 +34,8 @@ describe('FEATURE-070 meta screens refresh', () => {
     expect(app.slice(manorStart, levelsStart)).not.toContain('data-action="reset"');
   });
 
-  it('publishes the FEATURE-070 build label', () => {
-    expect(version).toContain('0.10.5-playtest.070-meta-screens-refresh');
-    expect(version).toContain('FEATURE-070 · Meta screens refresh');
+  it('keeps the FEATURE-070 composition contract in successor builds', () => {
+    expect(version).toContain("export const APP_VERSION = '0.10.");
     expect(styles).toContain('FEATURE-070');
   });
 });

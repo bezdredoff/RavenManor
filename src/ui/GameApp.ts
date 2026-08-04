@@ -113,6 +113,11 @@ type RoomReveal = Readonly<{
   unlockMessage?: string;
 }>;
 
+type ResultAction = Readonly<{
+  action: 'story' | 'repair-now' | 'next-level' | 'levels';
+  label: string;
+}>;
+
 const DIFFICULTY_LABELS: Record<LevelDifficulty, string> = {
   easy: 'Легко',
   normal: 'Обычно',
@@ -1807,6 +1812,65 @@ export class GameApp {
     }
   }
 
+  private renderResultScene(
+    roomId: string,
+    levelId: number,
+    tone: 'win' | 'loss',
+  ): string {
+    const room = rooms.find((candidate) => candidate.id === roomId) ?? rooms[0];
+    const visualState = getRoomVisualState(
+      room.id,
+      roomVisuals,
+      restorationTasks,
+      this.progress.state.completedRestorationTasks,
+    );
+    const sceneAsset = getRoomSceneAsset(visualState.stage.assetKey);
+    const resultLabel = tone === 'win' ? 'Победа' : 'Поражение';
+
+    return `
+      <header class="result-scene result-scene--${tone}" data-result-room="${room.id}">
+        <div class="result-scene-room-art" aria-hidden="true">
+          ${this.renderRoomSceneArt(room.id, sceneAsset, visualState.completedTaskCount)}
+        </div>
+        <div class="result-scene-shade" aria-hidden="true"></div>
+        <div class="result-vfx result-vfx--${tone}" aria-hidden="true">${this.renderVfxParticles(tone, 'result-particle')}</div>
+        <div class="result-scene-caption">
+          <span>${resultLabel} · ${room.title}</span>
+          <strong>Уровень ${String(levelId).padStart(3, '0')}</strong>
+        </div>
+      </header>
+    `;
+  }
+
+  private renderResultObjectiveRows(): string {
+    return (this.objectiveTracker?.snapshots ?? []).map((snapshot) => {
+      const remaining = Math.max(0, snapshot.target - snapshot.current);
+      const complete = remaining === 0;
+      if ('tileType' in snapshot && typeof snapshot.tileType === 'number') {
+        const tile = tileTypes[snapshot.tileType];
+        return `
+          <div class="result-objective-row ${complete ? 'complete' : ''}">
+            <div class="result-objective-icon">${this.renderTileIcon(snapshot.tileType, 'result-tile-icon')}</div>
+            <div><span>${complete ? 'Готово' : 'Осталось'}</span><strong>${tile?.name ?? 'Фишки'}</strong></div>
+            <b>${snapshot.current}/${snapshot.target}</b>
+          </div>
+        `;
+      }
+
+      const obstacleKind = 'obstacleKind' in snapshot
+        ? snapshot.obstacleKind as ObstacleKind
+        : 'rubble';
+      const presentation = getObstaclePresentation({ kind: obstacleKind, layers: 1 });
+      return `
+        <div class="result-objective-row ${complete ? 'complete' : ''}">
+          <div class="result-objective-icon"><img class="result-obstacle-icon" src="${presentation.assetPath}" alt="" draggable="false" /></div>
+          <div><span>${complete ? 'Готово' : 'Осталось'}</span><strong>${getObstacleLabel(obstacleKind)}</strong></div>
+          <b>${snapshot.current}/${snapshot.target}</b>
+        </div>
+      `;
+    }).join('');
+  }
+
   private async swapWithMotion(first: Position, second: Position): Promise<void> {
     this.audio.play('swap');
     this.engine.swap(first, second);
@@ -1840,9 +1904,6 @@ export class GameApp {
     );
     const storyScene = getStorySceneForLevel(storyScenes, completedLevelId);
     this.audio.play('win');
-    const rewardMessage = newlyEarned > 0
-      ? `Получено новых звёзд: ${newlyEarned} ★`
-      : 'Лучший результат уровня не улучшен.';
     const canRepair = activeRestoration?.status === 'available';
     const metaMessage = activeRestoration
       ? canRepair
@@ -1850,28 +1911,86 @@ export class GameApp {
         : `Следующая задача: «${activeRestoration.task.title}». Нужно ещё ${activeRestoration.starsMissing} ★.`
       : 'Все доступные задачи ремонта выполнены.';
 
+    const storyPending = Boolean(storyScene && !this.progress.isStoryViewed(completedLevelId));
+    const storyAction: ResultAction | null = storyScene
+      ? {
+          action: 'story',
+          label: this.progress.isStoryViewed(completedLevelId)
+            ? 'Повторить сюжетную сцену'
+            : 'Смотреть сюжетную сцену',
+        }
+      : null;
+    const repairAction: ResultAction | null = canRepair
+      ? { action: 'repair-now', label: 'Выполнить ремонт' }
+      : null;
+    const nextLevelAction: ResultAction | null = nextLevelId === null
+      ? null
+      : { action: 'next-level', label: 'Следующий уровень' };
+    const primaryAction: ResultAction = storyPending && storyAction
+      ? storyAction
+      : repairAction
+        ?? nextLevelAction
+        ?? storyAction
+        ?? { action: 'levels', label: 'К уровням' };
+    const contextualActions = [storyAction, repairAction, nextLevelAction]
+      .filter((action): action is ResultAction => action !== null);
+    const secondaryActions = contextualActions
+      .filter((action) => action.action !== primaryAction.action);
+    const routeKicker = storyPending
+      ? 'Сюжет ждёт'
+      : canRepair
+        ? 'Ремонт доступен'
+        : 'Маршрут продолжения';
+    const routeTitle = storyPending && storyScene
+      ? storyScene.title
+      : canRepair && activeRestoration
+        ? `${activeRestoration.room.title} · ${activeRestoration.task.title}`
+        : nextLevelId === null
+          ? 'Возвращение в поместье'
+          : 'Следующий уровень';
+    const routeDetail = storyPending && storyScene
+      ? `${storyScene.chapter} · Новая запись будет добавлена в дневник.`
+      : metaMessage;
+    const rewardLabel = newlyEarned > 0 ? 'Новые звёзды' : 'Лучший результат';
+    const rewardValue = newlyEarned > 0
+      ? `+${newlyEarned} ★`
+      : `${this.progress.state.stars[completedLevelId] ?? stars} ★`;
+    const resultRoomId = storyScene?.roomId ?? this.currentRoomId;
+
     this.openModal(`
-      <div class="result-vfx result-vfx--win" aria-hidden="true">${this.renderVfxParticles('win', 'result-particle')}</div>
-      <div class="result-emblem result-emblem--win" aria-hidden="true">✦</div>
-      <div class="big-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
-      <h2>Уровень пройден</h2>
-      <p>Звёзды восстанавливают поместье, а ключевые ремонты открывают следующие уровни и механики.</p>
-      <p class="reward-message">${rewardMessage}</p>
-      <div class="result-next-step ${canRepair ? 'ready' : ''}">
-        <span>Следующий шаг</span>
-        <strong>${metaMessage}</strong>
-        ${activeRestoration ? this.renderTaskOutcome(activeRestoration.task, true) : ''}
-      </div>
-      <div class="modal-balance">Доступно: ${this.progress.availableStars} ★ · Молоты: ${this.progress.getBoosterCount('hammer')} · Перемешивания: ${this.progress.getBoosterCount('shuffle')}</div>
-      <div class="stack">
-        ${canRepair ? '<button class="primary" data-action="repair-now">Выполнить ремонт</button>' : ''}
-        ${nextLevelId === null
-          ? ''
-          : `<button class="${canRepair ? 'secondary' : 'primary'}" data-action="next-level">Следующий уровень</button>`}
-        <button class="${nextLevelId === null && !canRepair ? 'primary' : 'secondary'}" data-action="levels">К уровням</button>
-        <button class="secondary" data-action="manor">В поместье</button>
-        ${storyScene ? `<button class="ghost" data-action="story">${this.progress.isStoryViewed(completedLevelId) ? 'Повторить сюжетную сцену' : 'Сюжетная сцена'}${nextLevelId === null ? ' → к уровням' : ' → следующий уровень'}</button>` : ''}
-      </div>
+      <section class="result-screen result-screen--win" aria-labelledby="result-title">
+        ${this.renderResultScene(resultRoomId, completedLevelId, 'win')}
+        <div class="result-sheet">
+          <div class="result-star-crest" aria-label="${stars} из 3 звёзд">
+            ${[0, 1, 2].map((index) => `<span class="${index < stars ? 'earned' : ''}" aria-hidden="true">★</span>`).join('')}
+          </div>
+          <div class="result-heading">
+            <div class="chapter">Испытание завершено</div>
+            <h2 id="result-title">Уровень пройден</h2>
+          </div>
+          <div class="result-reward-ledger">
+            <div><span>${rewardLabel}</span><strong>${rewardValue}</strong></div>
+            <div><span>Доступно</span><strong>${this.progress.availableStars} ★</strong></div>
+            <div><span>Бустеры</span><strong>${this.progress.getBoosterCount('hammer')} / ${this.progress.getBoosterCount('shuffle')}</strong></div>
+          </div>
+          <section class="result-route-card ${canRepair ? 'ready' : ''}">
+            <span>${routeKicker}</span>
+            <strong>${routeTitle}</strong>
+            <p>${routeDetail}</p>
+            ${activeRestoration && !storyPending ? this.renderTaskOutcome(activeRestoration.task, true) : ''}
+          </section>
+          <button class="primary result-primary-action" data-action="${primaryAction.action}">${primaryAction.label}</button>
+          ${secondaryActions.length > 0 ? `
+            <div class="result-secondary-actions">
+              ${secondaryActions.map((action) => `<button class="secondary compact" data-action="${action.action}">${action.label}</button>`).join('')}
+            </div>
+          ` : ''}
+          <div class="result-utility-actions">
+            ${primaryAction.action === 'levels' ? '' : '<button class="ghost compact" data-action="levels">К уровням</button>'}
+            <button class="ghost compact" data-action="manor">В поместье</button>
+          </div>
+        </div>
+      </section>
     `, 'modal-card--result modal-card--win');
 
     if (canRepair && activeRestoration) {
@@ -1904,17 +2023,29 @@ export class GameApp {
   }
 
   private loseLevel(): void {
+    if (!this.currentLevel) return;
+    const storyScene = getStorySceneForLevel(storyScenes, this.currentLevel.id);
+    const resultRoomId = storyScene?.roomId ?? this.currentRoomId;
     this.analytics.finishLevel('loss', 0, this.movesLeft);
     this.audio.play('loss');
     this.openModal(`
-      <div class="result-vfx result-vfx--loss" aria-hidden="true">${this.renderVfxParticles('loss', 'result-particle')}</div>
-      <div class="result-emblem result-emblem--loss" aria-hidden="true">☾</div>
-      <h2>Ходы закончились</h2>
-      <p class="subtitle">Можно повторить попытку или выбрать другой открытый уровень.</p>
-      <div class="stack">
-        <button class="primary" data-action="retry">Повторить</button>
-        <button class="ghost" data-action="exit">К уровням</button>
-      </div>
+      <section class="result-screen result-screen--loss" aria-labelledby="result-title">
+        ${this.renderResultScene(resultRoomId, this.currentLevel.id, 'loss')}
+        <div class="result-sheet">
+          <div class="result-loss-crest" aria-hidden="true">☾</div>
+          <div class="result-heading">
+            <div class="chapter">Испытание не завершено</div>
+            <h2 id="result-title">Ходы закончились</h2>
+            <p>Посмотрите, что осталось, и попробуйте ещё раз.</p>
+          </div>
+          <section class="result-objective-summary" aria-label="Осталось выполнить">
+            <div class="result-objective-heading"><span>Осталось выполнить</span><small>Прогресс этой попытки</small></div>
+            ${this.renderResultObjectiveRows()}
+          </section>
+          <button class="primary result-primary-action" data-action="retry">Повторить уровень</button>
+          <button class="ghost result-exit-action" data-action="exit">К уровням</button>
+        </div>
+      </section>
     `, 'modal-card--result modal-card--loss');
     this.bindModal('retry', () => {
       this.closeModal();

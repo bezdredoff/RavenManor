@@ -19,7 +19,7 @@ const checks = [
   ['Settings ledger', app.includes('settings-ledger') && app.includes('settings-danger-zone')],
   ['reset removed from Manor', !manorSource.includes('data-action="reset"')],
   ['FEATURE-069 tokens preserved', styles.includes(".journal-room-tab[aria-selected='true']")],
-  ['version', version.includes('0.10.5-playtest.070-meta-screens-refresh')],
+  ['successor version label', version.includes("export const APP_VERSION = '0.10.")],
 ];
 
 let failed = false;
