@@ -33,8 +33,8 @@ describe('FEATURE-069 unified UI kit', () => {
     expect(app).toContain('role="tabpanel"');
   });
 
-  it('publishes the FEATURE-069 build label', () => {
-    expect(version).toContain('0.10.4-playtest.069-unified-ui-kit');
-    expect(version).toContain('FEATURE-069 · Unified UI kit');
+  it('publishes FEATURE-069 or its verified meta-screen successor', () => {
+    expect(version).toMatch(/0\.10\.(?:4-playtest\.069-unified-ui-kit|5-playtest\.070-meta-screens-refresh)/);
+    expect(version).toMatch(/FEATURE-(?:069 · Unified UI kit|070 · Meta screens refresh)/);
   });
 });

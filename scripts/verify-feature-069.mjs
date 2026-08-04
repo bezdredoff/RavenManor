@@ -16,7 +16,7 @@ const checks = [
   ['toast ornament', styles.includes('.toast::after')],
   ['tab and locked states', styles.includes(".journal-room-tab[aria-selected='true']") && styles.includes('.booster-button.locked')],
   ['accessible tab semantics', app.includes('role="tablist"') && app.includes('aria-selected="${isSelected}"')],
-  ['version', version.includes('0.10.4-playtest.069-unified-ui-kit')],
+  ['version', version.includes('0.10.4-playtest.069-unified-ui-kit') || version.includes('0.10.5-playtest.070-meta-screens-refresh')],
 ];
 
 let failed = false;
