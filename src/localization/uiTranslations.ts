@@ -27,6 +27,7 @@ export const UI_TRANSLATIONS: readonly TranslationEntry[] = [
   { ru: 'Поместье', en: 'Manor', be: 'Маёнтак' },
   { ru: 'Дневник', en: 'Journal', be: 'Дзённік' },
   { ru: 'Новое', en: 'New', be: 'Новае' },
+  { ru: 'Новых', en: 'New', be: 'Новых' },
   { ru: 'Новых:', en: 'New:', be: 'Новых:' },
   { ru: 'Глава I · Возвращение в Raven Manor', en: 'Chapter I · Return to Raven Manor', be: 'Раздзел I · Вяртанне ў Raven Manor' },
   { ru: 'Запись после уровня', en: 'Entry after level', be: 'Запіс пасля ўзроўню' },

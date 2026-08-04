@@ -153,6 +153,7 @@ export class GameApp {
   private starWalletExpanded = false;
   private activeBooster: BoosterKind | null = null;
   private settingsReturnAction: (() => void) | null = null;
+  private selectedJournalRoomId: string | null = null;
 
   constructor(root: HTMLElement, errors: ErrorLog = new ErrorLog()) {
     this.root = root;
@@ -404,7 +405,7 @@ export class GameApp {
     this.bind('journal', () => this.showStoryJournal());
   }
 
-  private showStoryJournal(): void {
+  private showStoryJournal(playOpenCue = true): void {
     const groups = getStoryJournalGroups(
       storyScenes,
       rooms,
@@ -425,13 +426,55 @@ export class GameApp {
       storyScenes,
       this.progress.state.completed,
     ) ?? storyScenes[0];
+    const preferredRoomId = this.selectedJournalRoomId
+      ?? nextStoryScene?.roomId
+      ?? journalBackgroundScene.roomId;
+    const selectedGroup = groups.find((group) => group.room.id === preferredRoomId)
+      ?? groups[0];
+
+    if (!selectedGroup) {
+      throw new Error('Story journal requires at least one room group.');
+    }
+
+    this.selectedJournalRoomId = selectedGroup.room.id;
+    const selectedBackgroundScene = [...selectedGroup.entries]
+      .reverse()
+      .find((entry) => entry.status !== 'locked')?.scene
+      ?? selectedGroup.entries[0]?.scene
+      ?? journalBackgroundScene;
     const journalBackgroundAsset = getStoryBackgroundAsset(
-      journalBackgroundScene,
+      selectedBackgroundScene,
       this.progress.state.completedRestorationTasks,
     );
 
-    const groupCards = groups.map((group) => {
-      const entries = group.entries.map((entry) => {
+    const roomTabs = groups.map((group, index) => {
+      const isSelected = group.room.id === selectedGroup.room.id;
+      const hasNewEntries = group.entries.some((entry) => entry.status === 'new');
+      const groupBackgroundAsset = getStoryBackgroundAsset(
+        group.entries[0]?.scene ?? journalBackgroundScene,
+        this.progress.state.completedRestorationTasks,
+      );
+      return `
+        <button
+          type="button"
+          id="journal-room-tab-${group.room.id}"
+          role="tab"
+          class="journal-room-tab ${isSelected ? 'journal-room-tab--selected' : ''} ${hasNewEntries ? 'journal-room-tab--new' : ''}"
+          data-journal-room-tab="${group.room.id}"
+          aria-label="${group.room.title}. ${group.viewedCount}/${group.entries.length}"
+          aria-selected="${isSelected}"
+          aria-current="${isSelected ? 'page' : 'false'}"
+        >
+          <img src="${groupBackgroundAsset}" alt="" draggable="false" />
+          <span class="journal-room-tab-shade" aria-hidden="true"></span>
+          <span class="journal-room-tab-index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span>
+          <strong>${group.viewedCount}/${group.entries.length}</strong>
+          ${hasNewEntries ? '<span class="journal-room-tab-new" aria-label="Новое">●</span>' : ''}
+        </button>
+      `;
+    }).join('');
+
+    const selectedEntries = selectedGroup.entries.map((entry) => {
         const locked = entry.status === 'locked';
         const isNew = entry.status === 'new';
         const title = locked ? `Запись после уровня ${entry.scene.afterLevelId}` : entry.scene.title;
@@ -440,64 +483,91 @@ export class GameApp {
           : entry.scene.summary;
         const statusLabel = locked ? 'Закрыто' : isNew ? 'Новое' : 'Просмотрено';
         return `
-          <article class="journal-entry journal-entry--${entry.status} ${entry.scene.importance === 'major' ? 'journal-entry--major' : ''}">
-            <div class="journal-entry-number" aria-hidden="true">${String(entry.scene.afterLevelId).padStart(2, '0')}</div>
-            <div class="journal-entry-copy">
+          <article
+            class="journal-entry journal-entry--${entry.status} ${entry.scene.importance === 'major' ? 'journal-entry--major' : ''}"
+            data-journal-entry-id="${entry.scene.id}"
+            data-journal-status="${entry.status}"
+            data-journal-importance="${entry.scene.importance}"
+          >
+            <div class="journal-entry-topline">
+              <div class="journal-entry-number" aria-hidden="true"><span>${String(entry.scene.afterLevelId).padStart(2, '0')}</span></div>
               <div class="journal-entry-meta">
-                <span>После уровня ${entry.scene.afterLevelId}</span>
                 ${entry.scene.importance === 'major' && !locked ? '<span class="journal-major-badge">Ключевая сцена</span>' : ''}
                 <span class="journal-status journal-status--${entry.status}">${statusLabel}</span>
               </div>
+            </div>
+            <div class="journal-entry-copy">
               <strong>${title}</strong>
               <p>${summary}</p>
             </div>
             ${locked
               ? '<div class="journal-lock" aria-hidden="true">◆</div>'
-              : `<button class="${isNew ? 'primary' : 'secondary'} compact" data-story-level="${entry.scene.afterLevelId}">${isNew ? 'Смотреть' : 'Пересмотреть'}</button>`}
+              : `<button class="journal-entry-action ${isNew ? 'primary' : 'secondary'} compact" data-story-level="${entry.scene.afterLevelId}">${isNew ? 'Смотреть' : 'Пересмотреть'}</button>`}
           </article>
         `;
-      }).join('');
-
-      return `
-        <section class="journal-group" aria-label="${group.room.title}">
-          <header class="journal-group-heading">
-            <div>
-              <div class="chapter">${group.room.title}</div>
-              <h2>${group.entries[0]?.scene.chapter ?? group.room.title}</h2>
-            </div>
-            <strong>${group.viewedCount}/${group.entries.length}</strong>
-          </header>
-          <div class="journal-entry-list">${entries}</div>
-        </section>
-      `;
     }).join('');
 
-    this.audio.play('journalOpen');
+    if (playOpenCue) this.audio.play('journalOpen');
     this.renderScreen('journal', `
       ${this.topbar('Дневник', () => this.showHome())}
-      <section class="journal-hero">
-        <img src="${storyJournalIcon}" alt="" draggable="false" />
-        <div>
-          <div class="chapter">Архив воспоминаний</div>
-          <h1>Дневник Raven Manor</h1>
-          <p>Здесь сохраняются все открытые сюжетные эпизоды. Повторный просмотр не изменяет прогресс.</p>
-        </div>
-      </section>
-      <section class="journal-progress-card">
-        <div><span>Открыто</span><strong>${progress.unlocked}/${progress.total}</strong></div>
-        <div><span>Просмотрено</span><strong>${progress.viewed}/${progress.total}</strong></div>
-        <div><span>Новых</span><strong>${progress.newCount}</strong></div>
-      </section>
-      ${nextStoryScene
-        ? `<button class="primary wide-action" data-action="journal-continue">Продолжить: ${nextStoryScene.title}</button>`
-        : '<div class="journal-complete-note">Все открытые сцены просмотрены.</div>'}
-      <div class="journal-group-list">${groupCards}</div>
+      <main class="journal-book" aria-labelledby="journal-title">
+        <header class="journal-book-cover">
+          <div class="journal-book-mark"><img src="${storyJournalIcon}" alt="" draggable="false" /></div>
+          <div class="journal-book-title">
+            <div class="chapter">Архив воспоминаний</div>
+            <h1 id="journal-title">Дневник Raven Manor</h1>
+          </div>
+          <div class="journal-book-seal" aria-label="Открыто ${progress.unlocked}/${progress.total}">
+            <strong>${progress.unlocked}</strong><span>/${progress.total}</span>
+          </div>
+        </header>
+
+        <section class="journal-ledger" aria-label="Архив воспоминаний">
+          <div><span>Просмотрено</span><strong>${progress.viewed}/${progress.total}</strong></div>
+          <div><span>Новых</span><strong>${progress.newCount}</strong></div>
+          ${nextStoryScene
+            ? `<button class="journal-continue" data-action="journal-continue"><span>Продолжить:</span><strong>${nextStoryScene.title}</strong><b aria-hidden="true">›</b></button>`
+            : '<div class="journal-complete-note">Все открытые сцены просмотрены.</div>'}
+        </section>
+
+        <nav class="journal-room-tabs" role="tablist" aria-label="Комнаты Raven Manor">${roomTabs}</nav>
+
+        <section
+          class="journal-page"
+          role="tabpanel"
+          data-journal-room="${selectedGroup.room.id}"
+          aria-labelledby="journal-room-tab-${selectedGroup.room.id}"
+        >
+          <header class="journal-page-header" style="--journal-room-art: url(&quot;${journalBackgroundAsset}&quot;)">
+            <div class="journal-page-header-shade" aria-hidden="true"></div>
+            <div class="journal-page-heading">
+              <div class="chapter">${selectedGroup.room.title}</div>
+              <h2>${selectedGroup.entries[0]?.scene.chapter ?? selectedGroup.room.title}</h2>
+              <p>${selectedGroup.room.description}</p>
+            </div>
+            <div class="journal-page-count" aria-label="${selectedGroup.viewedCount}/${selectedGroup.entries.length}">
+              <span aria-hidden="true">◆</span>
+              <strong>${selectedGroup.viewedCount}/${selectedGroup.entries.length}</strong>
+            </div>
+          </header>
+          <div class="journal-entry-grid">${selectedEntries}</div>
+        </section>
+      </main>
     `, journalBackgroundAsset);
 
     this.bind('back', () => this.showHome());
     if (nextStoryScene) {
       this.bind('journal-continue', () => this.showStory(nextStoryScene.afterLevelId, undefined, 'journal'));
     }
+    this.screen.querySelectorAll<HTMLButtonElement>('[data-journal-room-tab]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const roomId = button.dataset.journalRoomTab;
+        if (!roomId || roomId === this.selectedJournalRoomId) return;
+        this.audio.play('ui');
+        this.selectedJournalRoomId = roomId;
+        this.showStoryJournal(false);
+      });
+    });
     this.screen.querySelectorAll<HTMLButtonElement>('[data-story-level]').forEach((button) => {
       button.addEventListener('click', () => {
         const levelId = Number(button.dataset.storyLevel);
