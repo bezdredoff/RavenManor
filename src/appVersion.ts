@@ -1,2 +1,2 @@
-export const APP_VERSION = '0.10.4-playtest.069-unified-ui-kit';
-export const BUILD_LABEL = 'FEATURE-069 · Unified UI kit';
+export const APP_VERSION = '0.10.5-playtest.070-meta-screens-refresh';
+export const BUILD_LABEL = 'FEATURE-070 · Meta screens refresh';

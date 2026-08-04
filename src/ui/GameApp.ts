@@ -381,23 +381,55 @@ export class GameApp {
       this.progress.state.viewedStoryScenes,
     );
     const hasNewStory = storyProgress.newCount > 0;
+    const hall = rooms.find((room) => room.id === 'hall');
+    const hallVisualState = getRoomVisualState(
+      'hall',
+      roomVisuals,
+      restorationTasks,
+      this.progress.state.completedRestorationTasks,
+    );
+    const completedLevelCount = levels.filter((level) => this.progress.state.completed[level.id]).length;
+    const unlockedRoomCount = rooms.filter((room) => getRoomUnlockState(
+      room,
+      restorationTasks,
+      this.progress.state.completedRestorationTasks,
+    ).unlocked).length;
+    const homeSceneAsset = getRoomSceneAsset(hallVisualState.stage.assetKey);
     this.renderScreen('home', `
       ${this.topbar('Raven Manor')}
-      <section class="hero">
-        <div class="raven-mark"><img src="${ravenMark}" alt="" draggable="false" /></div>
-        <h1>Raven Manor</h1>
-        <p class="subtitle">Проходите match-3 уровни, восстанавливайте поместье и раскрывайте тайну семьи Блэквуд.</p>
+      <section class="home-manor-hero" aria-label="${hall?.title ?? 'Raven Manor'}: ${hallVisualState.stage.title}">
+        <div class="home-manor-art" aria-hidden="true">
+          ${this.renderRoomCardArt('hall', homeSceneAsset, hallVisualState.completedTaskCount)}
+        </div>
+        <div class="home-manor-shade" aria-hidden="true"></div>
+        <div class="home-brand-lockup">
+          <div class="raven-mark"><img src="${ravenMark}" alt="" draggable="false" /></div>
+          <div>
+            <div class="chapter">Глава I · Возвращение</div>
+            <h1>Raven Manor</h1>
+          </div>
+        </div>
+        <div class="home-progress-ribbon" aria-label="Прогресс главы">
+          <span><strong>${completedLevelCount}</strong> / ${levels.length}<small>Уровни</small></span>
+          <span><strong>${unlockedRoomCount}</strong> / ${rooms.length}<small>Комнаты</small></span>
+          <span><strong>${storyProgress.viewed}</strong> / ${storyProgress.total}<small>Дневник</small></span>
+        </div>
       </section>
-      <div class="stack home-actions">
+      <section class="home-command-deck">
+        <p class="subtitle">Проходите match-3 уровни, восстанавливайте поместье и раскрывайте тайну семьи Блэквуд.</p>
+        <div class="home-actions">
         <button class="primary" data-action="play">Играть</button>
-        <button class="secondary" data-action="manor">Поместье</button>
-        <button class="ghost journal-home-button ${hasNewStory ? 'journal-home-button--new' : ''}" data-action="journal">
-          <img src="${storyJournalIcon}" alt="" draggable="false" />
-          <span>Дневник · ${storyProgress.viewed}/${storyProgress.total}</span>
-          ${hasNewStory ? '<span class="journal-new-bubble">Новое</span>' : ''}
-        </button>
-      </div>
-      <p class="footer-note">Глава I · Возвращение в Raven Manor · ${APP_VERSION}</p>
+          <div class="home-secondary-actions">
+            <button class="secondary" data-action="manor">Поместье</button>
+            <button class="ghost journal-home-button ${hasNewStory ? 'journal-home-button--new' : ''}" data-action="journal">
+              <img src="${storyJournalIcon}" alt="" draggable="false" />
+              <span>Дневник · ${storyProgress.viewed}/${storyProgress.total}</span>
+              ${hasNewStory ? '<span class="journal-new-bubble">Новое</span>' : ''}
+            </button>
+          </div>
+        </div>
+      </section>
+      <p class="footer-note home-build-label">${APP_VERSION}</p>
     `);
 
     this.bind('play', () => this.showLevelMap());
@@ -593,7 +625,9 @@ export class GameApp {
   }
 
   private showManor(): void {
-    const cards = rooms.map((room) => {
+    let unlockedRoomCount = 0;
+    let restoredRoomCount = 0;
+    const cards = rooms.map((room, index) => {
       const unlockState = getRoomUnlockState(
         room,
         restorationTasks,
@@ -613,14 +647,17 @@ export class GameApp {
       const restorationLabel = visualState.isComplete
         ? 'Комната восстановлена'
         : `Восстановление: ${visualState.completedTaskCount}/${visualState.totalTaskCount}`;
+      if (!locked) unlockedRoomCount += 1;
+      if (visualState.isComplete) restoredRoomCount += 1;
 
       const sceneAsset = getRoomSceneAsset(visualState.stage.assetKey);
       return `
         <article
-          class="room-card room-card--visual ${locked ? 'locked' : ''} ${visualState.isComplete ? 'restored' : ''} ${this.recentlyUnlockedRoomId === room.id ? 'just-unlocked' : ''}"
+          class="room-card room-card--visual manor-room-node manor-room-node--${index % 2 === 0 ? 'left' : 'right'} ${locked ? 'locked' : ''} ${visualState.isComplete ? 'restored' : ''} ${this.recentlyUnlockedRoomId === room.id ? 'just-unlocked' : ''}"
           ${locked ? '' : `data-room="${room.id}" role="button" tabindex="0"`}
           aria-label="${locked ? `${room.title}. ${lockedLabel}` : `Открыть комнату ${room.title}`}"
         >
+          <div class="manor-room-index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</div>
           <div class="room-card-art" aria-hidden="true">
             ${this.renderRoomCardArt(room.id, sceneAsset, visualState.completedTaskCount)}
             <div class="room-card-art-shade"></div>
@@ -638,29 +675,30 @@ export class GameApp {
 
     this.renderScreen('manor', `
       ${this.topbar('Поместье', () => this.showHome())}
-      <div class="chapter">Глава I · Возвращение</div>
-      <h2>Комнаты Raven Manor</h2>
-      <p class="subtitle">Ремонт комнат открывает новые группы уровней, механики и полезные бустеры.</p>
-      <div class="wide-action-grid">
+      <section class="meta-screen-intro manor-intro">
+        <div>
+          <div class="chapter">Глава I · Возвращение</div>
+          <h2>Комнаты Raven Manor</h2>
+          <p class="subtitle">Ремонт комнат открывает новые группы уровней, механики и полезные бустеры.</p>
+        </div>
+        <div class="meta-progress-seal" aria-label="Открыто комнат: ${unlockedRoomCount} из ${rooms.length}">
+          <strong>${unlockedRoomCount}</strong><span>/${rooms.length}</span><small>Открыто</small>
+        </div>
+      </section>
+      <div class="meta-quick-actions">
         <button class="primary" data-action="levels">Перейти к уровням</button>
         <button class="secondary" data-action="journal">Открыть дневник</button>
       </div>
-      <div class="room-list">${cards}</div>
-      <button class="ghost reset" data-action="reset">Сбросить прогресс</button>
+      <div class="manor-route-heading">
+        <span>Маршрут поместья</span>
+        <small>${restoredRoomCount}/${rooms.length} · Комната восстановлена</small>
+      </div>
+      <div class="room-list manor-room-map">${cards}</div>
     `);
 
     this.bind('back', () => this.showHome());
     this.bind('levels', () => this.showLevelMap());
     this.bind('journal', () => this.showStoryJournal());
-    this.bind('reset', () => {
-      if (confirm(this.localization.translate('Сбросить весь прогресс?'))) {
-        this.progress.reset();
-        this.analytics.recordAction('progress_reset');
-        this.pendingRoomReveal = null;
-        this.recentlyUnlockedRoomId = null;
-        this.showManor();
-      }
-    });
     this.playRecentRoomUnlock();
     this.screen.querySelectorAll<HTMLElement>('[data-room]').forEach((card) => {
       const openRoom = () => {
@@ -698,13 +736,26 @@ export class GameApp {
   }
 
   private showLevelMap(focusGroupId: string | null = null): void {
-    const groupCards = levelGroups.map((group) => {
-      const state = getLevelGroupState(
+    const groupStates = levelGroups.map((group) => ({
+      group,
+      state: getLevelGroupState(
         group,
         levelGroups,
         this.progress.state.completed,
         this.progress.state.completedRestorationTasks,
-      );
+      ),
+    }));
+    const playableLevels = groupStates.flatMap(({ group, state }) => (
+      state.unlocked
+        ? group.levelIds.map((levelId) => levels.find((level) => level.id === levelId)).filter((level) => level !== undefined)
+        : []
+    ));
+    const continuationLevel = playableLevels.find((level) => !this.progress.state.completed[level.id])
+      ?? playableLevels[playableLevels.length - 1]
+      ?? levels[0];
+    const completedLevelCount = levels.filter((level) => this.progress.state.completed[level.id]).length;
+
+    const groupCards = groupStates.map(({ group, state }, groupIndex) => {
       const sourceGroup = levelGroups.find((candidate) => candidate.id === state.sourceGroupId);
       const requiredTask = restorationTasks.find((task) => task.id === state.requiredTaskId);
       const unlockMessage = state.unlocked
@@ -721,6 +772,7 @@ export class GameApp {
       return `
         <section class="level-group ${state.unlocked ? '' : 'locked'}" data-level-group-id="${group.id}" tabindex="-1">
           <div class="level-group-heading">
+            <div class="level-group-index" aria-hidden="true">${String(groupIndex + 1).padStart(2, '0')}</div>
             <div>
               <div class="chapter">${state.unlocked ? 'Доступно' : 'Закрыто ремонтом'}</div>
               <h2>${group.title}</h2>
@@ -735,12 +787,32 @@ export class GameApp {
 
     this.renderScreen('levels', `
       ${this.topbar('Уровни', () => this.showHome())}
-      <div class="chapter">Match-3 кампания</div>
-      <h2>Зарабатывайте звёзды для ремонта</h2>
-      <p class="subtitle">Первые уровни доступны сразу. Ключевые ремонты открывают следующие группы и новые механики.</p>
-      ${this.renderActiveRestorationCard()}
-      <button class="secondary wide-action" data-action="manor">Открыть поместье</button>
+      <section class="meta-screen-intro levels-intro">
+        <div>
+          <div class="chapter">Match-3 кампания</div>
+          <h2>Зарабатывайте звёзды для ремонта</h2>
+          <p class="subtitle">Первые уровни доступны сразу. Ключевые ремонты открывают следующие группы и новые механики.</p>
+        </div>
+        <div class="meta-progress-seal" aria-label="Пройдено уровней: ${completedLevelCount} из ${levels.length}">
+          <strong>${completedLevelCount}</strong><span>/${levels.length}</span><small>Пройдено</small>
+        </div>
+      </section>
+      ${continuationLevel ? `
+        <section class="level-continuation-card">
+          <div class="level-continuation-number" aria-hidden="true">${String(continuationLevel.id).padStart(3, '0')}</div>
+          <div class="level-continuation-copy">
+            <div class="chapter">Следующий уровень</div>
+            <h2>${continuationLevel.title}</h2>
+            <div class="level-objective">${this.renderLevelObjectiveSummary(continuationLevel)}</div>
+          </div>
+          <button class="primary" data-level="${continuationLevel.id}">Играть</button>
+        </section>
+      ` : ''}
       <div class="level-group-list">${groupCards}</div>
+      <section class="level-map-meta-route">
+        ${this.renderActiveRestorationCard(true)}
+        <button class="secondary wide-action" data-action="manor">Открыть поместье</button>
+      </section>
     `);
 
     if (focusGroupId) {
@@ -771,21 +843,19 @@ export class GameApp {
     const stars = this.progress.state.stars[level.id] ?? 0;
     return `
       <article class="level-card ${groupUnlocked ? '' : 'locked'}">
-        <div>
-          <div class="level-card-topline">
-            <div class="level-number">${String(level.id).padStart(3, '0')}</div>
+        <button
+          class="level-node-button"
+          ${groupUnlocked ? '' : 'disabled'}
+          data-level="${level.id}"
+          aria-label="${level.title}. ${this.renderLevelObjectiveSummary(level).replace(/<[^>]+>/g, ' ')}. ${stars} из 3 звёзд"
+        >
+          <span class="level-card-topline">
+            <strong class="level-number">${String(level.id).padStart(3, '0')}</strong>
             <span class="difficulty difficulty-${level.difficulty}">${DIFFICULTY_LABELS[level.difficulty]}</span>
-          </div>
-          <h3>${level.title}</h3>
-          <div class="room-meta level-objective">${this.renderLevelObjectiveSummary(level)}</div>
-          <div class="balance-meta">${level.moves} ходов · 3★ при ${level.starThresholds.threeStarsMovesLeft}+ оставшихся</div>
-        </div>
-        <div>
-          <div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
-          <button class="${groupUnlocked ? 'primary' : 'ghost'}" ${groupUnlocked ? '' : 'disabled'} data-level="${level.id}">
-            ${groupUnlocked ? 'Играть' : 'Закрыто'}
-          </button>
-        </div>
+          </span>
+          <span class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>
+          <span class="level-node-action">${groupUnlocked ? 'Играть' : 'Закрыто'}</span>
+        </button>
       </article>
     `;
   }
@@ -812,8 +882,11 @@ export class GameApp {
 
     this.renderScreen('room', `
       ${this.topbar(room.title, () => this.showManor())}
-      <p class="subtitle">${room.description}</p>
       ${roomVisual}
+      <section class="room-detail-summary">
+        <p class="subtitle">${room.description}</p>
+        <button class="secondary compact" data-action="levels">К уровням</button>
+      </section>
       <section class="room-section">
         <div class="section-heading">
           <div>
@@ -822,14 +895,6 @@ export class GameApp {
           </div>
         </div>
         <div class="restoration-list">${restorationCards}</div>
-      </section>
-      <section class="room-section room-level-cta">
-        <div>
-          <div class="chapter">Match-3</div>
-          <h2>Нужны ещё звёзды?</h2>
-          <p class="subtitle">Проходите открытые уровни, зарабатывайте звёзды и возвращайтесь к текущей задаче ремонта.</p>
-        </div>
-        <button class="primary" data-action="levels">К уровням</button>
       </section>
     `);
 
@@ -2078,9 +2143,21 @@ export class GameApp {
 
     this.renderScreen('settings', `
       ${this.topbar('Настройки', () => this.returnFromSettings(), false)}
-      <div class="chapter">Аудио</div>
-      <h2>Музыка и звуки</h2>
-      <section class="settings-card audio-settings-card">
+      <section class="settings-screen-intro">
+        <div class="raven-mark"><img src="${ravenMark}" alt="" draggable="false" /></div>
+        <div>
+          <div class="chapter">Настройки</div>
+          <h1>Raven Manor</h1>
+          <p class="subtitle">Музыка и звуки · Язык · Игровые настройки · Доступность</p>
+        </div>
+      </section>
+      <div class="settings-ledger">
+      <section class="settings-group settings-group--audio">
+        <header class="settings-group-heading">
+          <div class="chapter">Аудио</div>
+          <h2>Музыка и звуки</h2>
+        </header>
+        <section class="settings-card audio-settings-card">
         <div class="setting-row setting-row--status">
           <div>
             <strong>Звук игры</strong>
@@ -2102,94 +2179,123 @@ export class GameApp {
           <button class="ghost" data-action="audio-music-preview" ${audio.muted || !audioSupported ? 'disabled' : ''}>Проверить музыку</button>
           <button class="ghost" data-action="audio-preview" ${audio.muted || !audioSupported ? 'disabled' : ''}>Проверить эффекты</button>
         </div>
+        </section>
       </section>
 
-      <div class="chapter settings-section-label">Язык</div>
-      <h2>Язык интерфейса и сюжета</h2>
-      <section class="settings-card language-settings-card">
-        <p class="subtitle">Изменение языка не сбрасывает игровой прогресс.</p>
-        <div class="language-options" role="group" aria-label="Язык интерфейса и сюжета">${languageButtons}</div>
+      <section class="settings-group settings-group--language">
+        <header class="settings-group-heading">
+          <div class="chapter">Язык</div>
+          <h2>Язык интерфейса и сюжета</h2>
+        </header>
+        <section class="settings-card language-settings-card">
+          <p class="subtitle">Изменение языка не сбрасывает игровой прогресс.</p>
+          <div class="language-options" role="group" aria-label="Язык интерфейса и сюжета">${languageButtons}</div>
+        </section>
       </section>
 
-      <div class="chapter settings-section-label">Игровые настройки</div>
-      <h2>Подсказки и обучение</h2>
-      <section class="settings-card">
-        <div>
-          <strong>Короткое обучение match-3</strong>
-          <p class="subtitle">Две контекстные подсказки без обязательного обучающего уровня.</p>
-        </div>
-        <div class="setting-status">${status}</div>
-        <div class="stack">
-          <button class="secondary" data-action="tutorial-restart">Показать снова</button>
-          <button class="ghost" data-action="tutorial-disable">Отключить подсказки</button>
-        </div>
-      </section>
-
-      <div class="chapter settings-section-label">Игровое поле</div>
-      <h2>Усиления</h2>
-      <section class="settings-card">
-        <div>
-          <strong>Сильные комбинации</strong>
-          <p class="subtitle">Линии из 4–5, формы T/L и квадраты 2×2 создают специальные фишки.</p>
-        </div>
-        <div class="setting-status">Молоты: ${this.progress.getBoosterCount('hammer')} · Перемешивания: ${this.progress.getBoosterCount('shuffle')}</div>
-        <div class="stack"><button class="secondary" data-action="booster-guide">Активные бустеры</button><button class="ghost" data-action="special-guide">Комбинации</button><button class="ghost" data-action="obstacle-guide">Препятствия</button></div>
-      </section>
-      <p class="footer-note settings-context-note">Новые механики позднее будут объясняться такими же короткими контекстными карточками.</p>
-
-      <div class="chapter settings-section-label">Доступность</div>
-      <h2>Анимации и эффекты</h2>
-      <section class="settings-card">
-        <div>
-          <strong>Сокращение движения</strong>
-          <p class="subtitle">Игра автоматически следует системной настройке <em>Reduce Motion</em>. При её включении отключаются частицы, перелёты и декоративные движения, но все состояния остаются видимыми.</p>
-        </div>
-        <div class="setting-status">${this.prefersReducedMotion() ? 'Сокращённые эффекты активны' : 'Полные эффекты активны'}</div>
-      </section>
-
-      <div class="chapter settings-section-label">Установка</div>
-      <h2>Приложение на телефоне</h2>
-      <section class="settings-card">
-        <div class="setting-row setting-row--status">
+      <section class="settings-group settings-group--gameplay">
+        <header class="settings-group-heading">
+          <div class="chapter">Игровые настройки</div>
+          <h2>Подсказки и обучение</h2>
+        </header>
+        <section class="settings-card">
           <div>
-            <strong>Устанавливаемая PWA-сборка</strong>
-            <p class="subtitle">При первом онлайн-запуске сборка целиком сохраняется на устройстве. Перед авиарежимом проверьте, что статус подтверждает офлайн-готовность.</p>
+            <strong>Короткое обучение match-3</strong>
+            <p class="subtitle">Две контекстные подсказки без обязательного обучающего уровня.</p>
           </div>
-          <div class="setting-status">${getPwaStatusLabel(pwaStatus)}</div>
-        </div>
-        <div class="stack">
-          ${pwaStatus.installAvailable ? '<button class="primary" data-action="pwa-install">Установить приложение</button>' : ''}
-          ${pwaStatus.serviceWorkerReady ? '<button class="secondary" data-action="pwa-offline-check">Проверить офлайн-готовность</button>' : ''}
-          ${pwaStatus.serviceWorkerReady ? '<button class="ghost" data-action="pwa-update">Проверить обновление</button>' : ''}
-        </div>
+          <div class="setting-status">${status}</div>
+          <div class="stack">
+            <button class="secondary" data-action="tutorial-restart">Показать снова</button>
+            <button class="ghost" data-action="tutorial-disable">Отключить подсказки</button>
+          </div>
+        </section>
       </section>
 
-      <div class="chapter settings-section-label">Playtest</div>
-      <h2>Сохранение и диагностика</h2>
-      <section class="settings-card diagnostics-card">
-        <div class="setting-row setting-row--status">
+      <section class="settings-group settings-group--board">
+        <header class="settings-group-heading">
+          <div class="chapter">Игровое поле</div>
+          <h2>Усиления</h2>
+        </header>
+        <section class="settings-card">
           <div>
-            <strong>${BUILD_LABEL}</strong>
-            <p class="subtitle">Версия ${APP_VERSION} · ${navigator.onLine ? 'онлайн' : 'офлайн'}</p>
+            <strong>Сильные комбинации</strong>
+            <p class="subtitle">Линии из 4–5, формы T/L и квадраты 2×2 создают специальные фишки.</p>
           </div>
-          ${recoveryStatus}
-        </div>
-        <div class="playtest-summary" aria-label="Сводка локального тестирования">
-          <span>Сессии <strong>${analyticsSummary.sessions}</strong></span>
-          <span>Попытки <strong>${analyticsSummary.attempts}</strong></span>
-          <span>Победы <strong>${analyticsSummary.wins}</strong></span>
-          <span>Подсказки <strong>${analyticsSummary.hints}</strong></span>
-        </div>
-        <div class="settings-action-grid">
-          <button class="secondary" data-action="save-export">Экспорт сохранения</button>
-          <button class="ghost" data-action="save-import">Импорт сохранения</button>
-          <button class="secondary" data-action="analytics-export">Экспорт аналитики</button>
-          <button class="ghost" data-action="diagnostics-export">Экспорт диагностики</button>
-        </div>
-        <button class="ghost compact" data-action="analytics-reset">Очистить локальную аналитику</button>
-        <input class="visually-hidden" type="file" accept="application/json,.json" data-save-import-file aria-label="Выбрать файл сохранения" />
-        <p class="subtitle settings-privacy-note">Данные остаются только на устройстве, пока игрок сам не экспортирует JSON. Сторонняя аналитика не подключается.</p>
+          <div class="setting-status">Молоты: ${this.progress.getBoosterCount('hammer')} · Перемешивания: ${this.progress.getBoosterCount('shuffle')}</div>
+          <div class="stack"><button class="secondary" data-action="booster-guide">Активные бустеры</button><button class="ghost" data-action="special-guide">Комбинации</button><button class="ghost" data-action="obstacle-guide">Препятствия</button></div>
+        </section>
+        <p class="footer-note settings-context-note">Новые механики позднее будут объясняться такими же короткими контекстными карточками.</p>
       </section>
+
+      <section class="settings-group settings-group--accessibility">
+        <header class="settings-group-heading">
+          <div class="chapter">Доступность</div>
+          <h2>Анимации и эффекты</h2>
+        </header>
+        <section class="settings-card">
+          <div>
+            <strong>Сокращение движения</strong>
+            <p class="subtitle">Игра автоматически следует системной настройке <em>Reduce Motion</em>. При её включении отключаются частицы, перелёты и декоративные движения, но все состояния остаются видимыми.</p>
+          </div>
+          <div class="setting-status">${this.prefersReducedMotion() ? 'Сокращённые эффекты активны' : 'Полные эффекты активны'}</div>
+        </section>
+      </section>
+
+      <section class="settings-group settings-group--install">
+        <header class="settings-group-heading">
+          <div class="chapter">Установка</div>
+          <h2>Приложение на телефоне</h2>
+        </header>
+        <section class="settings-card">
+          <div class="setting-row setting-row--status">
+            <div>
+              <strong>Устанавливаемая PWA-сборка</strong>
+              <p class="subtitle">При первом онлайн-запуске сборка целиком сохраняется на устройстве. Перед авиарежимом проверьте, что статус подтверждает офлайн-готовность.</p>
+            </div>
+            <div class="setting-status">${getPwaStatusLabel(pwaStatus)}</div>
+          </div>
+          <div class="stack">
+            ${pwaStatus.installAvailable ? '<button class="primary" data-action="pwa-install">Установить приложение</button>' : ''}
+            ${pwaStatus.serviceWorkerReady ? '<button class="secondary" data-action="pwa-offline-check">Проверить офлайн-готовность</button>' : ''}
+            ${pwaStatus.serviceWorkerReady ? '<button class="ghost" data-action="pwa-update">Проверить обновление</button>' : ''}
+          </div>
+        </section>
+      </section>
+
+      <section class="settings-group settings-group--playtest">
+        <header class="settings-group-heading">
+          <div class="chapter">Playtest</div>
+          <h2>Сохранение и диагностика</h2>
+        </header>
+        <section class="settings-card diagnostics-card">
+          <div class="setting-row setting-row--status">
+            <div>
+              <strong>${BUILD_LABEL}</strong>
+              <p class="subtitle">Версия ${APP_VERSION} · ${navigator.onLine ? 'онлайн' : 'офлайн'}</p>
+            </div>
+            ${recoveryStatus}
+          </div>
+          <div class="playtest-summary" aria-label="Сводка локального тестирования">
+            <span>Сессии <strong>${analyticsSummary.sessions}</strong></span>
+            <span>Попытки <strong>${analyticsSummary.attempts}</strong></span>
+            <span>Победы <strong>${analyticsSummary.wins}</strong></span>
+            <span>Подсказки <strong>${analyticsSummary.hints}</strong></span>
+          </div>
+          <div class="settings-action-grid">
+            <button class="secondary" data-action="save-export">Экспорт сохранения</button>
+            <button class="ghost" data-action="save-import">Импорт сохранения</button>
+            <button class="secondary" data-action="analytics-export">Экспорт аналитики</button>
+            <button class="ghost" data-action="diagnostics-export">Экспорт диагностики</button>
+          </div>
+          <input class="visually-hidden" type="file" accept="application/json,.json" data-save-import-file aria-label="Выбрать файл сохранения" />
+          <p class="subtitle settings-privacy-note">Данные остаются только на устройстве, пока игрок сам не экспортирует JSON. Сторонняя аналитика не подключается.</p>
+          <div class="settings-danger-zone">
+            <button class="ghost compact" data-action="analytics-reset">Очистить локальную аналитику</button>
+            <button class="ghost compact" data-action="progress-reset">Сбросить прогресс</button>
+          </div>
+        </section>
+      </section>
+      </div>
     `);
 
     this.bind('back', () => this.returnFromSettings());
@@ -2226,6 +2332,15 @@ export class GameApp {
     this.bind('save-import', () => this.screen.querySelector<HTMLInputElement>('[data-save-import-file]')?.click());
     this.bind('analytics-export', () => this.exportAnalytics());
     this.bind('diagnostics-export', () => this.exportDiagnostics());
+    this.bind('progress-reset', () => {
+      if (confirm(this.localization.translate('Сбросить весь прогресс?'))) {
+        this.progress.reset();
+        this.analytics.recordAction('progress_reset');
+        this.pendingRoomReveal = null;
+        this.recentlyUnlockedRoomId = null;
+        this.showSettings();
+      }
+    });
     this.bind('analytics-reset', () => {
       if (confirm(this.localization.translate('Очистить только локальные данные плейтеста? Игровой прогресс сохранится.'))) {
         this.analytics.reset();
