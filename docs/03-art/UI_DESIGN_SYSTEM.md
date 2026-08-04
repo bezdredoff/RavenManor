@@ -66,6 +66,21 @@ Colour must communicate hierarchy, not replace text or icon meaning.
 - one primary action per local decision group;
 - active feedback must work for touch, not only hover.
 
+FEATURE-069 adds shared control-surface tokens instead of screen-local button
+palettes. Primary, secondary, ghost and icon buttons use the same depth,
+bottom-edge brass glint, focus, pressed and disabled grammar. Compact controls
+remain at least `--touch-target` (44 px) tall outside the Match-3 board.
+
+### Selection and locked states
+
+- selected tabs, pressed toggles and active boosters use a gold border plus a
+  restrained wine/plum surface;
+- selection must also be exposed through `aria-selected` or `aria-pressed`;
+- disabled controls use the shared disabled surface and retain readable text;
+- locked cards and controls are desaturated and dimmed consistently, but must
+  not reveal future restoration artwork;
+- journal room navigation uses `tablist`, `tab`, and `tabpanel` semantics.
+
 ### Cards
 
 - room cards prioritise title and state;
@@ -79,6 +94,10 @@ Colour must communicate hierarchy, not replace text or icon meaning.
 - content scrolls inside the modal when necessary;
 - safe-area padding is applied;
 - critical action remains easy to reach with one hand.
+
+Generic modal cards and toast notifications share the plum surface, brass line,
+gold detail and restrained diamond ornament. Story modals keep the approved
+FEATURE-066 composition and are excluded from the generic corner ornament.
 
 ## Accessibility
 
@@ -95,3 +114,6 @@ FEATURE-039 keeps current emoji/content placeholders. FEATURE-040 replaces
 board assets and adds gameplay motion. FEATURE-041 replaces room and story
 placeholders. This separation prevents visual asset production from becoming a
 prerequisite for the layout system.
+
+FEATURE-069 does not redesign meta-screen composition, win/fail presentation or
+the gameplay HUD. Those remain FEATURE-070, FEATURE-071 and FEATURE-072.
